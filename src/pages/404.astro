@@ -1,0 +1,18 @@
+---
+interface Props {
+    error: unknown;
+}
+
+const { error } = Astro.props;
+---
+
+<h1>Fuck it!</h1>
+<div>{error instanceof Error ? error.message : "Unknown error"}</div>
+<a href="/">Home</a>
+
+<style>
+    h1 {
+        font-size: 2rem;
+        color: red;
+    }
+</style>
