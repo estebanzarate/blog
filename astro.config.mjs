@@ -3,6 +3,10 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://hackache.vercel.app',
+  adapter: vercel({
+    imageService: true,
+  }),
   prefetch: {
     defaultStrategy: 'viewport'
   },
