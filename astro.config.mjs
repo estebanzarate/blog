@@ -27,14 +27,14 @@ export default defineConfig({
     name: "Neucha",
     cssVariable: "--font-neucha",
     provider: fontProviders.google(),
-    weights: [100, 300, 400, 600, 700, 900],
+    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
     styles: ["normal"]
   },
   {
-    name: "Yuyu",
-    cssVariable: "--font-yuyu",
-    provider: fontProviders.google(),
-    weights: [100, 300, 400, 600, 700, 900],
+    name: "DejaVu Sans",
+    cssVariable: "--font-dejavu",
+    provider: fontProviders.fontsource(),
+    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
     styles: ["normal"],
 
   }]

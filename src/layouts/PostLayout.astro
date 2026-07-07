@@ -1,4 +1,5 @@
 ---
+import { Font } from "astro:assets";
 import Layout from "@layouts/Layout.astro";
 import "@styles/post.css";
 ---
@@ -7,6 +8,7 @@ import "@styles/post.css";
     <div class="markdown-post">
         <slot />
     </div>
+    <Font cssVariable="--font-neucha" />
 </Layout>
 
 <script>
