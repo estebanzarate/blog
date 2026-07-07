@@ -1,9 +1,10 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
+import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://hackache.vercel.app',
+  site: 'https://blog-estebanzarate.vercel.app',
   adapter: vercel({
     imageService: true,
   }),
