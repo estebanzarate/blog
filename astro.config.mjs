@@ -28,14 +28,14 @@ export default defineConfig({
     cssVariable: "--font-neucha",
     provider: fontProviders.google(),
     weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal"]
+    styles: ["normal", "italic"],
   },
   {
-    name: "DejaVu Sans",
+    name: "DejaVu Mono",
     cssVariable: "--font-dejavu",
     provider: fontProviders.fontsource(),
     weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal"],
+    styles: ["normal", "italic"],
 
   }]
 });

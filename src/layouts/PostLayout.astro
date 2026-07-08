@@ -1,12 +1,21 @@
 ---
 import { Font } from "astro:assets";
 import Layout from "@layouts/Layout.astro";
-import "@styles/post.css";
+import TableOfContent from "@components/TableOfContent.astro";
+const { headings } = Astro.props;
+import "@styles/markdown.css";
 ---
 
 <Layout>
-    <div class="markdown-post">
-        <slot />
+    <div class="post-layout">
+        <div class="markdown-post">
+            <slot />
+        </div>
+        <!-- <TableOfContent {headings} /> -->
+        <!-- <div id="index-overlay" class="index-overlay"></div> -->
+        <!-- <button id="open-index" class="index-toggle" aria-label="Abrir índice"
+            >☰</button
+        > -->
     </div>
     <Font cssVariable="--font-neucha" />
 </Layout>

@@ -1,0 +1,143 @@
+---
+const { headings } = Astro.props;
+---
+
+<aside id="index-aside">
+    <div class="aside-header">
+        <h2>Índice</h2>
+        <button id="close-index" class="close-btn" aria-label="Cerrar índice"
+            >✕</button
+        >
+    </div>
+    <ul>
+        {
+            headings.map((heading: any) => (
+                <li class={`level-${heading.level}`}>
+                    <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+            ))
+        }
+    </ul>
+</aside>
+
+<script>
+    const asideEl = document.querySelector<HTMLElement>("#index-aside");
+    const openBtn = document.querySelector<HTMLButtonElement>("#open-index");
+    const closeBtn = document.querySelector<HTMLButtonElement>("#close-index");
+    const overlay = document.querySelector<HTMLElement>("#index-overlay");
+
+    function openIndex() {
+        asideEl?.classList.add("open");
+        overlay?.classList.add("visible");
+        document.body.classList.add("no-scroll");
+    }
+
+    function closeIndex() {
+        asideEl?.classList.remove("open");
+        overlay?.classList.remove("visible");
+        document.body.classList.remove("no-scroll");
+    }
+
+    openBtn?.addEventListener("click", openIndex);
+    closeBtn?.addEventListener("click", closeIndex);
+    overlay?.addEventListener("click", closeIndex);
+</script>
+
+<style>
+    aside ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    aside a {
+        text-decoration: none;
+    }
+    .aside-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    .close-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 1.1rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0.25rem;
+    }
+    .index-toggle {
+        display: none;
+    }
+    .index-overlay {
+        display: none;
+    }
+
+    @media (max-width: 1200px) {
+        aside {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(75vw, 280px);
+            margin: 0;
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            background: rgba(30, 30, 46, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 0.75rem 0 0 0.75rem;
+            padding: 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 101;
+            font-size: clamp(0.8rem, 2vw, 0.95rem);
+        }
+        aside.open {
+            transform: translateX(0);
+        }
+        aside a {
+            text-decoration: none;
+            color: #cba6f7;
+            transition: color 0.15s ease;
+        }
+        aside a:hover {
+            color: #f5c2e7;
+        }
+        .close-btn {
+            display: block;
+        }
+        .index-toggle {
+            display: block;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            background: rgba(30, 30, 46, 0.75);
+            backdrop-filter: blur(12px);
+            border: none;
+            border-radius: 999px;
+            width: 2.5rem;
+            height: 2.5rem;
+            color: inherit;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        aside.open ~ .index-toggle {
+            display: none;
+        }
+        .index-overlay {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            transition: background 0.25s ease;
+            z-index: 99;
+        }
+        .index-overlay.visible {
+            background: rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+    }
+</style>

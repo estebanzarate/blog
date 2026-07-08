@@ -1,0 +1,127 @@
+---
+interface Props {
+    type?: "note" | "info" | "warning" | "success" | "danger" | "tip";
+    title?: string;
+}
+
+const { type = "note", title } = Astro.props;
+
+const config = {
+    note: {
+        label: "Note",
+        color: "#8b949e",
+        bg: "rgba(139,148,158,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+    },
+    info: {
+        label: "Info",
+        color: "#58a6ff",
+        bg: "rgba(88,166,255,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    },
+    warning: {
+        label: "Warning",
+        color: "#d29922",
+        bg: "rgba(210,153,34,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    },
+    success: {
+        label: "Success",
+        color: "#3fb950",
+        bg: "rgba(63,185,80,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    },
+    danger: {
+        label: "Danger",
+        color: "#f85149",
+        bg: "rgba(248,81,73,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+    },
+    tip: {
+        label: "Tip",
+        color: "#a371f7",
+        bg: "rgba(163,113,247,0.08)",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    },
+} as const;
+
+const c = config[type] ?? config.note;
+const label = title ?? c.label;
+---
+
+<div class="callout" style={`--cc: ${c.color}; --cb: ${c.bg}`}>
+    <div class="callout-header">
+        <span class="callout-icon" set:html={c.icon} />
+        <span class="callout-label">{label}</span>
+    </div>
+    <div class="callout-body">
+        <slot />
+    </div>
+</div>
+
+<style>
+    .callout {
+        border-left: 3px solid var(--cc);
+        background: var(--cb);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        padding: 0.875rem 1.125rem;
+        margin: 1.5rem 0;
+    }
+
+    .callout-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--cc);
+    }
+
+    .callout-icon {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        line-height: 0;
+    }
+
+    .callout-label {
+        font-weight: 600;
+        font-size: var(--font-size-sm);
+        line-height: 1;
+    }
+
+    .callout-body {
+        font-size: var(--font-size-sm);
+        color: var(--color-text);
+        line-height: 1.7;
+    }
+
+    .callout-body :global(p) {
+        margin: 0;
+    }
+    .callout-body :global(p + p) {
+        margin-top: 0.5rem;
+    }
+
+    .callout-body :global(code) {
+        font-size: 0.875em;
+        font-family: var(--font-mono);
+        background: rgba(0, 0, 0, 0.12);
+        padding: 0.1em 0.35em;
+        border-radius: 3px;
+    }
+
+    .callout-body :global(pre) {
+        margin: 0.75rem 0 0;
+        font-size: var(--font-size-xs);
+    }
+
+    .callout-body :global(ul),
+    .callout-body :global(ol) {
+        padding-left: 1.25rem;
+        margin: 0.25rem 0 0;
+    }
+
+    .callout-body :global(a) {
+        color: var(--cc);
+    }
+</style>
