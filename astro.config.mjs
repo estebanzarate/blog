@@ -1,10 +1,13 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
 import vercel from '@astrojs/vercel';
+import { unified } from '@astrojs/markdown-remark';
+import rehypeExternalLinks from 'rehype-external-links';
+import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://blog-estebanzarate.vercel.app',
+  integrations: [mdx()],
   adapter: vercel({
     imageService: true,
   }),
@@ -37,5 +40,19 @@ export default defineConfig({
     weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
     styles: ["normal", "italic"],
 
-  }]
+  }],
+  markdown: {
+    processor: unified({
+      rehypePlugins: [
+        [
+          rehypeExternalLinks,
+          {
+            content: { type: 'text', value: ' 🔗' },
+            target: '_blank',
+            rel: ['noopener', 'noreferrer'],
+          }
+        ],
+      ]
+    }),
+  },
 });

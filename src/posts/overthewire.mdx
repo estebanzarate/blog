@@ -1,0 +1,189 @@
+---
+title: Over The Wire - Bandit
+description: Resolución de todos los niveles de Bandit en Over The Wire
+lang: es
+---
+
+## Bandit Level 0
+
+[Bandit Level 0](https://overthewire.org/wargames/bandit/bandit0.html)
+
+```bash
+ssh -p 2220 bandit0@bandit.labs.overthewire.org
+```
+
+## Bandit Level 0 → Level 1
+
+[Bandit Level 0 → Level 1](https://overthewire.org/wargames/bandit/bandit1.html)
+
+```bash
+ls -la
+```
+
+```plaintext
+total 24
+drwxr-xr-x   2 root    root    4096 Jun 24 14:58 .
+drwxr-xr-x 150 root    root    4096 Jun 24 15:02 ..
+-rw-r--r--   1 root    root     220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root    root    3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root    root     807 Feb 13 12:16 .profile
+-rw-r-----   1 bandit1 bandit0  438 Jun 24 14:58 readme
+```
+
+```bash
+cat readme
+```
+
+```plaintext
+Congratulations on your first steps into the bandit game!!
+Please make sure you have read the rules at https://overthewire.org/rules/
+If you are following a course, workshop, walkthrough or other educational activity,
+please inform the instructor about the rules as well and encourage them to
+contribute to the OverTheWire community so we can keep these games free!
+
+The password you are looking for is: 6y2kwnwK6grgvwvpvLaa2T1cpFEKOhNR
+```
+
+<Callout type="success" title="Password Bandit1">
+6y2kwnwK6grgvwvpvLaa2T1cpFEKOhNR
+</Callout>
+
+## Bandit Level 1 → Level 2
+
+[Bandit Level 1 → Level 2](https://overthewire.org/wargames/bandit/bandit2.html)
+
+```bash
+ls -la
+```
+
+```plaintext
+total 24
+-rw-r-----   1 bandit2 bandit1   33 Jun 24 14:59 -
+drwxr-xr-x   2 root    root    4096 Jun 24 14:59 .
+drwxr-xr-x 150 root    root    4096 Jun 24 15:02 ..
+-rw-r--r--   1 root    root     220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root    root    3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root    root     807 Feb 13 12:16 .profile
+```
+
+```bash
+cat ./-
+```
+
+<Callout type="success" title="Password Bandit2">
+PK8fYLZg2hnHSz83plBL1iEPKdD3QToB
+</Callout>
+
+## Bandit Level 2 → Level 3
+
+[Bandit Level 2 → Level 3](https://overthewire.org/wargames/bandit/bandit3.html)
+
+```bash
+ls -la
+```
+
+```plaintext
+total 24
+-rw-r-----   1 bandit3 bandit2   33 Jun 24 14:59 --spaces in this filename--
+drwxr-xr-x   2 root    root    4096 Jun 24 14:59 .
+drwxr-xr-x 150 root    root    4096 Jun 24 15:02 ..
+-rw-r--r--   1 root    root     220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root    root    3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root    root     807 Feb 13 12:16 .profile
+```
+
+```bash
+cat ./--spaces\ in\ this\ filename-- 
+```
+
+<Callout type="success" title="Password Bandit2">
+7ZZ2LFrykP2zEyvBl4m3clcL7tGYJPME
+</Callout>
+
+## Bandit Level 3 → Level 4
+
+[Bandit Level 3 → Level 4](https://overthewire.org/wargames/bandit/bandit4.html)
+
+```bash
+ls -la
+```
+
+```plaintext
+total 24
+drwxr-xr-x   3 root root 4096 Jun 24 14:59 .
+drwxr-xr-x 150 root root 4096 Jun 24 15:02 ..
+-rw-r--r--   1 root root  220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root root 3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root root  807 Feb 13 12:16 .profile
+drwxr-xr-x   2 root root 4096 Jun 24 14:59 inhere
+```
+
+```bash
+cd inhere/
+```
+
+```bash
+ls -la
+```
+
+```plaintext
+total 12
+drwxr-xr-x 2 root    root    4096 Jun 24 14:59 .
+drwxr-xr-x 3 root    root    4096 Jun 24 14:59 ..
+-rw-r----- 1 bandit4 bandit3   33 Jun 24 14:59 ...Hiding-From-You
+```
+
+```bash
+cat ./...Hiding-From-You 
+```
+
+<Callout type="success" title="Password Bandit2">
+xzTXq1rDJQVVAzdv5cHq1TQytTWufAMq
+</Callout>
+
+## Bandit Level 4 → Level 5
+
+[Bandit Level 4 → Level 5](https://overthewire.org/wargames/bandit/bandit5.html)
+
+```bash
+bandit4@bandit:~$ ls -la
+```
+
+```plaintext
+total 24
+drwxr-xr-x   3 root root 4096 Jun 24 14:59 .
+drwxr-xr-x 150 root root 4096 Jun 24 15:02 ..
+-rw-r--r--   1 root root  220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root root 3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root root  807 Feb 13 12:16 .profile
+drwxr-xr-x   2 root root 4096 Jun 24 14:59 inhere
+```
+
+```bash
+cd inhere/
+```
+
+```bash
+file ./*
+```
+
+```plaintext
+./-file00: data
+./-file01: data
+./-file02: data
+./-file03: data
+./-file04: data
+./-file05: data
+./-file06: OpenPGP Public Key
+./-file07: ASCII text
+./-file08: data
+./-file09: Motorola S-Record; binary data in text format
+```
+
+```bash
+cat ./-file07 
+```
+
+<Callout type="success" title="Password Bandit2">
+6C7h9GD8M6ai5nr7wo1RonrzFjj9yIrG
+</Callout>
