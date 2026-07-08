@@ -96,7 +96,7 @@ drwxr-xr-x 150 root    root    4096 Jun 24 15:02 ..
 cat ./--spaces\ in\ this\ filename-- 
 ```
 
-<Callout type="success" title="Password Bandit2">
+<Callout type="success" title="Password Bandit3">
 7ZZ2LFrykP2zEyvBl4m3clcL7tGYJPME
 </Callout>
 
@@ -137,7 +137,7 @@ drwxr-xr-x 3 root    root    4096 Jun 24 14:59 ..
 cat ./...Hiding-From-You 
 ```
 
-<Callout type="success" title="Password Bandit2">
+<Callout type="success" title="Password Bandit4">
 xzTXq1rDJQVVAzdv5cHq1TQytTWufAMq
 </Callout>
 
@@ -184,6 +184,44 @@ file ./*
 cat ./-file07 
 ```
 
-<Callout type="success" title="Password Bandit2">
+<Callout type="success" title="Password Bandit5">
 6C7h9GD8M6ai5nr7wo1RonrzFjj9yIrG
+</Callout>
+
+## Bandit Level 5 → Level 6
+
+[Bandit Level 5 → Level 6](https://overthewire.org/wargames/bandit/bandit6.html)
+
+```bash
+ls -la
+```
+
+```plaintext
+total 24
+drwxr-xr-x   3 root root    4096 Jun 24 14:59 .
+drwxr-xr-x 150 root root    4096 Jun 24 15:02 ..
+-rw-r--r--   1 root root     220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root root    3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root root     807 Feb 13 12:16 .profile
+drwxr-x---  22 root bandit5 4096 Jun 24 14:59 inhere
+```
+
+```bash
+cd inhere/
+```
+
+```bash
+find . -type f -size 1033c \! -executable -exec file {} \; 2>/dev/null
+```
+
+```plaintext
+./maybehere07/.file2: ASCII text, with very long lines (1000)
+```
+
+```bash
+cat ./maybehere07/.file2
+```
+
+<Callout type="success" title="Password Bandit6">
+pXa26xhMWaC2SvDotA4r9EgZkulOeSBW
 </Callout>
