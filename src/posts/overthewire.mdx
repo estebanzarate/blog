@@ -376,3 +376,143 @@ GROozWPO8QyN0mGrjUkID0WCYkZiQxrN
 ```bash
 ssh -p 2220 bandit12@bandit.labs.overthewire.org
 ```
+
+```bash
+mktemp -d    
+```
+
+```plaintext
+/tmp/tmp.dncxgguoXT
+```
+
+```bash
+cd /tmp/tmp.dncxgguoXT
+```
+
+```bash
+cp ~/data.txt .
+```
+
+```bash
+bandit12@bandit:/tmp/tmp.dncxgguoXT$ file data.txt 
+```
+
+```plaintext
+data.txt: ASCII text
+```
+
+```bash
+bandit12@bandit:/tmp/tmp.dncxgguoXT$ xxd -r data.txt > file
+```
+
+```bash
+bandit12@bandit:/tmp/tmp.dncxgguoXT$ file file 
+```
+
+```plaintext
+file: gzip compressed data, was "data2.bin", last modified: Wed Jun 24 14:58:58 2026, max compression, from Unix, original size modulo 2^32 578
+```
+
+```bash
+gzip -dc file > file2
+```
+
+```bash
+file file2
+```
+
+```plaintext
+file2: bzip2 compressed data, block size = 900k
+```
+
+```bash
+bzip2 -dc file2 > file3
+```
+
+```bash
+file file3 
+```
+
+```plaintext
+file3: gzip compressed data, was "data4.bin", last modified: Wed Jun 24 14:58:58 2026, max compression, from Unix, original size modulo 2^32 20480
+```
+
+```bash
+gzip -dc file3 > file4
+```
+
+```bash
+file file4
+```
+
+```plaintext
+file4: POSIX tar archive (GNU)
+```
+
+```bash
+file file5
+```
+
+```plaintext
+file5: POSIX tar archive (GNU)
+```
+
+```bash
+tar -xf file5 -O > file6
+```
+
+```bash
+file file6
+```
+
+```plaintext
+file6: bzip2 compressed data, block size = 900k
+```
+
+```bash
+bzip2 -dc file6 > file7
+```
+
+```bash
+file file7
+```
+
+```plaintext
+file7: POSIX tar archive (GNU)
+```
+
+```bash
+tar -xf file7 -O > file8
+```
+
+```bash
+file file8
+```
+
+```plaintext
+file8: gzip compressed data, was "data9.bin", last modified: Wed Jun 24 14:58:58 2026, max compression, from Unix, original size modulo 2^32 49
+```
+
+```bash
+gzip -dc file8 > file9
+```
+
+```bash
+file file9
+```
+
+```plaintext
+file9: ASCII text
+```
+
+```bash
+cat file9
+```
+
+```plaintext
+The password is qQYQiHOBPR8zR61qxYqX45quvihF2uzk
+```
+
+<Callout type="success" title="Password Bandit13">
+qQYQiHOBPR8zR61qxYqX45quvihF2uzk
+</Callout>
