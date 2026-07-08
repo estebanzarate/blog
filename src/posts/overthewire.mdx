@@ -53,6 +53,10 @@ The password you are looking for is: 6y2kwnwK6grgvwvpvLaa2T1cpFEKOhNR
 [Bandit Level 1 → Level 2](https://overthewire.org/wargames/bandit/bandit2.html)
 
 ```bash
+ssh -p 2220 bandit1@bandit.labs.overthewire.org
+```
+
+```bash
 ls -la
 ```
 
@@ -79,6 +83,10 @@ PK8fYLZg2hnHSz83plBL1iEPKdD3QToB
 [Bandit Level 2 → Level 3](https://overthewire.org/wargames/bandit/bandit3.html)
 
 ```bash
+ssh -p 2220 bandit2@bandit.labs.overthewire.org
+```
+
+```bash
 ls -la
 ```
 
@@ -103,6 +111,10 @@ cat ./--spaces\ in\ this\ filename--
 ## Bandit Level 3 → Level 4
 
 [Bandit Level 3 → Level 4](https://overthewire.org/wargames/bandit/bandit4.html)
+
+```bash
+ssh -p 2220 bandit3@bandit.labs.overthewire.org
+```
 
 ```bash
 ls -la
@@ -144,6 +156,10 @@ xzTXq1rDJQVVAzdv5cHq1TQytTWufAMq
 ## Bandit Level 4 → Level 5
 
 [Bandit Level 4 → Level 5](https://overthewire.org/wargames/bandit/bandit5.html)
+
+```bash
+ssh -p 2220 bandit4@bandit.labs.overthewire.org
+```
 
 ```bash
 bandit4@bandit:~$ ls -la
@@ -193,6 +209,10 @@ cat ./-file07
 [Bandit Level 5 → Level 6](https://overthewire.org/wargames/bandit/bandit6.html)
 
 ```bash
+ssh -p 2220 bandit5@bandit.labs.overthewire.org
+```
+
+```bash
 ls -la
 ```
 
@@ -225,3 +245,71 @@ cat ./maybehere07/.file2
 <Callout type="success" title="Password Bandit6">
 pXa26xhMWaC2SvDotA4r9EgZkulOeSBW
 </Callout>
+
+## Bandit Level 6 → Level 7
+
+[Bandit Level 6 → Level 7](https://overthewire.org/wargames/bandit/bandit7.html)
+
+```bash
+ssh -p 2220 bandit6@bandit.labs.overthewire.org
+```
+
+```bash
+find / -user bandit7 -group bandit6 -size 33c 2>/dev/null
+```
+
+```plaintext
+/var/lib/dpkg/info/bandit7.password
+```
+
+```bash
+cat /var/lib/dpkg/info/bandit7.password
+```
+
+<Callout type="success" title="Password Bandit7">
+Bmnnvf82KzQlfxgAI2d1zYbr1u9pr3E3
+</Callout>
+
+## Bandit Level 7 → Level 8
+
+[Bandit Level 7 → Level 8](https://overthewire.org/wargames/bandit/bandit8.html)
+
+```bash
+ssh -p 2220 bandit7@bandit.labs.overthewire.org
+```
+
+```bash
+grep millionth data.txt 
+```
+
+```plaintext
+millionth	VR1ljMayciFxbnUokuQmJFw6QC9VKtub
+```
+
+<Callout type="success" title="Password Bandit8">
+VR1ljMayciFxbnUokuQmJFw6QC9VKtub
+</Callout>
+
+## Bandit Level 8 → Level 9
+
+[Bandit Level 8 → Level 9](https://overthewire.org/wargames/bandit/bandit9.html)
+
+```bash
+ssh -p 2220 bandit8@bandit.labs.overthewire.org
+```
+
+```bash
+sort data.txt | uniq -u
+```
+
+<Callout type="success" title="Password Bandit9">
+EjmOSvuAu7sGAHqHVcBDPirRe9T03kxl
+</Callout>
+
+## Bandit Level 9 → Level 10
+
+[Bandit Level 9 → Level 10](https://overthewire.org/wargames/bandit/bandit10.html)
+
+```bash
+ssh -p 2220 bandit9@bandit.labs.overthewire.org
+```
