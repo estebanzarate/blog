@@ -889,3 +889,102 @@ chmod 600 bandit17
 ```bash
 ssh -i bandit17 -p 2220 bandit17@bandit.labs.overthewire.org
 ```
+
+```bash
+ls -la
+```
+
+```plaintext
+total 36
+drwxr-xr-x   3 root     root     4096 Jun 24 14:59 .
+drwxr-xr-x 150 root     root     4096 Jun 24 15:02 ..
+-rw-r-----   1 bandit17 bandit17   33 Jun 24 14:59 .bandit16.password
+-rw-r--r--   1 root     root      220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root     root     3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root     root      807 Feb 13 12:16 .profile
+drwxr-xr-x   2 root     root     4096 Jun 24 14:59 .ssh
+-rw-r-----   1 bandit18 bandit17 3300 Jun 24 14:59 passwords.new
+-rw-r-----   1 bandit18 bandit17 3300 Jun 24 14:59 passwords.old
+```
+
+```bash
+diff passwords.old passwords.new
+```
+
+```plaintext
+42c42
+< icUh23IUytZLIYhcCaXL18agiSIqymBc
+---
+> OQxXZjELndr90zuhOTDYBEomI0SZITXI
+```
+
+<Callout type="success" title="Password Bandit18">
+OQxXZjELndr90zuhOTDYBEomI0SZITXI
+</Callout>
+
+## Bandit Level 18 → Level 19
+
+[Bandit Level 18 → Level 19](https://overthewire.org/wargames/bandit/bandit19.html)
+
+```bash
+ssh -p 2220 bandit18@bandit.labs.overthewire.org cat readme
+```
+
+```plaintext
+KpsOfPkcP7i1FlIExk2QEjyt6dw8dxZI
+```
+
+<Callout type="success" title="Password Bandit19">
+KpsOfPkcP7i1FlIExk2QEjyt6dw8dxZI
+</Callout>
+
+## Bandit Level 19 → Level 20
+
+[Bandit Level 19 → Level 20](https://overthewire.org/wargames/bandit/bandit20.html)
+
+```bash
+ssh -p 2220 bandit19@bandit.labs.overthewire.org
+```
+
+```bash
+ls -la
+```
+
+```plaintext
+total 36
+drwxr-xr-x   2 root     root      4096 Jun 24 14:59 .
+drwxr-xr-x 150 root     root      4096 Jun 24 15:02 ..
+-rw-r--r--   1 root     root       220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root     root      3851 Jun 24 14:50 .bashrc
+-rw-r--r--   1 root     root       807 Feb 13 12:16 .profile
+-rwsr-x---   1 bandit20 bandit19 14880 Jun 24 14:59 bandit20-do
+```
+
+```bash
+./bandit20-do 
+```
+
+```plaintext
+Run a command as another user.
+  Example: ./bandit20-do whoami
+```
+
+```bash
+./bandit20-do whoami
+```
+
+```plaintext
+bandit20
+```
+
+```bash
+./bandit20-do cat /etc/bandit_pass/bandit20
+```
+
+```plaintext
+4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
+```
+
+<Callout type="success" title="Password Bandit20">
+4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
+</Callout>
