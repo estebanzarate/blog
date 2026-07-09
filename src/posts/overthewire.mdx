@@ -988,3 +988,74 @@ bandit20
 <Callout type="success" title="Password Bandit20">
 4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
 </Callout>
+
+## Bandit Level 20 → Level 21
+
+[Bandit Level 20 → Level 21](https://overthewire.org/wargames/bandit/bandit21.html)
+
+```bash
+ssh -p 2220 bandit20@bandit.labs.overthewire.org
+```
+
+```bash
+nc -l 1234 &
+```
+
+```plaintext
+[1] 470
+```
+
+```bash
+bg
+```
+
+```plaintext
+-bash: bg: job 1 already in background
+```
+
+```bash
+jobs
+```
+
+```plaintext
+[1]+  Running                    nc -l 1234 &
+```
+
+```bash
+bandit20@bandit:~$ ./suconnect 1234 &
+```
+
+```plaintext
+[2] 498
+```
+
+```bash
+fg
+```
+
+```plaintext
+nc -l 1234
+```
+
+```bash
+4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
+```
+
+```plaintext
+Read: 4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
+Password matches, sending next password
+bW9kBv5WC3P4yoDyf12LSdGuNz5ka6hY
+[2]   Done                       ./suconnect 1234
+```
+
+<Callout type="success" title="Password Bandit21">
+bW9kBv5WC3P4yoDyf12LSdGuNz5ka6hY
+</Callout>
+
+## Bandit Level 21 → Level 22
+
+[Bandit Level 21 → Level 22](https://overthewire.org/wargames/bandit/bandit22.html)
+
+```bash
+ssh -p 2220 bandit21@bandit.labs.overthewire.org
+```
