@@ -1098,3 +1098,75 @@ RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
 <Callout type="success" title="Password Bandit22">
 RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
 </Callout>
+
+## Bandit Level 22 → Level 23
+
+[Bandit Level 22 → Level 23](https://overthewire.org/wargames/bandit/bandit23.html)
+
+```bash
+ssh -p 2220 bandit22@bandit.labs.overthewire.org
+```
+
+```bash
+ls /etc/cron.d
+```
+
+```plaintext
+behemoth4_cleanup  clean_tmp  cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  leviathan5_cleanup  manpage3_resetpw_job  otw-tmp-dir
+```
+
+```bash
+cat /etc/cron.d/cronjob_bandit23
+```
+
+```plaintext
+@reboot bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+* * * * * bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+```
+
+```bash
+cat /usr/bin/cronjob_bandit23.sh
+```
+
+```bash
+#!/bin/bash
+
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+
+echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
+
+cat /etc/bandit_pass/$myname > /tmp/$mytarget
+```
+
+```bash
+cat /tmp/bandit23
+```
+
+```bash
+ls -l /usr/bin/cronjob_bandit23.sh
+```
+
+```plaintext
+-rwxr-x--- 1 bandit23 bandit22 211 Jun 24 14:59 /usr/bin/cronjob_bandit23.sh
+```
+
+```bash
+/usr/bin/cronjob_bandit23.sh
+```
+
+```plaintext
+Copying passwordfile /etc/bandit_pass/bandit22 to /tmp/8169b67bd894ddbb4412f91573b38db3
+```
+
+```bash
+cat /tmp/8169b67bd894ddbb4412f91573b38db3
+```
+
+```plaintext
+RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+```
+
+<Callout type="success" title="Password Bandit23">
+RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+</Callout>
