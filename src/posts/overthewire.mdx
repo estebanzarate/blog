@@ -1059,3 +1059,42 @@ bW9kBv5WC3P4yoDyf12LSdGuNz5ka6hY
 ```bash
 ssh -p 2220 bandit21@bandit.labs.overthewire.org
 ```
+
+```bash
+ls /etc/cron.d
+```
+
+```plaintext
+behemoth4_cleanup  clean_tmp  cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  leviathan5_cleanup  manpage3_resetpw_job  otw-tmp-dir
+```
+
+```bash
+cat /etc/cron.d/cronjob_bandit22 
+```
+
+```plaintext
+@reboot bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+* * * * * bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+```
+
+```bash
+cat /usr/bin/cronjob_bandit22.sh
+```
+
+```bash
+#!/bin/bash
+chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+```
+
+```bash
+cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+```
+
+```plaintext
+RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+```
+
+<Callout type="success" title="Password Bandit22">
+RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+</Callout>
