@@ -1364,7 +1364,7 @@ git clone ssh://bandit27-git@bandit.labs.overthewire.org:2220/home/bandit27-git/
 ```
 
 ```bash
-cd repo/
+cd repo
 ```
 
 ```bash
@@ -1389,4 +1389,156 @@ index 0000000..d5e39c5
 
 <Callout type="success" title="Password Bandit28">
 y8Yd2ssKcpHpud7UvOSOxwamRMzIGIeQ
+</Callout>
+
+## Bandit Level 28 → Level 29
+
+[Bandit Level 28 → Level 29](https://overthewire.org/wargames/bandit/bandit29.html)
+
+```bash
+git clone ssh://bandit28-git@bandit.labs.overthewire.org:2220/home/bandit28-git/repo
+```
+
+```bash
+cd repo
+```
+
+```bash
+git log
+```
+
+```plaintext
+commit e2e1de5396037bafb23e9bb37c12ebea9b911cfd (HEAD -> master, origin/master, origin/HEAD)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Wed Jun 24 14:59:20 2026 +0000
+
+    fix info leak
+
+commit 2678cfadd8f2a347bc23e1ea491f702e5b184709
+Author: Morla Porla <morla@overthewire.org>
+Date:   Wed Jun 24 14:59:20 2026 +0000
+
+    add missing data
+
+commit 9530d526c22b9e6e6ae11070ef8ff8ee21eb2e02
+Author: Ben Dover <noone@overthewire.org>
+Date:   Wed Jun 24 14:59:20 2026 +0000
+
+    initial commit of README.md
+```
+
+```bash
+git show 2678cfadd8f2a347bc23e1ea491f702e5b184709
+```
+
+```plaintext
+commit 2678cfadd8f2a347bc23e1ea491f702e5b184709
+Author: Morla Porla <morla@overthewire.org>
+Date:   Wed Jun 24 14:59:20 2026 +0000
+
+    add missing data
+
+diff --git a/README.md b/README.md
+index 7ba2d2f..42331d9 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+ 
+ - username: bandit29
+-- password: <TBD>
++- password: Em7eGtqaMySwNFjCpwzzHhLhospOcdt0
+```
+
+<Callout type="success" title="Password Bandit29">
+Em7eGtqaMySwNFjCpwzzHhLhospOcdt0
+</Callout>
+
+## Bandit Level 29 → Level 30
+
+[Bandit Level 29 → Level 30](https://overthewire.org/wargames/bandit/bandit30.html)
+
+```bash
+git clone ssh://bandit29-git@bandit.labs.overthewire.org:2220/home/bandit29-git/repo
+```
+
+```bash
+cd repo
+```
+
+```bash
+git branch -r
+```
+
+```plaintext
+  origin/HEAD -> origin/master
+  origin/dev
+  origin/master
+  origin/sploits-dev
+```
+
+```bash
+git checkout dev
+```
+
+```plaintext
+branch 'dev' set up to track 'origin/dev'.
+Switched to a new branch 'dev'
+```
+
+```bash
+git log
+```
+
+```plaintext
+commit 0bf8160435c51882945ce56ae74a2798dd3c57f3 (HEAD -> dev, origin/dev)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Wed Jun 24 14:59:22 2026 +0000
+
+    add data needed for development
+
+commit 1b95ced7d4caee2ac19f5293d0533700e55ebf3b
+Author: Ben Dover <noone@overthewire.org>
+Date:   Wed Jun 24 14:59:22 2026 +0000
+
+    add gif2ascii
+
+commit b607fba0c867d0bbdf4b4a5e62cd04b79c8fea83 (origin/master, origin/HEAD, master)
+Author: Ben Dover <noone@overthewire.org>
+Date:   Wed Jun 24 14:59:22 2026 +0000
+
+    fix username
+
+commit 84c16f8255d7a07c45b96a1780234ed20f7457b7
+Author: Ben Dover <noone@overthewire.org>
+Date:   Wed Jun 24 14:59:22 2026 +0000
+
+    initial commit of README.md
+```
+
+```bash
+git show 0bf8160435c51882945ce56ae74a2798dd3c57f3
+```
+
+```plaintext
+commit 0bf8160435c51882945ce56ae74a2798dd3c57f3 (HEAD -> dev, origin/dev)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Wed Jun 24 14:59:22 2026 +0000
+
+    add data needed for development
+
+diff --git a/README.md b/README.md
+index 1af21d3..d395d04 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for bandit30 of bandit.
+ ## credentials
+ 
+ - username: bandit30
+-- password: <no passwords in production!>
++- password: jq9Dfg2rXsfYsWMgFuKlXhphjdH7USgX
+```
+
+<Callout type="success" title="Password Bandit30">
+jq9Dfg2rXsfYsWMgFuKlXhphjdH7USgX
 </Callout>
