@@ -49,6 +49,12 @@
         text-underline-offset: 3px;
     }
 
+    ul li code,
+    strong,
+    p code {
+        word-wrap: break-word;
+    }
+
     li {
         line-height: 1.75;
     }
