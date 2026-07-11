@@ -38,20 +38,23 @@ You can find the password for the next level on this page.
 </html>
 ```
 
-Esta vulnerabilidad se puede clasificar como [CWE-615: Inclusion of Sensitive Information in Source Code Comments](https://cwe.mitre.org/data/definitions/615.html).
-
 <Callout type="success" title="Password natas1">
 scfWG6qNEIdzqVyfRwEGXyNUfFZkZeQ7
 </Callout>
 
+<Callout type="warning" title="Vulnerabilidad">
+Esta vulnerabilidad se puede clasificar como [**CWE-615** Inclusion of Sensitive Information in Source Code Comments](https://cwe.mitre.org/data/definitions/615.html) inclusión de información sensible en los comentarios del código fuente
+</Callout>
+
 <Callout type="tip" title="Mitigación">
 - Eliminar comentarios orientados a la depuración antes de subir el sitio a un entorno de producción.
-- Si se utiliza JavaScript moderno (React.js, Vue, Angular, etc) se recomienda no publicar los archivos `.map` en el servidor de producción pública, ya que estos archivos reconstruyen el código fuente original.
 </Callout>
 
 ## Natas Level 0 → Level 1
 
 [Natas Level 0 → Level 1](https://overthewire.org/wargames/natas/natas1.html)
+
+Al abrir el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
 
 ```bash
 curl http://natas1.natas.labs.overthewire.org/ --user natas1:scfWG6qNEIdzqVyfRwEGXyNUfFZkZeQ7
@@ -80,13 +83,21 @@ next level on this page, but rightclicking has been blocked!
 </html>
 ```
 
+Al acceder al sitio web se indica que se puede obtener el password en el sitio pero que el click derecho está bloqueado. Usando `curl` podemos acceder al código fuente y ver el password para el siguiente nivel.
+
 <Callout type="success" title="Password natas2">
 vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Eliminar comentarios orientados a la depuración antes de subir el sitio a un entorno de producción.
 </Callout>
 
 ## Natas Level 1 → Level 2
 
 [Natas Level 1 → Level 2](https://overthewire.org/wargames/natas/natas2.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
 
 ```bash
 curl http://natas2.natas.labs.overthewire.org/ --user natas2:vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
@@ -112,6 +123,8 @@ There is nothing on this page
 </body></html>
 ```
 
+El código fuente muestra la ruta `files/pixel.png` perteneciente a una imagen. Accedemos a la ruta `files` para ver si se listan más archivos.
+
 ```bash
 curl -L http://natas2.natas.labs.overthewire.org/files --user natas2:vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
 ```
@@ -136,6 +149,8 @@ curl -L http://natas2.natas.labs.overthewire.org/files --user natas2:vsDOxoXyq3w
 </body></html>
 ```
 
+Vemos que se lista un archivo `users.txt` conteniendo usuarios y contraseñas en el que se incluye el password para el próximo nivel.
+
 ```bash
 curl -L http://natas2.natas.labs.overthewire.org/files/users.txt --user natas2:vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
 ```
@@ -150,8 +165,18 @@ eve:zo4mJWyNj2
 mallory:9urtcpzBmH
 ```
 
-<Callout type="success" title="Password natas3">
-K30JrSRHzjxq3paUQuwozY4MNvmNFyhI
+<Callout type="success" title="Password natas2">
+vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Esta vulnerabilidad se puede clasificar como [**CWE-548** Exposure of Information Through Directory Listing](https://cwe.mitre.org/data/definitions/548.html) exposición de información a través de listados en directorios
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Deshabilitar el listado automático de directorios en el servidor web para que devuelva un error (como 403 Forbidden) en lugar de mostrar los archivos.
+- Colocar un archivo vacío llamado `index.html` o `index.php` en los directorios públicos para que el servidor cargue esa página en blanco por defecto.
+- Restringir el acceso a carpetas sensibles (/uploads, /images) mediante reglas de firewall o políticas de la aplicación.
 </Callout>
 
 ## Natas Level 2 → Level 3
