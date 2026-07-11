@@ -56,10 +56,84 @@ Con el tiempo aprende qué movimientos son buenos.
 
 Dataset (features + labels)  
 &emsp; **↓**  
-Modelo aprende patrones  
+Model learns patterns  
 &emsp; **↓**  
-Archivo nuevo (solo features)  
+New file (only features)  
 &emsp; **↓**  
-Modelo predice label
+Model predicts label
 
 El modelo nunca ve el label de datos nuevos — solo los de entrenamiento. Generaliza lo aprendido a datos que nunca vio.
+
+## ¿Cómo aprende exactamente? — Loss & Gradient Descent
+
+El modelo aprende cometiendo errores y corrigiéndose.
+
+### Loss Function
+
+Mide qué tan equivocado está el modelo. Toma la predicción del modelo y el label correcto, y devuelve un número.
+
+<Callout type="note" title="">
+Número alto → el modelo está muy equivocado  
+Número bajo → el modelo está acertando  
+Número cero → predicción perfecta  
+</Callout>
+
+<Callout type="example" title="Ejemplo">
+prediction: 0.2  (modelo dice 20% probabilidad de malware)  
+real label: 1.0  (era malware)  
+
+loss = qué tan lejos está 0.2 de 1.0 → número alto
+</Callout>
+
+El objetivo del entrenamiento es minimizar ese número.
+
+### Parameters (Weights)
+
+El modelo tiene internamente miles o millones de números llamados weights (pesos). Son los únicos valores que cambian durante el entrenamiento.
+
+<Callout type="note" title="">
+features → [model weights] → prediction
+</Callout>
+
+Al inicio los weights son aleatorios. Por eso al principio el modelo predice basura. El entrenamiento consiste en ajustar esos weights hasta que las predicciones sean buenas.
+
+### Gradient Descent
+
+Algoritmo que ajusta los weights para reducir el loss. Si se sabe en qué dirección está el error, hay que moverse en dirección contraria.
+
+1. El modelo hace una predicción
+2. Se calcula el loss
+3. Se calcula el gradient (en qué dirección y cuánto mover cada weight)
+4. Se ajustan los weights
+5. Repetir miles de veces
+
+```text
+Loss
+│
+│ \
+│  \
+│   \__
+│      \
+│       \__
+└──────────────→ Epochs (iteraciones)
+
+El loss baja con cada iteración → el modelo mejora.
+```
+
+### Epoch — unidad de repetición
+
+Una pasada completa por todo el dataset. Típicamente se entrena por muchos epochs hasta que el loss converge (deja de bajar significativamente).
+
+<Callout type="note" title="">
+Initialize random weights  
+&emsp;**↓**  
+[  Forward pass: features → prediction  ]  
+&emsp;**↓**    
+[  Calculate loss: prediction vs label  ]  
+&emsp;**↓**    
+[  Backward pass: calculate gradients   ]  
+&emsp;**↓**    
+[  Update weights                       ]  
+&emsp;**↓**    
+Repeat → Epoch → Repeat → until loss converges
+</Callout>
