@@ -8,9 +8,13 @@ lang: es
 
 [Natas Level 0](https://overthewire.org/wargames/natas/natas0.html)
 
+Al abrir el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales proporcionadas.
+
 ```bash
 curl http://natas0.natas.labs.overthewire.org/ --user natas0:natas0
 ```
+
+El código fuente del sitio web nos muestra el password para el siguiente nivel.
 
 ```html
 <html>
@@ -34,8 +38,15 @@ You can find the password for the next level on this page.
 </html>
 ```
 
+Esta vulnerabilidad se puede clasificar como [CWE-615: Inclusion of Sensitive Information in Source Code Comments](https://cwe.mitre.org/data/definitions/615.html).
+
 <Callout type="success" title="Password natas1">
 scfWG6qNEIdzqVyfRwEGXyNUfFZkZeQ7
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Eliminar comentarios orientados a la depuración antes de subir el sitio a un entorno de producción.
+- Si se utiliza JavaScript moderno (React.js, Vue, Angular, etc) se recomienda no publicar los archivos `.map` en el servidor de producción pública, ya que estos archivos reconstruyen el código fuente original.
 </Callout>
 
 ## Natas Level 0 → Level 1
