@@ -34,3 +34,32 @@ El modelo agrupa los similares entre sí, sin saber qué son.
 El modelo juega al ajedrez, gana puntos si gana partidas, los pierde si las pierde.  
 Con el tiempo aprende qué movimientos son buenos.
 </Callout>
+
+### Supervised Learning
+
+- **Features**: características de entrada. Lo que el modelo observa para hacer su predicción.
+- **Label**: la respuesta correcta. Lo que el modelo tiene que aprender a predecir.
+- **Dataset**: la colección de pares `(features → label)` con los que se entrena.
+
+<Callout type="example" title="Ejemplo">
+| `file_size` | `has_network_calls` | `entropy` | label |
+| - | - | - | - |
+| 1200 | 1 | 7.8 | `malicious` |
+| 340 | 0 | 3.2 | `benign` |
+| 980 | 1 | 6.5 | `malicious` |
+| 210 | 0 | 2.1 | `benign` |
+</Callout>
+
+- Las primeras tres columnas son features
+- La última columna es el label
+- Cada fila es un sample (muestra)
+
+Dataset (features + labels)  
+&emsp; **↓**  
+Modelo aprende patrones  
+&emsp; **↓**  
+Archivo nuevo (solo features)  
+&emsp; **↓**  
+Modelo predice label
+
+El modelo nunca ve el label de datos nuevos — solo los de entrenamiento. Generaliza lo aprendido a datos que nunca vio.
