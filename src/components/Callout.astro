@@ -94,25 +94,20 @@ const label = title ?? c.label;
         font-weight: 600;
     }
 
-    .callout-body :global(p) {
+    .callout-body {
+        font-family: var(--font-victor);
+        font-size: clamp(0.9rem, 5vw, 1.1rem);
+    }
+
+    .callout-body p {
         margin: 0;
         word-wrap: break-word;
+        strong {
+            font-weight: 700;
+        }
     }
     .callout-body :global(p + p) {
         margin-top: 0.5rem;
-    }
-
-    .callout-body :global(code) {
-        font-size: 0.875em;
-        font-family: var(--font-mono);
-        background: rgba(0, 0, 0, 0.12);
-        padding: 0.1em 0.35em;
-        border-radius: 3px;
-    }
-
-    .callout-body :global(pre) {
-        margin: 0.75rem 0 0;
-        font-size: var(--font-size-xs);
     }
 
     .callout-body :global(ul),

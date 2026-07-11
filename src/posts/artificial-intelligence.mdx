@@ -97,6 +97,34 @@ features → [model weights] → prediction
 
 Al inicio los weights son aleatorios. Por eso al principio el modelo predice basura. El entrenamiento consiste en ajustar esos weights hasta que las predicciones sean buenas.
 
+### Bias
+
+Valor independiente que se suma a la predicción. Le da al modelo un punto de partida ajustable, desconectado de los features.
+
+<Callout type="example" title="Ejemplo">
+prediction = weight * feature + bias
+
+Sin bias:  0.15 * 0.0 = 0.0       (atrapado en cero)  
+Con bias:  0.15 * 0.0 + 0.3 = 0.3 (puede predecir cualquier valor)
+</Callout>
+
+<Callout type="info" title="Analogía">
+El weight es la pendiente de una línea, el bias es dónde esa línea corta el eje Y. Juntos definen cualquier línea posible.
+</Callout>
+
+### Hyperparameters
+
+Valores que se definen antes de entrenar. El modelo nunca los toca.
+
+- `learning_rate`: Qué tan grande es cada paso de ajuste de weights
+- `epochs`: Cuántas veces el modelo ve el dataset completo
+
+<Callout type="info" title="">
+`learning_rate` muy alto **→** los pasos son grandes **→** el modelo salta sobre el mínimo **→** nunca converge  
+`learning_rate` muy bajo **→** los pasos son tiny   **→** converge, pero tarda demasiado  
+`learning_rate` correcto **→** baja suave y converge  
+</Callout>
+
 ### Gradient Descent
 
 Algoritmo que ajusta los weights para reducir el loss. Si se sabe en qué dirección está el error, hay que moverse en dirección contraria.
@@ -136,4 +164,264 @@ Initialize random weights
 [  Update weights                       ]  
 &emsp;**↓**    
 Repeat → Epoch → Repeat → until loss converges
+</Callout>
+
+### 01_gradient_descent.py
+
+```python
+import numpy as np
+
+# ── Dataset ──────────────────────────────────────────────────────────────────
+# Feature: file entropy (higher entropy → more likely compressed/encrypted/malicious)
+# Label:   maliciousness score (0.0 = benign, 1.0 = malicious)
+
+features = np.array([2.1, 3.5, 5.0, 6.5, 7.8])
+labels   = np.array([0.1, 0.2, 0.5, 0.8, 0.9])
+
+# ── Parameters (weights) ─────────────────────────────────────────────────────
+# The model has two learnable values:
+#   weight → how much the feature influences the prediction
+#   bias   → baseline offset, independent of the feature
+
+np.random.seed(42)
+weight = np.random.randn()
+bias   = np.random.randn()
+
+# ── Hyperparameters ───────────────────────────────────────────────────────────
+# Hyperparameters are values YOU set before training. The model does not learn them.
+#   learning_rate → how big each weight update step is
+#   epochs        → how many times we iterate over the full dataset
+
+learning_rate = 0.01
+epochs        = 100
+
+# ── Training loop ─────────────────────────────────────────────────────────────
+print(f"{'Epoch':>6} | {'Loss':>8} | {'Weight':>8} | {'Bias':>8}")
+print("-" * 40)
+
+for epoch in range(epochs):
+
+    # Forward pass — generate predictions with current weights
+    predictions = weight * features + bias
+
+    # Loss — Mean Squared Error (MSE)
+    # Measures how far predictions are from real labels
+    # Formula: mean of (prediction - label)^2
+    loss = np.mean((predictions - labels) ** 2)
+
+    # Gradients — direction and magnitude to adjust each weight
+    # Derived from the derivative of MSE with respect to each parameter
+    d_weight = np.mean(2 * (predictions - labels) * features)
+    d_bias   = np.mean(2 * (predictions - labels))
+
+    # Weight update — move weights in the opposite direction of the gradient
+    weight -= learning_rate * d_weight
+    bias   -= learning_rate * d_bias
+
+    if epoch % 10 == 0:
+        print(f"{epoch:>6} | {loss:>8.4f} | {weight:>8.4f} | {bias:>8.4f}")
+
+# ── Inference ─────────────────────────────────────────────────────────────────
+# Using the trained model to predict on new, unseen data
+
+print("\n── Inference ─────────────────────────────────────")
+new_entropy = 7.0
+prediction  = weight * new_entropy + bias
+print(f"File entropy: {new_entropy} → Maliciousness score: {prediction:.4f}")
+
+for entropy in [0.1, 4.8, 9.9, 2.9, 8.3]:
+    prediction  = weight * entropy + bias
+    print(f"File entropy: {entropy} → Maliciousness score: {prediction:.4f}")
+```
+
+`numpy` — librería de Python para operaciones matemáticas sobre arrays. Es la base de todo ML en Python. Sin ella estarías escribiendo loops a mano.
+
+**Dataset** — los mismos conceptos de antes. `features` son las entradas, `labels` son las respuestas correctas.  
+`weight` y `bias` — los únicos parámetros que el modelo aprende. Arrancan aleatorios, por eso el primer loss es enorme (3.86).  
+**Forward pass** — `weight * features + bias` es la predicción. Una línea recta ajustable.  
+**Loss (MSE)** — `(prediction - label)²` elevado al cuadrado castiga errores grandes más que errores pequeños. El promedio sobre todo el dataset da el loss total.  
+**Gradients** — la derivada del loss respecto a cada weight. Le dice al modelo en qué dirección y cuánto moverse.  
+**Weight update** — `weight -= learning_rate * gradient`. El signo negativo es clave: va en la dirección opuesta al gradiente para bajar el loss.
+
+Lo que muestra la salida
+
+```plaintext
+Epoch 0  → Loss: 3.86   # weights aleatorios, predicciones pésimas
+Epoch 10 → Loss: 0.003  # el modelo aprendió casi todo en los primeros 10 epochs
+Epoch 90 → Loss: 0.0029 # converge, ya no baja mucho más
+```
+
+**La inferencia final**: un archivo con entropy `7.0` recibe score `0.79` — el modelo lo marca como probablemente malicioso. Nunca vio ese archivo durante el entrenamiento.
+
+## Regression
+
+El modelo predice un valor continuo — cualquier número dentro de un rango.
+
+<Callout type="note" title="">
+Entrada: entropy = 7.0  
+Salida:  maliciousness score = 0.79  ← número continuo
+</Callout>
+
+Útil cuando la respuesta es una cantidad: precio, temperatura, score.
+
+## Classification
+
+El modelo predice una categoría discreta — una clase entre opciones definidas.
+
+<Callout type="note" title="">
+Entrada: entropy = 7.0
+Salida:  "malicious" o "benign"  ← una de dos categorías
+</Callout>
+
+| Tipo | Salida | Ejemplo |
+| - | - | - |
+| Regression | Número continuo | Score de 0.0 a 1.0 |
+| Binary Classification | Una de dos clases | malicious / benign |
+| Multi-class Classification | Una de N clases | trojan / ransomware / adware / benign |
+
+### Activation Functions
+
+Transforma la salida del modelo antes de entregarla. En clasificación binaria se usa sigmoid:
+
+<Callout type="note" title="Función matemática">
+sigmoid(x) = 1 / (1 + e^(-x))
+</Callout>
+
+No importa qué número entre — sigmoid siempre devuelve algo entre 0 y 1
+
+<Callout type="note" title="">
+sigmoid(-10) → 0.00004  (casi seguro clase 0)  
+sigmoid(0)   → 0.5      (el modelo no sabe)  
+sigmoid(10)  → 0.99995  (casi seguro clase 1)
+</Callout>
+
+La salida del modelo pasa por sigmoid antes de ser una predicción final
+
+<Callout type="note" title="">
+raw output = weight × feature + bias **←** puede ser cualquier número  
+prediction = sigmoid(raw output) **←** siempre entre 0 y 1
+</Callout>
+
+### Binary Cross-Entropy (BCE)
+
+<Callout type="note" title="">
+BCE = -mean( label × log(prediction) + (1 - label) × log(1 - prediction) )
+</Callout>
+
+Castiga mucho más cuando el modelo está muy seguro y se equivoca
+
+<Callout type="example" title="Ejemplo">
+prediction = 0.99, label = 0  **→** loss enorme  (muy seguro, muy equivocado)  
+prediction = 0.51, label = 0  **→** loss pequeño (apenas se equivocó)
+</Callout>
+
+### 02_binary_classifier.py
+
+```python
+import numpy as np
+
+# ── Activation Function ───────────────────────────────────────────────────────
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+# ── Loss Function ─────────────────────────────────────────────────────────────
+def binary_cross_entropy(predictions, labels):
+    # Clip predictions to avoid log(0) which is undefined
+    predictions = np.clip(predictions, 1e-7, 1 - 1e-7)
+    return -np.mean(labels * np.log(predictions) + (1 - labels) * np.log(1 - predictions))
+
+# ── Dataset ───────────────────────────────────────────────────────────────────
+# Features: [file_entropy, has_network_calls]
+# Labels:   0 = benign, 1 = malicious
+
+features = np.array([
+    [2.1, 0],
+    [3.5, 0],
+    [5.0, 1],
+    [6.5, 1],
+    [7.8, 1],
+    [1.9, 0],
+    [7.2, 1],
+    [3.1, 0],
+])
+
+labels = np.array([0, 0, 1, 1, 1, 0, 1, 0], dtype=float)
+
+# ── Parameters ────────────────────────────────────────────────────────────────
+# Now we have one weight per feature, plus one bias
+# features.shape[1] = 2 → two weights
+
+np.random.seed(42)
+weights = np.random.randn(features.shape[1])  # shape: (2,)
+bias    = np.random.randn()
+
+# ── Hyperparameters ───────────────────────────────────────────────────────────
+learning_rate = 0.1
+epochs        = 100
+
+# ── Training Loop ─────────────────────────────────────────────────────────────
+print(f"{'Epoch':>6} | {'Loss':>8} | {'Weights':>20} | {'Bias':>8}")
+print("-" * 55)
+
+for epoch in range(epochs):
+
+    # Forward pass
+    raw_output  = features @ weights + bias  # matrix multiplication: (8,2) @ (2,) = (8,)
+    predictions = sigmoid(raw_output)
+
+    # Loss
+    loss = binary_cross_entropy(predictions, labels)
+
+    # Gradients
+    error      = predictions - labels                              # (8,)
+    d_weights  = (features.T @ error) / len(labels)               # (2,)
+    d_bias     = np.mean(error)
+
+    # Weight update
+    weights -= learning_rate * d_weights
+    bias    -= learning_rate * d_bias
+
+    if epoch % 10 == 0:
+        print(f"{epoch:>6} | {loss:>8.4f} | {str(weights.round(4)):>20} | {bias:>8.4f}")
+
+# ── Inference ─────────────────────────────────────────────────────────────────
+print("\n── Inference ──────────────────────────────────────────")
+
+test_samples = np.array([
+    [7.5, 1],  # high entropy + network calls → expected: malicious
+    [2.0, 0],  # low entropy  + no network    → expected: benign
+    [6.0, 0],  # high entropy + no network    → ambiguous
+])
+
+for sample in test_samples:
+    raw        = sample @ weights + bias
+    prob       = sigmoid(raw)
+    label      = "malicious" if prob >= 0.5 else "benign"
+    print(f"entropy={sample[0]}, network={int(sample[1])} → {prob:.4f} → {label}")
+```
+
+El dataset tiene `file_entropy` y `has_network_calls`. Por eso `weights` es un array de dos valores, uno por feature.  
+**Matrix multiplication** (`@`) — en vez de `weight * feature` hacemos `features @ weights`. Es la misma operación pero para múltiples features a la vez. El resultado es una predicción por cada sample del dataset.  
+
+<Callout type="example" title="Ejemplo">
+features (8,2) @ weights (2,) = raw_output (8,)  
+8 samples, 2 features cada uno → 8 predicciones
+</Callout>
+
+`np.clip` — sigmoid puede devolver exactamente 0 o 1 con valores extremos, y `log(0)` es indefinido. Clip limita los valores a un rango seguro antes de calcular el loss.  
+`features.T` — la transpuesta de la matriz de features. Necesaria para que las dimensiones coincidan al calcular el gradiente de los weights.
+
+Lo que muestra la salida
+
+<Callout type="example" title="Ejemplo">
+Epoch  0 **→** Loss: 1.06   # weights aleatorios  
+Epoch 90 **→** Loss: 0.38   # el modelo aprendió
+</Callout>
+
+Y la inferencia
+
+<Callout type="example" title="Ejemplo">
+entropy=7.5, network=1 **→** 0.85 **→** malicious   # alta confianza, correcto  
+entropy=2.0, network=0 **→** 0.37 **→** benign      # correctamente benign  
+entropy=6.0, network=0 **→** 0.60 **→** malicious   # ambiguo, entropy alta pesa más
 </Callout>

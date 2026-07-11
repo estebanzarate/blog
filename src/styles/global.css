@@ -1,7 +1,7 @@
 :root {
     --font-sans: var(--font-neucha), cursive;
     --font-mono: var(--font-dejavu), monospace;
-
+    --font-note: var(--font-victor), monospace;
     /* Primary */
     --color-primary: #3B71CA;
     --color-primary-light: #6D94D6;
