@@ -9,22 +9,12 @@ const post = defineCollection({
         description: z.string().optional(),
         lang: z.enum(['en', 'es']),
         tags: z.array(z.string()).optional(),
-        draft: z.boolean().default(false)
-    }),
-});
+        draft: z.boolean().default(false),
 
-const writeup = defineCollection({
-    loader: glob({ base: './src/posts/writeups', pattern: '**/*.{md,mdx}' }),
-    schema: z.object({
-        title: z.string(),
-        description: z.string(),
-        lang: z.enum(['en', 'es']),
-        platform: z.string(),
-        difficulty: z.string(),
+        platform: z.string().optional(),
+        difficulty: z.string().optional(),
         hints: z.array(z.string()).optional(),
-        tags: z.array(z.string()).optional(),
-        draft: z.boolean().default(false)
     }),
 });
 
-export const collections = { post, writeup };
+export const collections = { post };

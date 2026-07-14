@@ -329,7 +329,7 @@ Dado el puerto y el servicio buscamos información sobre el puerto, servicio y p
 
 Hay un comando que nos permite subir un archivo pasandole una ruta del mismo (`FSUPLOAD Command`) encontramos como ejecutarlo dentro de la documentación del lenguaje PJL, aprovechando este comando se puede probar un path traversal. Dentro del directorio `/tmp` creamos un archivo `lat.py` y probamos obtener el archivo `/etc/passwd`.
 
-```python3
+```python
 import socket
 
 s = socket.socket()

@@ -5,14 +5,16 @@ import Callout from "@components/Callout.astro";
 
 export async function getStaticPaths() {
     const posts = await getCollection("post");
-    return posts.map((post) => ({
-        params: {
-            post: post.id,
-        },
-        props: {
-            post,
-        },
-    }));
+    return posts.map((post) => {
+        return {
+            params: {
+                post: post.id,
+            },
+            props: {
+                post,
+            },
+        };
+    });
 }
 
 const { post } = Astro.props;
