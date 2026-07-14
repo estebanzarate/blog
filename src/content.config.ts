@@ -9,6 +9,7 @@ const post = defineCollection({
         description: z.string().optional(),
         lang: z.enum(['en', 'es']),
         tags: z.array(z.string()).optional(),
+        draft: z.boolean().default(false)
     }),
 });
 
@@ -17,10 +18,12 @@ const writeup = defineCollection({
     schema: z.object({
         title: z.string(),
         description: z.string(),
+        lang: z.enum(['en', 'es']),
         platform: z.string(),
         difficulty: z.string(),
         hints: z.array(z.string()).optional(),
         tags: z.array(z.string()).optional(),
+        draft: z.boolean().default(false)
     }),
 });
 

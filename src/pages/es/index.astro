@@ -2,12 +2,13 @@
 import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
 const posts = await getCollection("post");
+const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
 ---
 
 <Layout>
 	<div class="cards">
 		{
-			posts.map((post) => {
+			filteredPosts.map((post) => {
 				return (
 					<article class="card">
 						<h2>{post.data.title}</h2>

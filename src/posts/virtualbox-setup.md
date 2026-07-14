@@ -1250,3 +1250,9 @@ sudo usermod -aG wireshark $USER
 ```bash
 sudo git clone https://github.com/insidetrust/statistically-likely-usernames.git /usr/share/wordlists/statistically-likely-usernames
 ```
+
+## Otras herramientas
+
+```bash
+sudo pacman -S ascii
+```
