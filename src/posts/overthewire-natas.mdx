@@ -310,6 +310,8 @@ Access disallowed. You are visiting from "" while authorized users should come o
 </html>
 ```
 
+La web muestra que los usuarios autorizados deben venir solo de `http://natas5.natas.labs.overthewire.org/`. Para lograr eso modificamos el header `referer` que indica la URL de la página web previa desde la que el usuario llegó a la página actual o solicitó un recurso.
+
 ```bash
 curl -e http://natas5.natas.labs.overthewire.org/ http://natas4.natas.labs.overthewire.org/index.php --user natas4:JDrPnuZAKyl6MkiqQGFIddrqpvgOASth
 ```
@@ -337,8 +339,18 @@ Access granted. The password for natas5 is e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
 </html>
 ```
 
+Modificando el header referer obtenemos el password para el siguiente nivel.
+
 <Callout type="success" title="Password natas5">
 e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Si el servidor confía ciegamente en el header HTTP (Referer) que el usuario controla por completo se puede producir un `Broken Access Control`. Esta vulnerabilidad se puede asociar al [**CWE-293** Using Referer Field for Authentication](https://cwe.mitre.org/data/definitions/293.html) uso del campo Referer para autenticación.
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- En lugar de verificar de dónde viene el usuario, verifica quién es el usuario y si tiene permiso mediante sesiones seguras en el servidor.
 </Callout>
 
 ## Natas Level 4 → Level 5
