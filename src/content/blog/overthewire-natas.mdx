@@ -590,7 +590,7 @@ curl http://natas7.natas.labs.overthewire.org/ --user natas7:B1szg95UcTnrzwnF3i3
 </html>
 ```
 
-La web muestra dos links, uno a `home` y otro a `about`, ambos 
+La web muestra dos links, uno a `home` y otro a `about`, ambos se crean con la base `http://natas7.natas.labs.overthewire.org/index.php?page=`. También muestra un comentario como pista de donde se encuentra el password para el siguiente nivel. En vez de ingresar home o about al parámetro `page`, probamos ingresando la ruta donde se guarda el password del siguiente nivel y lo obtenemos.
 
 ```bash
 curl http://natas7.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8 --user natas7:B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
@@ -625,6 +625,19 @@ ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
 
 <Callout type="success" title="Password natas8">
 ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de un fallo de `Local File Inclusion (LFI)` (inclusión de archivos locales). La aplicación web toma el valor del parámetro page provisto por el usuario y lo pasa directamente a una función de lectura o inclusión de archivos (como include() o require() en PHP) sin realizar ningún tipo de input validation o sanitization. Esto permite a un atacante abusar del flujo para realizar un directory traversal o cargar directamente archivos arbitrarios del sistema de archivos local (como `/etc/natas_webpass/natas8`).
+- [**CWE-98** Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion')](https://cwe.mitre.org/data/definitions/98.html)
+- [**CWE-22** Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')](https://cwe.mitre.org/data/definitions/22.html)
+- [**CWE-73** External Control of File Name or Path](https://cwe.mitre.org/data/definitions/73.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Validar el parámetro contra una lista estricta de valores permitidos en el código (por ejemplo, si page no es exactamente "home" o "about", se rechaza la petición).
+- No pasar parámetros de la query directamente a funciones del sistema de archivos. Es mejor asociar cada página a un ID interno o índice numérico seguro.
+- Utilizar funciones de sanitización que limpien y extraigan solo el nombre del archivo (como basename() en PHP) para prevenir el uso de rutas absolutas o el uso de secuencias de retroceso de directorio como `../`.
 </Callout>
 
 ## Natas Level 7 → Level 8
