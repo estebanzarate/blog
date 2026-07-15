@@ -1,4 +1,5 @@
 ---
+type: post
 title: Setup de Arch Linux
 description: Instalación de Arch Linux en Virtual Box
 lang: es

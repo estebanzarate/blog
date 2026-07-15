@@ -2,6 +2,7 @@
 import PostLayout from "@layouts/PostLayout.astro";
 import { getCollection, render } from "astro:content";
 import Callout from "@components/Callout.astro";
+import PostMeta from "@components/PostMeta.astro";
 
 export async function getStaticPaths() {
     const posts = await getCollection("post");
@@ -24,6 +25,7 @@ const { Content, headings } = await render(post);
 <PostLayout {headings}>
     <h1>{post.data.title}</h1>
     <p>{post.data.description}</p>
+    <PostMeta post={post} />
     <div>
         <Content components={{ Callout }} />
     </div>

@@ -1,21 +1,111 @@
 ---
+import { Image } from "astro:assets";
 import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
 const posts = await getCollection("post");
 const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
+
+const platformMap: any = {
+	hackthebox: {
+		label: "Hack The Box",
+		class: "htb",
+	},
+};
+
+const difficultyMap: any = {
+	veryeasy: {
+		label: "Very Easy",
+		class: "very-easy",
+	},
+	easy: {
+		label: "Easy",
+		class: "easy",
+	},
+	medium: {
+		label: "Medium",
+		class: "medium",
+	},
+	hard: {
+		label: "Hard",
+		class: "hard",
+	},
+	insane: {
+		label: "Insane",
+		class: "insane",
+	},
+};
+
+const osMap: any = {
+	linux: {
+		label: "Linux",
+		class: "linux",
+	},
+	windows: {
+		label: "Windows",
+		class: "windows",
+	},
+};
 ---
 
 <Layout>
 	<div class="cards">
 		{
 			filteredPosts.map((post) => {
+				const platform =
+					post.data.platform && platformMap[post.data.platform];
+
+				const difficulty =
+					post.data.difficulty && difficultyMap[post.data.difficulty];
+
+				const os = post.data.os && osMap[post.data.os];
+
 				return (
 					<article class="card">
 						<h2>{post.data.title}</h2>
+
+						{post.data.type === "writeup" && (
+							<>
+								{post.data.image && (
+									<div class="card-image-container">
+										<Image
+											src={post.data.image}
+											alt={post.data.title}
+											width={280}
+											height={200}
+											loading="lazy"
+											class="card-image"
+											data-no-zoom
+										/>
+									</div>
+								)}
+
+								<div class="card-meta">
+									{platform && (
+										<p class={`badge ${platform.class}`}>
+											{platform.label}
+										</p>
+									)}
+
+									{os && (
+										<p class={`badge ${os.class}`}>
+											{os.label}
+										</p>
+									)}
+
+									{difficulty && (
+										<p class={`badge ${difficulty.class}`}>
+											{difficulty.label}
+										</p>
+									)}
+								</div>
+							</>
+						)}
+
 						{post.data.description && (
 							<p>{post.data.description}</p>
 						)}
-						<a class="card-link" href={`/es/posts/${post.id}`}>
+
+						<a class="card-link" href={`/es/${post.id}`}>
 							Leer post
 						</a>
 					</article>
@@ -43,21 +133,70 @@ const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
 			border: 1px solid #0d1117;
 		}
 		h2 {
+			margin-block: 0.5rem 1rem;
 			font-size: clamp(1.2rem, 5vw, 1.3rem);
 		}
-	}
+		.card-image-container {
+			display: flex;
+			justify-content: center;
+			margin-bottom: 1rem;
+			.card-image {
+				width: 100%;
+				max-width: 150px;
+				height: auto;
+			}
+		}
+		.card-meta {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			row-gap: 0.25rem;
+			margin-bottom: 1rem;
+			.badge {
+				margin: 0;
+				border: 2px solid var(--color-dark);
+				border-radius: 4px;
+				padding: 0.1rem 0.4rem;
+				font-size: 0.9rem;
+				text-align: center;
+			}
+			.htb {
+				color: var(--color-success);
+			}
 
-	.card-link {
-		display: flex;
-		justify-content: center;
-		margin-top: auto;
-		border: 3px solid var(--color-warning);
-		padding: 0.4rem 0.6rem;
-		background-color: #0d1117;
-		color: var(--color-light);
-		text-decoration: none;
-		&:active {
-			transform: scale(0.95);
+			.linux {
+			}
+
+			.windows {
+			}
+
+			.very-easy {
+			}
+
+			.easy {
+			}
+
+			.medium {
+			}
+
+			.hard {
+			}
+
+			.insane {
+			}
+		}
+		.card-link {
+			display: flex;
+			justify-content: center;
+			margin-top: auto;
+			border: 3px solid var(--color-warning);
+			padding: 0.4rem 0.6rem;
+			background-color: #0d1117;
+			color: var(--color-light);
+			text-decoration: none;
+			&:active {
+				transform: scale(0.95);
+			}
 		}
 	}
 </style>
