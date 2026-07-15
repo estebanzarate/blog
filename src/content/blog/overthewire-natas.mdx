@@ -644,6 +644,8 @@ Se trata de un fallo de `Local File Inclusion (LFI)` (inclusión de archivos loc
 
 [Natas Level 7 → Level 8](https://overthewire.org/wargames/natas/natas8.html)
 
+Al navegar al sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
 ```bash
 curl -X POST http://natas8.natas.labs.overthewire.org/ --user natas8:ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
 ```
@@ -675,6 +677,8 @@ Input secret: <input name=secret><br>
 </html>
 ```
 
+El sitio web muestra un formulario que pide ingresar un secret y proporciona un link al código fuente. El código fuente muestra como se ofusca el secret. Tenemos que hacer el método inverso para obtener el secret y enviarlo en el formulario.
+
 [http://natas8.natas.labs.overthewire.org/index-source.html](http://natas8.natas.labs.overthewire.org/index-source.html)
 
 ```php
@@ -696,11 +700,17 @@ if(array_key_exists("submit", $_POST)) {
 ?>
 ```
 
-![Natas Level 7 Level 8 Cyberchef](@images/blog/overthewire-natas/natas-level7-level8-cyberchef.png)
+Desde la terminal con `PHP` podemos hacer el método inverso al que se realiza en la función `encodeSecret` y obtenemos el secret.
 
-<Callout type="note" title="Secret">
+```bash
+php -r 'echo base64_decode(strrev(hex2bin("3d3d516343746d4d6d6c315669563362"))) . "\n";'
+```
+
+```plaintext
 oubWYf2kBq
-</Callout>
+```
+
+Enviamos el secret en el formulario.
 
 ```bash
 curl -X POST http://natas8.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8 --user 
@@ -734,8 +744,22 @@ Input secret: <input name=secret><br>
 </html>
 ```
 
+Obtenemos el password para el próximo nivel.
+
 <Callout type="success" title="Password natas9">
 UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de un fallo de Security through Obscurity (seguridad a través de la oscuridad) y el uso de Symmetric Cryptography/Encoding reversible en el lado del cliente. El desarrollador intentó proteger un secreto utilizando funciones de encoding y manipulación de strings (`base64_encode`, `strrev`, `bin2hex`) en lugar de emplear un algoritmo de hashing criptográfico unidireccional seguro (como SHA-256 o bcrypt). Al ser un proceso completamente reversible, cualquier atacante con acceso al código fuente puede realizar la ingeniería inversa del algoritmo para revelar el secreto original.
+- [**CWE-327** Use of a Broken or Risky Cryptographic Algorithm](https://cwe.mitre.org/data/definitions/327.html)
+- [**CWE-656** Reliance on Security Through Obscurity](https://cwe.mitre.org/data/definitions/656.html)
+- [**CWE-259** Use of Hard-coded Password](https://cwe.mitre.org/data/definitions/259.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Para validar secretos o contraseñas, nunca se deben usar métodos reversibles. El secreto debe guardarse en el servidor como un hash seguro (por ejemplo, utilizando `password_hash()` en PHP con `bcrypt` o `Argon2`). La validación se hace comparando los hashes mediante `password_verify()`.
+- No almacenar credenciales o secretos directamente (hardcoded) en el código de la aplicación. Estos deben guardarse de forma segura en variables de entorno o archivos de configuración protegidos fuera del alcance de los usuarios finales.
 </Callout>
 
 ## Natas Level 8 → Level 9
