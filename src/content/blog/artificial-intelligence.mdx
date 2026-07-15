@@ -442,3 +442,73 @@ entropy=7.5, network=1 **→** 0.85 **→** malicious   # alta confianza, correc
 entropy=2.0, network=0 **→** 0.37 **→** benign      # correctamente benign  
 entropy=6.0, network=0 **→** 0.60 **→** malicious   # ambiguo, entropy alta pesa más
 </Callout>
+
+## Neural Networks
+
+Una red neuronal es una cadena de capas. Cada capa transforma los datos y pasa el resultado a la siguiente.
+
+```plaintext
+INPUT       HIDDEN LAYER      OUTPUT
+features →  [transformación] → prediction
+```
+
+Cada capa tiene sus propios weights y bias. Cada capa aplica una activation function. El resultado de una capa es la entrada de la siguiente.
+
+### Neurons
+
+Cada neuron dentro de una capa hace
+
+```plaintext
+output = activation( weights · inputs + bias )
+```
+
+La diferencia es que ahora hay muchos neurons en paralelo, y muchas capas en secuencia.
+
+### Layers
+
+- **Input layer**: los features. No hace ninguna transformación, solo recibe los datos.
+- **Hidden layer**: capas intermedias donde ocurre el aprendizaje real. Pueden ser una o muchas.
+- **Output layer**: produce la predicción final. Su activation function depende del problema.
+
+```
+Input Layer    Hidden Layer    Output Layer
+  (2 neurons)   (4 neurons)     (1 neuron)
+
+  entropy  ──→  [n1]  ──→
+                [n2]  ──→  [output] → sigmoid → probability
+  network  ──→  [n3]  ──→
+                [n4]  ──→
+```
+
+Cada neuron de la hidden layer recibe todos los inputs — por eso se llama fully connected o dense layer.
+
+```
+Capa 1 → aprende patrones simples   (entropy alta, tiene network calls)
+Capa 2 → aprende combinaciones      (entropy alta AND network calls → sospechoso)
+Capa 3 → aprende conceptos          (este patrón combinado → malware tipo X)
+```
+
+### Forward Pass
+
+Con dos capas el flujo es
+
+```
+input
+  ↓
+hidden = activation( input @ W1 + b1 )   ← primera transformación
+  ↓
+output = activation( hidden @ W2 + b2 )  ← predicción final
+```
+
+`W1`, `b1` son los weights y bias de la hidden layer.
+`W2`, `b2` son los weights y bias de la output layer.
+
+### Backpropagation
+
+El algoritmo que propaga el error desde la output layer hacia atrás, calculando el gradiente de cada capa. Si se sabe cuánto se equivocó la salida, se puede calcular cuánto contribuyó cada capa anterior a ese error.
+
+```
+output error → gradiente W2 → gradiente W1
+     ↑                              ↑
+  lo que ya sabíamos          backpropagation lo calcula
+```
