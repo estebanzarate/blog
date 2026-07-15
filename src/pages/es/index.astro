@@ -106,7 +106,8 @@ const osMap: any = {
 						)}
 
 						<a class="card-link" href={`/es/${post.id}`}>
-							Leer post
+							Leer{" "}
+							{post.data.type === "post" ? "post" : "writeup"}
 						</a>
 					</article>
 				);
