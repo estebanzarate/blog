@@ -11,11 +11,11 @@ lang: es
 - Click derecho en la nueva máquina virtual creada, seleccionar `settings`
 - En la sección `General`, pestaña `Features`, seleccionar la opción `Bidirectional` en `Shared Clipboard`
 
-![VirtualBox Settings General Features](@images/posts/virtualbox-setup/virtualbox-settings-general-features.png)
+![VirtualBox Settings General Features](@images/blog/virtualbox-setup/virtualbox-settings-general-features.png)
 
 - En la sección `Display`, pestaña `Screen`, seleccionar la opción `VBoxSVGA` en `Graphics Controller`
 
-![VirtualBox Settings Display Graphics Controller](@images/posts/virtualbox-setup/virtualbox-settings-display-graphics-controller.png)
+![VirtualBox Settings Display Graphics Controller](@images/blog/virtualbox-setup/virtualbox-settings-display-graphics-controller.png)
 
 - Click `OK` para guardar los cambios
 - Iniciar la máquina virtual
@@ -61,11 +61,11 @@ archinstall
 - Click derecho en la nueva máquina virtual creada, seleccionar `settings`
 - En la sección `System`, pestaña `Motherboard`, destildar la opción `Optical` en `Boot Device Order (BIOS only)`
 
-![VirtualBox Settings System Motherboad Boot Device Order](@images/posts/virtualbox-setup/virtualbox-settings-system-motherboard-boot-device-order.png)
+![VirtualBox Settings System Motherboad Boot Device Order](@images/blog/virtualbox-setup/virtualbox-settings-system-motherboard-boot-device-order.png)
 
 - En la sección `Storage`, apartado `Motherboard`, click derecho sobre la imgen ISO y click en `Remove`
 
-![Storage Config](@images/posts/virtualbox-setup/virtualbox-settings-storage-controlleride.png)
+![Storage Config](@images/blog/virtualbox-setup/virtualbox-settings-storage-controlleride.png)
 
 Click `OK` para guardar los cambios
 
