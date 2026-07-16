@@ -63,7 +63,7 @@ const osMap: any = {
 					<article class="card">
 						<h2>{post.data.title}</h2>
 
-						{post.data.type === "writeup" && (
+						{
 							<>
 								{post.data.image && (
 									<div class="card-image-container">
@@ -99,7 +99,7 @@ const osMap: any = {
 									)}
 								</div>
 							</>
-						)}
+						}
 
 						{post.data.description && (
 							<p>{post.data.description}</p>

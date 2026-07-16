@@ -1,0 +1,22 @@
+---
+type: post
+title: NMAP
+description: ""
+lang: es
+draft: false
+image: ../../images/blog/nmap/nmap.png
+---
+
+## Host discovery
+
+**TCP ACK Ping** `-PA <puertos>`: Envía un paquete TCP simulando reconocer una conexión inexistente con la bandera ACK; si el host está activo, responderá con un paquete RST para rechazarla.
+
+**UDP Ping** `-PU <puertos>`: Envía un paquete UDP (generalmente vacío) a puertos inusuales como el 40125 para forzar al host activo a responder con un error "ICMP Port Unreachable".
+
+**ICMP Ping** `-PE, -PP, -PM`: Utiliza consultas de la suite ICMP para comprobar el estado: Echo Request `-PE`, petición de marca de tiempo `-PP` o petición de máscara de red `-PM`.
+
+**IP Protocol Ping** `-PO <protocolos>`: Envía paquetes IP crudos con el número de protocolo especificado en su cabecera esperando respuestas del mismo protocolo o un error ICMP de protocolo no soportado.
+
+**ARP Scan** `-PR`: Envía solicitudes ARP directas y de forma nativa para descubrir hosts dentro de una misma red local (LAN) ethernet o Wi-Fi, siendo el método más rápido y difícil de bloquear en redes locales.
+
+Combinar con la flag `-sn` para evitar escaneo de puertos.

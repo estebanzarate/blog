@@ -11,12 +11,6 @@
         line-height: 1.2;
         margin-top: 2rem;
         word-wrap: break-word;
-
-        &::before {
-            content: "#";
-            margin-right: 0.3rem;
-            color: var(--color-success);
-        }
     }
 
     h1 {
@@ -70,6 +64,7 @@
         color: var(--color-pink);
         font-weight: 600;
         font-family: var(--font-mono);
+        font-size: 0.9rem;
     }
 
     pre {
