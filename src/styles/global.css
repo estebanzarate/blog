@@ -1,5 +1,5 @@
 :root {
-    --font-sans: var(--font-neucha), cursive;
+    --font-sans: var(--font-jost), cursive;
     --font-mono: var(--font-dejavu), monospace;
     --font-note: var(--font-victor), monospace;
     /* Primary */

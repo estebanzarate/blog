@@ -14,6 +14,7 @@ const post = defineCollection({
 
         image: image().optional(),
         platform: z.enum(['hackthebox']).optional(),
+        url: z.string().optional(),
         difficulty: z.enum(['veryeasy', 'easy', 'medium', 'hard', 'insane']).optional(),
         os: z.enum(["linux", "windows"]).optional(),
         hints: z.array(z.string()).optional(),

@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 const { post } = Astro.props;
 const data = post.data;
 
@@ -80,6 +82,30 @@ const os = data.os && osMap[data.os];
         </div>
     )
 }
+{
+    data.image && (
+        <div class="image-container">
+            <Image
+                src={data.image.src}
+                alt={data.title}
+                width={280}
+                height={200}
+                loading="lazy"
+                class="image"
+                data-no-zoom
+            />
+        </div>
+    )
+}
+{
+    data.url && (
+        <div class="url-container">
+            <a href={data.url} target="_blank" rel="noopener noreferrer">
+                {data.url}
+            </a>
+        </div>
+    )
+}
 
 <style>
     .post-meta {
@@ -125,5 +151,24 @@ const os = data.os && osMap[data.os];
     }
 
     .insane {
+    }
+    .image-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+        .image {
+            width: 100%;
+            max-width: 250px;
+            height: auto;
+        }
+    }
+    .url-container {
+        display: flex;
+        justify-content: center;
+        a {
+            font-size: clamp(1rem, 5vw, 1.5rem);
+            text-decoration: none;
+            line-break: anywhere;
+        }
     }
 </style>

@@ -1,0 +1,74 @@
+---
+type: writeup
+title: Fireflow
+description: ""
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/fireflow/fireflow.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Fireflow
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/fireflow 10.129.244.214
+```
+
+```plaintext
+PORT    STATE SERVICE REASON
+22/tcp  open  ssh     syn-ack ttl 63
+443/tcp open  https   syn-ack ttl 63
+```
+
+```bash
+nmap -p 22,443 -sCV -oA nmap/openports 10.129.244.214
+```
+
+```plaintext
+PORT    STATE SERVICE   VERSION
+22/tcp  open  ssh       OpenSSH 9.6p1 Ubuntu 3ubuntu13.16 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 0c:4b:d2:76:ab:10:06:92:05:dc:f7:55:94:7f:18:df (ECDSA)
+|_  256 2d:6d:4a:4c:ee:2e:11:b6:c8:90:e6:83:e9:df:38:b0 (ED25519)
+443/tcp open  ssl/https nginx
+|_http-server-header: nginx
+|_ssl-date: TLS randomness does not represent time
+|_http-title: 400 The plain HTTP request was sent to HTTPS port
+| tls-alpn: 
+|   http/1.1
+|   http/1.0
+|_  http/0.9
+| ssl-cert: Subject: commonName=fireflow.htb/organizationName=Task Force Nightfall/countryName=US
+| Subject Alternative Name: DNS:fireflow.htb, DNS:*.fireflow.htb
+| Not valid before: 2026-04-14T16:35:31
+|_Not valid after:  2028-07-17T16:35:31
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Agregar `fireflow.htb` al archivo `/etc/hosts`
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -u https://fireflow.htb -H 'Host: FUZZ.fireflow.htb' -ic -c -t 100 -fs 162
+```
+
+```plaintext
+flow                    [Status: 200, Size: 1142, Words: 132, Lines: 25, Duration: 408ms]
+```
+
+Agregar `flow.fireflow.htb` al archivo `/etc/hosts`
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u https://flow.fireflow.htb/FUZZ -ic -c -t 100 -fs 1142
+```
+
+```plaintext
+docs                    [Status: 200, Size: 1007, Words: 157, Lines: 32, Duration: 418ms]
+health                  [Status: 200, Size: 15, Words: 1, Lines: 1, Duration: 455ms]
+logs                    [Status: 403, Size: 51, Words: 4, Lines: 1, Duration: 583ms]
+redoc                   [Status: 200, Size: 889, Words: 176, Lines: 31, Duration: 2167ms]
+```
