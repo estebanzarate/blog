@@ -986,3 +986,252 @@ El desarrollador intentó mitigar el fallo del nivel anterior validando el input
 - En lugar de buscar qué caracteres no permitir, validar que la entrada contenga únicamente caracteres permitidos (por ejemplo, permitir estrictamente caracteres alfanuméricos usando `^[\w]+$`).
 - Si es obligatorio usar comandos de consola, se debe aplicar `escapeshellarg()` al parámetro `$key`. Esto encapsula el input entre comillas simples y neutraliza cualquier intento de pasar argumentos extra a grep, forzando al sistema a tratar toda la entrada como una cadena de texto de búsqueda literal.
 </Callout>
+
+## Natas Level 10 → Level 11
+
+[Natas Level 10 → Level 11](https://overthewire.org/wargames/natas/natas11.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas11.natas.labs.overthewire.org/ --user natas11:VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas11", "pass": "VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd" };</script></head>
+
+<h1>natas11</h1>
+<div id="content">
+<body style="background: #ffffff;">
+Cookies are protected with XOR encryption<br/><br/>
+
+
+<form>
+Background color: <input name=bgcolor value="#ffffff">
+<input type=submit value="Set color">
+</form>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+La web permite cambiar el color de fondo e indica que las cookies están protegidas con un encriptado con XOR, también tiene un link al código fuente que corre en el back.
+
+```php
+<?
+
+$defaultdata = array( "showpassword"=>"no", "bgcolor"=>"#ffffff");
+
+function xor_encrypt($in) {
+    $key = '<censored>';
+    $text = $in;
+    $outText = '';
+
+    // Iterate through each character
+    for($i=0;$i<strlen($text);$i++) {
+    $outText .= $text[$i] ^ $key[$i % strlen($key)];
+    }
+
+    return $outText;
+}
+
+function loadData($def) {
+    global $_COOKIE;
+    $mydata = $def;
+    if(array_key_exists("data", $_COOKIE)) {
+    $tempdata = json_decode(xor_encrypt(base64_decode($_COOKIE["data"])), true);
+    if(is_array($tempdata) && array_key_exists("showpassword", $tempdata) && array_key_exists("bgcolor", $tempdata)) {
+        if (preg_match('/^#(?:[a-f\d]{6})$/i', $tempdata['bgcolor'])) {
+        $mydata['showpassword'] = $tempdata['showpassword'];
+        $mydata['bgcolor'] = $tempdata['bgcolor'];
+        }
+    }
+    }
+    return $mydata;
+}
+
+function saveData($d) {
+    setcookie("data", base64_encode(xor_encrypt(json_encode($d))));
+}
+
+$data = loadData($defaultdata);
+
+if(array_key_exists("bgcolor",$_REQUEST)) {
+    if (preg_match('/^#(?:[a-f\d]{6})$/i', $_REQUEST['bgcolor'])) {
+        $data['bgcolor'] = $_REQUEST['bgcolor'];
+    }
+}
+
+saveData($data);
+
+
+
+?>
+
+<h1>natas11</h1>
+<div id="content">
+<body style="background: <?=$data['bgcolor']?>;">
+Cookies are protected with XOR encryption<br/><br/>
+
+<?
+if($data["showpassword"] == "yes") {
+    print "The password for natas12 is <censored><br>";
+}
+
+?>
+```
+
+Desde PHP en modo interactivo
+
+```bash
+php -a
+```
+
+Guardamos en una variable la cookie `data` que obtenemos del navegador
+
+```bash
+php > $cookie = "EGAgHwQ1IxYYMSQYGSZxTUksPFVHYDEQCC0%2FGBlgaVVIIzcVDyE3VRY%3D";
+```
+
+Decodificamos la cookie
+
+```bash
+php > $cookie = urldecode("EGAgHwQ1IxYYMSQYGSZxTUksPFVHYDEQCC0%2FGBlgaVVIIzcVDyE3VRY%3D");
+```
+
+Guardamos en la variable `$plaintext` el texto plano que corresponde a la cookie convirtiendolo al formato `json`
+
+```bash
+php > $plaintext = json_encode(["showpassword" => "no", "bgcolor" => "#ffffff"]);
+```
+
+Guardamos el texto cifrado en la variable `$ciphertext`
+
+```bash
+php > $ciphertext = base64_decode($cookie);
+```
+
+Creamos una variable para guardar la key
+
+```bash
+php > $key = "";
+```
+
+Ejecutamos un XOR y dadas sus propiedades obtenemos la key al observar el patrón que se repite
+
+```bash
+php > for ($i = 0; $i < strlen($plaintext); $i++) {$key .= $ciphertext[$i] ^ $plaintext[$i];}
+```
+
+```bash
+php > echo $key;
+```
+
+```plaintext
+kBSwkBSwkBSwkBSwkBSwkBSwkBSwkBSwkEQsiGQwk
+```
+
+Utilizamos la key en la función `xor_encrypt`
+
+```bash
+php > function xor_encrypt($in) {
+    $key = "kBSw";
+    $out = "";
+
+    for ($i = 0; $i < strlen($in); $i++) {
+        $out .= $in[$i] ^ $key[$i % strlen($key)];
+    }
+
+    return $out;
+}
+```
+
+Verificamos que la key es correcta si obtenemos el texto plano
+
+```bash
+php > echo xor_encrypt(base64_decode($cookie));
+```
+
+```plaintext
+{"showpassword":"no","bgcolor":"#adbdcd"}
+```
+
+Creamos un array con la key `showpassword` y el value `yes` para obtener el password
+
+```bash
+php > $data = ["showpassword" => "yes", "bgcolor" => "#adbdcd"];
+```
+
+Convertimos a json el array, lo ciframos con XOR y codificamos en base64 para reemplazar la cookie
+
+```bash
+php > echo base64_encode(xor_encrypt(json_encode($data)));
+```
+
+```plaintext
+EGAgHwQ1IxYYMSQYGSZxTUk7NgRJbnEVDCE8GwQwcU1JYTITCSYwE0k/
+```
+
+Enviamos la cookie y obtenemos el password
+
+```bash
+curl --cookie "data=EGAgHwQ1IxYYMSQYGSZxTUk7NgRJbnEVDCE8GwQwcU1JYTITCSYwE0k/" http://natas11.natas.labs.overthewire.org/ --user natas11:VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas11", "pass": "VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd" };</script></head>
+<br />
+<b>Warning</b>:  preg_match(): Allocation of JIT memory failed, PCRE JIT will be disabled. This is likely caused by security restrictions. Either grant PHP permission to allocate executable memory, or set pcre.jit=0 in <b>/var/www/natas/natas11/index.php</b> on line <b>34</b><br />
+
+<h1>natas11</h1>
+<div id="content">
+<body style="background: #adbdcd;">
+Cookies are protected with XOR encryption<br/><br/>
+
+The password for natas12 is EAGkE8uzFTxeoTT2mMst9Xy7PX6guEng<br>
+<form>
+Background color: <input name=bgcolor value="#adbdcd">
+<input type=submit value="Set color">
+</form>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+<Callout type="success" title="Password natas12">
+EAGkE8uzFTxeoTT2mMst9Xy7PX6guEng
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de Cryptographic Flaw (fallo criptográfico) combinada con Insufficiently Protected Credentials. El servidor confía ciegamente en el contenido de una cookie enviada por el usuario para controlar los privilegios de sesión (`showpassword`). Para protegerla de modificaciones, utiliza un cifrado XOR con clave repetitiva (XOR Cipher), que es una forma de Weak Cryptography. Debido a las propiedades matemáticas de la operación XOR, conocer tanto un bloque de texto plano como su equivalente cifrado permite deducir la clave secreta fácilmente (Known-Plaintext Attack o KPA). Una vez obtenida la clave, el atacante tiene la capacidad de forjar cookies válidas con privilegios elevados (Privilege Escalation).
+- [**CWE-326** Inadequate Encryption Strength](https://cwe.mitre.org/data/definitions/326.html)
+- [**CWE-565** Reliance on Cookies without Validation and Integrity Checking](https://cwe.mitre.org/data/definitions/565)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- La operación XOR simple no provee integridad. Se debe evitar diseñar protocolos de cifrado propios.
+- La mejor práctica consiste en almacenar los datos sensibles (como los privilegios de usuario o el estado de autenticación) del lado del servidor, dejando en la cookie únicamente un identificador de sesión único, aleatorio y de alta entropía.
+- En caso de requerir almacenar datos del lado del cliente, se deben usar estándares seguros con firmas criptográficas no manipulables, tales como HMAC (Hash-based Message Authentication Code) o JSON Web Tokens (JWT) firmados con algoritmos fuertes (como HS256 o RS256), manteniendo la clave de firma estrictamente resguardada en el servidor.
+</Callout>
