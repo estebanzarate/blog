@@ -765,7 +765,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/picom/picom.conf << 'EOF'
-backend = "render";
+backend = "xrender";
 vsync = true;
 shadow = false;
 fading = false;
@@ -963,7 +963,7 @@ cat > $HOME/.config/rofi/keybinds.rasi << 'EOF'
 }
 
 window {
-    width: 920px;
+    width: 700px;
     background-color: @bg;
     border: 0px;
     border-radius: 0px;
