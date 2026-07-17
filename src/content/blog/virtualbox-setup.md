@@ -766,7 +766,7 @@ cat > $HOME/.config/polybar/config.ini << 'EOF'
 include-file = $HOME/.config/colors/colors.ini
 
 [bar/main]
-background = #11111b
+background = #141d2b
 modules-left = arch desk ip vpn target
 modules-right = dog
 width = 99%
@@ -1093,7 +1093,6 @@ sudo pacman -Rns rxvt-unicode xdo dmenu
 ```bash
 sudo pacman -S docker
 sudo systemctl start docker.service
-sudo systemctl enable docker.service
 sudo docker run hello-world
 sudo usermod -aG docker $USER
 sudo pacman -S docker-compose
