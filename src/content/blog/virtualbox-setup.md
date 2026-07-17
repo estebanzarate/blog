@@ -106,7 +106,7 @@ Presionar `super` + `Return` para abrir `kitty`
 ### Pacman — Sistema
 
 ```bash
-sudo pacman -S base-devel binutils cmake gtk3 man-db noto-fonts-emoji numlockx p7zip papirus-icon-theme picom plocate polybar qt5ct ttf-hack-nerd xclip xorg-xset dunst libnotify
+sudo pacman -S base-devel binutils cmake gtk3 man-db noto-fonts-emoji numlockx p7zip papirus-icon-theme plocate polybar qt5ct ttf-hack-nerd xclip xorg-xset dunst libnotify
 ```
 
 ### Pacman — Misc
@@ -136,7 +136,7 @@ paru -S bibata-cursor-theme-bin catppuccin-gtk-theme-mocha
 ## Crear directorios y archivos de configuración
 
 ```bash
-mkdir -p $HOME/.config/{kitty,polybar,nvim,picom,colors,gtk-3.0,gtk-4.0,rofi,dunst,vpn}
+mkdir -p $HOME/.config/{kitty,polybar,nvim,colors,gtk-3.0,gtk-4.0,rofi,dunst,vpn}
 mkdir $HOME/.config/bspwm/scripts
 mkdir $HOME/.config/sxhkd/scripts
 mkdir $HOME/.config/polybar/scripts
@@ -145,7 +145,6 @@ touch $HOME/.config/sxhkd/scripts/keybinds.sh
 touch $HOME/.config/kitty/kitty.conf
 touch $HOME/.config/polybar/launch.sh
 touch $HOME/.config/polybar/scripts/{target.sh,target.txt,vpn.sh,ip.sh}
-touch $HOME/.config/picom/picom.conf
 touch $HOME/.config/colors/{colors.ini,colors.sh,colors.py}
 touch $HOME/.config/rofi/keybinds.rasi
 touch $HOME/.config/gtk-3.0/settings.ini
@@ -401,7 +400,7 @@ EOF
 
 ### $HOME/.config/bspwm/bspwmrc
 
-> Se ejecuta cada vez que se inicia una sesión de `bspwm`. Define la configuración del gestor de ventanas, como la cantidad de escritorios, el tamaño de los bordes y los espacios entre ventanas, además de iniciar los servicios y aplicaciones que deben ejecutarse automáticamente al comenzar la sesión, como `sxhkd`, `picom`, `dunst` y `polybar`.
+> Se ejecuta cada vez que se inicia una sesión de `bspwm`. Define la configuración del gestor de ventanas, como la cantidad de escritorios, el tamaño de los bordes y los espacios entre ventanas, además de iniciar los servicios y aplicaciones que deben ejecutarse automáticamente al comenzar la sesión, como `sxhkd`, `dunst` y `polybar`.
 
 ```bash
 cat > $HOME/.config/bspwm/bspwmrc << 'EOF'
@@ -420,7 +419,6 @@ bspc config gapless_monocle      false
 /usr/bin/xsetroot -cursor_name left_ptr &
 /usr/bin/xsetroot -solid "#11111b" &
 pkill -x VBoxClient; sleep 1 && VBoxClient-all &
-/usr/bin/picom &
 pgrep -x dunst > /dev/null || dunst &
 $HOME/.config/polybar/launch.sh &
 /usr/bin/xset r rate 250 40
@@ -754,22 +752,6 @@ cursor-theme-name=Bibata-Modern-Classic
 hide-user-image=true
 panel-position=top
 indicators=~session;~power
-EOF
-```
-
-## Picom
-
-### $HOME/.config/picom/picom.conf
-
-> Configura el comportamiento del compositor `picom`. Permite definir opciones relacionadas con el renderizado de las ventanas, la sincronización vertical (`vsync`) y efectos visuales como sombras, transparencias, desenfoques y animaciones, contribuyendo a mejorar la apariencia y fluidez del entorno de escritorio.
-
-```bash
-cat > $HOME/.config/picom/picom.conf << 'EOF'
-backend = "xrender";
-vsync = true;
-shadow = false;
-fading = false;
-blur-method = "none";
 EOF
 ```
 
