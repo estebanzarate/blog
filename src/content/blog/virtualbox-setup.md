@@ -180,7 +180,6 @@ alias wire='/usr/bin/wireshark > /dev/null 2>&1 & disown'
 
 PS1="\[\033[38;2;228;161;27m\]\w\[\033[0m\] \[\033[38;2;20;164;77m\]\[\033[0m\]"
 
-# displays the current target in Polybar
 target() {
     local target_file="$HOME/.config/polybar/scripts/target.txt"
     local usage="\n[${ANSI_WARNING}*${COLOR_RESET}] Usage: target [${ANSI_DANGER}ip${COLOR_RESET}] or target [${ANSI_DANGER}ip${COLOR_RESET}:${ANSI_DANGER}port${COLOR_RESET}]\n\n  target 10.10.10.10        → set target IP in Polybar\n  target 10.10.10.10:8080   → set target IP and port in Polybar\n  target                    → clear target from Polybar\n"
@@ -225,43 +224,57 @@ target() {
 }
 
 _ports_error() {
-    local usage="[${ANSI_WARNING}*${COLOR_RESET}] Usage: ports <${ANSI_DANGER}file${COLOR_RESET}>
-
-  ports lookup.gnmap   → parses grepable nmap output
-  ports lookup.nmap    → parses normal nmap output
-  ports lookup.xml     → parses XML nmap output"
+    local usage="[${ANSI_WARNING}*${COLOR_RESET}] Usage: ports [${ANSI_DANGER}-f${COLOR_RESET}] <${ANSI_DANGER}file${COLOR_RESET}>
+  ports lookup.gnmap      → parses grepable nmap output
+  ports lookup.nmap       → parses normal nmap output
+  ports lookup.xml        → parses XML nmap output
+  ports -f lookup.gnmap   → also includes filtered ports"
     echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: $1\n"
     echo -e "$usage\n"
 }
-
-# extracts open ports from Nmap output
 ports() {
-    if [[ $# -ne 1 ]]; then
-        if [[ $# -eq 0 ]]; then
-            _ports_error "no file specified"
-            dunstify -u critical "ports" "No file specified"
-        else
-            _ports_error "too many arguments"
-            dunstify -u critical "ports" "Too many arguments"
-        fi
+    local include_filtered=0
+    local file=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -f)
+                include_filtered=1
+                shift
+                ;;
+            *)
+                if [[ -n "$file" ]]; then
+                    _ports_error "too many arguments"
+                    dunstify -u critical "ports" "Too many arguments"
+                    return 1
+                fi
+                file="$1"
+                shift
+                ;;
+        esac
+    done
+    if [[ -z "$file" ]]; then
+        _ports_error "no file specified"
+        dunstify -u critical "ports" "No file specified"
         return 1
     fi
-    local file="$1"
     if [[ ! -f "$file" ]]; then
         _ports_error "'$file' is not a valid file"
         dunstify -u critical "ports" "'$file' is not a valid file"
         return 1
     fi
+    local state_regex="open"
+    [[ $include_filtered -eq 1 ]] && state_regex="open|filtered"
     local result
     case "$file" in
         *.gnmap)
-            result=$(grep -oP '\d{1,5}/open' "$file" | awk -F'/' '{print $1}' | sort -un | xargs | tr ' ' ',')
+            result=$(grep -oP "\d{1,5}/(${state_regex})" "$file" | awk -F'/' '{print $1}' | sort -un | xargs | tr ' ' ',')
             ;;
         *.nmap)
-            result=$(grep -oP '^\s*\d{1,5}/\w+\s+open' "$file" | grep -oP '^\s*\d+' | tr -d ' ' | sort -un | xargs | tr ' ' ',')
+            result=$(grep -oP "^\s*\d{1,5}/\w+\s+(${state_regex})" "$file" | grep -oP '^\s*\d+' | tr -d ' ' | sort -un | xargs | tr ' ' ',')
             ;;
         *.xml)
-            result=$(grep 'state="open"' "$file" | grep -oP 'portid="\K\d+' | sort -un | xargs | tr ' ' ',')
+            result=$(grep -oP "state=\"(${state_regex})\"[^>]*" "$file" | grep -B0 "" "$file" | true)
+            result=$(grep -oP 'portid="\K\d+(?=".*?state="(?:'"${state_regex}"')")' "$file" | sort -un | xargs | tr ' ' ',')
             ;;
         *)
             _ports_error "unrecognized file extension (expected .gnmap, .nmap or .xml)"
@@ -270,13 +283,13 @@ ports() {
             ;;
     esac
     if [[ -z "$result" ]]; then
-        echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] No open ports found in '$file'\n"
-        dunstify -u low "ports" "No open ports found in '$file'"
+        echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] No open$([[ $include_filtered -eq 1 ]] && echo "/filtered") ports found in '$file'\n"
+        dunstify -u low "ports" "No open$([[ $include_filtered -eq 1 ]] && echo "/filtered") ports found in '$file'"
         return 1
     fi
     echo "$result"
     echo -n "$result" | xclip -sel clip
-    dunstify -u normal "ports" "Open ports $result copied to clipboard"
+    dunstify -u normal "ports" "Ports copied to clipboard: $result"
 }
 
 _venv_error() {
@@ -287,7 +300,6 @@ _venv_success() {
     echo -e "\n[${ANSI_SUCCESS}+${COLOR_RESET}] $1"
 }
 
-# creates and manages Python virtual environments
 venv() {
     local venv_dir="venv"
     local libs=("$@")
@@ -329,7 +341,6 @@ _vpn_error() {
     [[ "$2" != "no-usage" ]] && echo -e "$usage\n"
 }
 
-# connects to Hack The Box or TryHackMe VPNs
 vpn() {
     local config_dir="$HOME/.config/vpn"
     if [[ $# -eq 0 ]]; then
@@ -364,7 +375,6 @@ vpn() {
     sudo openvpn --config "$config"
 }
 
-# copies a file to the clipboard
 clip() {
     if [[ $# -eq 0 ]]; then
         echo -e "\n[${ANSI_WARNING}*${COLOR_RESET}] Usage: clip <${ANSI_DANGER}file${COLOR_RESET}>\n"
@@ -395,7 +405,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/bspwm/bspwmrc << 'EOF'
-#!/usr/bin/env sh
+#!/bin/sh
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
@@ -500,7 +510,7 @@ super + alt + {Left,Down,Up,Right}
 
 # Show keybinds
 super + k
-	$HOME/.config/sxhkd/scripts/keybinds.sh
+	$HOME/.config/sxhkd/scripts/show_keybinds.sh
 EOF
 ```
 
@@ -510,7 +520,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/sxhkd/scripts/keybinds.sh << 'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 SXHKDRC="$HOME/.config/sxhkd/sxhkdrc"
 THEME="$HOME/.config/rofi/keybinds.rasi"
 KEY_WIDTH=46
@@ -721,7 +731,7 @@ sudo tee > /etc/lightdm/lightdm.conf << 'EOF'
 run-directory=/run/lightdm
 
 [Seat:*]
-autologin-user=$USER
+autologin-user=melvin
 autologin-user-timeout=0
 autologin-session=bspwm
 greeter-setup-script=/usr/bin/numlockx on
@@ -828,7 +838,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/polybar/launch.sh << 'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 
 killall -q polybar
 
@@ -841,7 +851,7 @@ polybar main 2>&1 | tee -a /tmp/polybar.log & disown
 
 ```bash
 cat > $HOME/.config/polybar/scripts/ip.sh << 'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 
 source $HOME/.config/colors/colors.sh
 
@@ -873,7 +883,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/polybar/scripts/vpn.sh << 'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 
 source $HOME/.config/colors/colors.sh
 
@@ -906,7 +916,7 @@ EOF
 
 ```bash
 cat > $HOME/.config/polybar/scripts/target.sh << 'EOF'
-#!/usr/bin/env bash
+#!/bin/bash
 
 source $HOME/.config/colors/colors.sh
 
@@ -949,11 +959,11 @@ cat > $HOME/.config/rofi/keybinds.rasi << 'EOF'
 
     background-color: transparent;
     text-color: @fg;
-    font: "JetBrainsMono Nerd Font 12";
+    font: "JetBrainsMono Nerd Font 11";
 }
 
 window {
-    width: 780px;
+    width: 920px;
     background-color: @bg;
     border: 0px;
     border-radius: 0px;
@@ -1077,8 +1087,14 @@ EOF
 
 ```bash
 sudo tee > /etc/profile.d/custom.sh << 'EOF'
-append_path '$HOME/go/bin'
-append_path '$HOME/.local/share/gem/ruby/3.4.0/bin'
+#!/bin/bash
+
+if [ -n "$HOME" ]; then
+    export PATH="$PATH:$HOME/go/bin"
+    export PATH="$PATH:$HOME/.local/share/gem/ruby/3.4.0/bin"
+    export PATH="$PATH:$HOME/.local/share/pnpm"
+    export PATH="$PATH:$HOME/.config/npm/global/bin"
+fi
 EOF
 ```
 
