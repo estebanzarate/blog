@@ -418,7 +418,7 @@ bspc config gapless_monocle      false
 /usr/bin/numlockx on &
 /usr/bin/xsetroot -cursor_name left_ptr &
 /usr/bin/xsetroot -solid "#11111b" &
-pkill -x VBoxClient; sleep 1 && VBoxClient-all &
+pkill -x VBoxClient; sleep 1 && VBoxClient --clipboard && VBoxClient --display &
 pgrep -x dunst > /dev/null || dunst &
 $HOME/.config/polybar/launch.sh &
 /usr/bin/xset r rate 250 40
@@ -1248,6 +1248,33 @@ sudo usermod -aG wireshark $USER
 
 ```bash
 sudo git clone https://github.com/insidetrust/statistically-likely-usernames.git /usr/share/wordlists/statistically-likely-usernames
+```
+
+## Performance
+
+```bash
+sudo systemctl disable systemd-networkd-wait-online.service
+```
+
+```bash
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/volatile.conf > /dev/null << 'EOF'
+[Journal]
+Storage=volatile
+RuntimeMaxUse=50M
+EOF
+sudo systemctl restart systemd-journald
+sudo rm -rf /var/log/journal
+```
+
+```bash
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf
+sudo sysctl vm.swappiness=10
+```
+
+```bash
+sudo sed -i 's/^HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)$/HOOKS=(base udev autodetect microcode modconf kms block filesystems fsck)/' /etc/mkinitcpio.conf
+sudo mkinitcpio -P
 ```
 
 ## Otras herramientas

@@ -26,37 +26,31 @@ export default defineConfig({
       en: "es"
     },
   },
-  fonts: [{
-    name: "Neucha",
-    cssVariable: "--font-neucha",
-    provider: fontProviders.google(),
-    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal", "italic"],
-  },
-  {
-    name: "DejaVu Mono",
-    cssVariable: "--font-dejavu",
-    provider: fontProviders.fontsource(),
-    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal", "italic"],
+  fonts: [
+    {
+      name: "DejaVu Mono",
+      cssVariable: "--font-dejavu",
+      provider: fontProviders.fontsource(),
+      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+      styles: ["normal", "italic"],
 
-  },
-  {
-    name: "Victor Mono",
-    cssVariable: "--font-victor",
-    provider: fontProviders.google(),
-    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal", "italic"],
+    },
+    {
+      name: "Victor Mono",
+      cssVariable: "--font-victor",
+      provider: fontProviders.google(),
+      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+      styles: ["normal", "italic"],
 
-  },
-  {
-    name: "Jost",
-    cssVariable: "--font-jost",
-    provider: fontProviders.google(),
-    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    styles: ["normal", "italic"],
+    },
+    {
+      name: "Jost",
+      cssVariable: "--font-jost",
+      provider: fontProviders.google(),
+      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+      styles: ["normal", "italic"],
 
-  },
+    },
   ],
   markdown: {
     processor: unified({
