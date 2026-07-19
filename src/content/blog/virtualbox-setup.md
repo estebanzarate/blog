@@ -72,10 +72,7 @@ Click `OK` para guardar los cambios
 
 Iniciar la máquina virtual  
 Iniciar sesión  
-Presionar `ctrl` + `alt` + `F2` para abrir una nueva consola
-
-![Login Arch](https://github.com/user-attachments/assets/d964f004-87f0-498f-97f8-1f10b5fbe480)
-
+Presionar `ctrl` + `alt` + `F2` para abrir una nueva consola  
 Iniciar sesión nuevamente
 
 ```bash
@@ -167,24 +164,35 @@ chmod +x $HOME/.config/polybar/scripts/{target.sh,vpn.sh,ip.sh}
 cat > $HOME/.bashrc << 'EOF'
 source $HOME/.config/colors/colors.sh
 
+export LS_COLORS="di=1;38;2;159;239;0:ln=1;38;2;46;231;186:ex=1;38;2;159;239;0:*.py=38;2;255;175;0:*.sh=38;2;159;239;0:*.json=38;2;159;0;255:*.txt=38;2;164;177;205:*.md=38;2;164;177;205:*.gnmap=38;2;255;175;0:*.nmap=38;2;255;175;0:*.xml=38;2;255;175;0:*.pcap=38;2;0;134;255:*.pcapng=38;2;0;134;255:*.zip=38;2;243;139;168:*.tar=38;2;243;139;168:*.gz=38;2;243;139;168:*.7z=38;2;243;139;168"
+
 [[ $- != *i* ]] && return
 
 export _JAVA_AWT_WM_NONREPARENTING=1
 export WPSCAN_API_TOKEN=
 
+alias ls='ls --color=auto'
 alias burp='/usr/bin/burpsuite > /dev/null 2>&1 & disown'
 alias fire='/usr/bin/firefox > /dev/null 2>&1 & disown'
 alias tor='/usr/bin/torbrowser-launcher > /dev/null 2>&1 & disown'
 alias wire='/usr/bin/wireshark > /dev/null 2>&1 & disown'
 
-PS1="\[\033[38;2;228;161;27m\]\w\[\033[0m\] \[\033[38;2;20;164;77m\]\[\033[0m\]"
+_git_prompt() {
+    local branch
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null) || branch=$(git rev-parse --short HEAD 2>/dev/null)
+    [[ -z "$branch" ]] && return
+    local dirty=""
+    [[ -n $(git status --porcelain 2>/dev/null) ]] && dirty="*"
+    echo -e " ${ANSI_SECONDARY_A}(${branch}${dirty})${COLOR_RESET}"
+}
+PS1="\[${ANSI_FG_STRONG}\]\w\[${COLOR_RESET}\]\$(_git_prompt) "
 
 target() {
     local target_file="$HOME/.config/polybar/scripts/target.txt"
     local usage="\n[${ANSI_WARNING}*${COLOR_RESET}] Usage: target [${ANSI_DANGER}ip${COLOR_RESET}] or target [${ANSI_DANGER}ip${COLOR_RESET}:${ANSI_DANGER}port${COLOR_RESET}]\n\n  target 10.10.10.10        → set target IP in Polybar\n  target 10.10.10.10:8080   → set target IP and port in Polybar\n  target                    → clear target from Polybar\n"
     if [[ $# -eq 0 ]]; then
         : > "$target_file"
-        dunstify -u normal "target" "Target cleared"
+        dunstify -u normal "[ Target ]" "Target cleared"
         return 0
     elif [[ $# -ne 1 ]]; then
         echo -e "$usage"
@@ -197,28 +205,28 @@ target() {
     if ! [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
         echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: '$ip' is not a valid IP address"
         echo -e "$usage"
-        dunstify -u critical "target" "'$ip' is not a valid IP address"
+        dunstify -u critical "[ Target ]" "'$ip' is not a valid IP address"
         return 1
     fi
     local octet
     for octet in ${ip//./ }; do
         if (( octet > 255 )); then
             echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: invalid IP (octets must be between 0 and 255)"
-            dunstify -u critical "target" "Invalid IP: octets must be between 0 and 255"
+            dunstify -u critical "[ Target ]" "Invalid IP: octets must be between 0 and 255"
             return 1
         fi
     done
     if [[ -n "$port" ]]; then
         if ! [[ "$port" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
             echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: invalid port (must be between 1 and 65535)"
-            dunstify -u critical "target" "Invalid port: must be between 1 and 65535"
+            dunstify -u critical "[ Target ]" "Invalid port: must be between 1 and 65535"
             return 1
         fi
         echo "$ip:$port" > "$target_file"
-        dunstify -u normal "target" "Target set to $ip:$port"
+        dunstify -u normal "[ Target ]" "Target set to $ip:$port"
     else
         echo "$ip" > "$target_file"
-        dunstify -u normal "target" "Target set to $ip"
+        dunstify -u normal "[ Target ]" "Target set to $ip"
     fi
 }
 
@@ -243,7 +251,7 @@ ports() {
             *)
                 if [[ -n "$file" ]]; then
                     _ports_error "too many arguments"
-                    dunstify -u critical "ports" "Too many arguments"
+                    dunstify -u critical "[ Ports ]" "Too many arguments"
                     return 1
                 fi
                 file="$1"
@@ -253,12 +261,12 @@ ports() {
     done
     if [[ -z "$file" ]]; then
         _ports_error "no file specified"
-        dunstify -u critical "ports" "No file specified"
+        dunstify -u critical "[ Ports ]" "No file specified"
         return 1
     fi
     if [[ ! -f "$file" ]]; then
         _ports_error "'$file' is not a valid file"
-        dunstify -u critical "ports" "'$file' is not a valid file"
+        dunstify -u critical "[ Ports ]" "'$file' is not a valid file"
         return 1
     fi
     local state_regex="open"
@@ -277,18 +285,18 @@ ports() {
             ;;
         *)
             _ports_error "unrecognized file extension (expected .gnmap, .nmap or .xml)"
-            dunstify -u critical "ports" "Unrecognized file extension"
+            dunstify -u critical "[ Ports ]" "Unrecognized file extension"
             return 1
             ;;
     esac
     if [[ -z "$result" ]]; then
         echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] No open$([[ $include_filtered -eq 1 ]] && echo "/filtered") ports found in '$file'\n"
-        dunstify -u low "ports" "No open$([[ $include_filtered -eq 1 ]] && echo "/filtered") ports found in '$file'"
+        dunstify -u low "[ Ports ]" "No open$([[ $include_filtered -eq 1 ]] && echo "/filtered") ports found in '$file'"
         return 1
     fi
     echo "$result"
     echo -n "$result" | xclip -sel clip
-    dunstify -u normal "ports" "Ports copied to clipboard: $result"
+    dunstify -u normal "[ Ports ]" "Ports copied to clipboard: $result"
 }
 
 _venv_error() {
@@ -344,12 +352,12 @@ vpn() {
     local config_dir="$HOME/.config/vpn"
     if [[ $# -eq 0 ]]; then
         _vpn_error "no arguments provided"
-        dunstify -u critical "vpn" "No arguments provided"
+        dunstify -u critical "[ VPN ]" "No arguments provided"
         return 1
     fi
     if [[ $# -gt 1 ]]; then
         _vpn_error "too many arguments"
-        dunstify -u critical "vpn" "Too many arguments"
+        dunstify -u critical "[ VPN ]" "Too many arguments"
         return 1
     fi
     local config
@@ -360,17 +368,17 @@ vpn() {
         thm)  config="$config_dir/thm.ovpn" ;;
         *)
             _vpn_error "unknown VPN '$1' (expected htb, htbc, htba or thm)"
-            dunstify -u critical "vpn" "Unknown VPN '$1'"
+            dunstify -u critical "[ VPN ]" "Unknown VPN '$1'"
             return 1
             ;;
     esac
     if [[ ! -f "$config" ]]; then
         _vpn_error "config file not found at '$config'" "no-usage"
-        dunstify -u critical "vpn" "Config file not found at '$config'"
+        dunstify -u critical "[ VPN ]" "Config file not found at '$config'"
         return 1
     fi
     echo -e "\n[${ANSI_WARNING}*${COLOR_RESET}] Connecting to $1 VPN\n"
-    dunstify -u normal "vpn" "Connecting to $1 VPN"
+    dunstify -u normal "[ VPN ]" "Connecting to $1 VPN"
     sudo openvpn --config "$config"
 }
 
@@ -386,12 +394,12 @@ clip() {
     fi
     if [[ ! -f "$1" ]]; then
         echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: '$1' is not a valid file\n"
-        dunstify -u critical "clip" "'$1' is not a valid file"
+        dunstify -u critical "[ CLIP ]" "'$1' is not a valid file"
         return 1
     fi
     xclip -sel clip < "$1"
     echo -e "\n[${ANSI_SUCCESS}+${COLOR_RESET}] '$1' copied to clipboard\n"
-    dunstify -u normal "clip" "'$1' copied to clipboard"
+    dunstify -u normal "[ CLIP ]" "'$1' copied to clipboard"
 }
 EOF
 ```
@@ -409,15 +417,18 @@ cat > $HOME/.config/bspwm/bspwmrc << 'EOF'
 pgrep -x sxhkd > /dev/null || sxhkd &
 
 bspc monitor -d I II III IV V VI VII VIII IX X
-bspc config border_width         2
+bspc config border_width         1
 bspc config window_gap           5
 bspc config split_ratio          0.5
+bspc config focused_border_color   "#9fef00"
+bspc config normal_border_color    "#1a2433"
+bspc config active_border_color    "#838ea4"
 bspc config borderless_monocle   true
 bspc config gapless_monocle      false
 
 /usr/bin/numlockx on &
 /usr/bin/xsetroot -cursor_name left_ptr &
-/usr/bin/xsetroot -solid "#11111b" &
+/usr/bin/xsetroot -solid "#141d2b" &
 pkill -x VBoxClient; sleep 1 && VBoxClient --clipboard && VBoxClient --display &
 pgrep -x dunst > /dev/null || dunst &
 $HOME/.config/polybar/launch.sh &
@@ -549,36 +560,38 @@ EOF
 
 ```bash
 cat > $HOME/.config/colors/colors.sh << 'EOF'
-COLOR_PRIMARY="#3B71CA"
-COLOR_SECONDARY="#9FA6B2"
-COLOR_SUCCESS="#14A44D"
-COLOR_DANGER="#DC4C64"
-COLOR_WARNING="#E4A11B"
-COLOR_INFO="#54B4D3"
-COLOR_LIGHT="#FBFBFB"
-COLOR_DARK="#332D2D"
-COLOR_PINK="#C2527A"
-COLOR_PURPLE="#7952B3"
-COLOR_DOG="#C68642"
-COLOR_ORANGE="#E8703A"
+COLOR_BG="#141d2b"
+COLOR_BG_ALT="#1a2433"
+COLOR_FG="#a4b1cd"
+COLOR_FG_STRONG="#fbfbfb"
+COLOR_FG_MUTED="#838ea4"
+
+COLOR_ACCENT="#9fef00"
+
+COLOR_SUCCESS="#9fef00"
+COLOR_WARNING="#ffaf00"
+COLOR_DANGER="#ff3e3e"
+COLOR_INFO="#0086ff"
+
+COLOR_SECONDARY_A="#9f00ff"
+COLOR_SECONDARY_B="#2ee7b6"
 
 COLOR_RESET="\033[0m"
 
-# -- ANSI (truecolor para bash scripts) --
 _hex() { local h="${1#"#"}"; echo "\e[38;2;$((16#${h:0:2}));$((16#${h:2:2}));$((16#${h:4:2}))m"; }
 
-ANSI_PRIMARY=$(_hex "$COLOR_PRIMARY")
-ANSI_SECONDARY=$(_hex "$COLOR_SECONDARY")
+ANSI_BG=$(_hex "$COLOR_BG")
+ANSI_BG_ALT=$(_hex "$COLOR_BG_ALT")
+ANSI_FG=$(_hex "$COLOR_FG")
+ANSI_FG_STRONG=$(_hex "$COLOR_FG_STRONG")
+ANSI_FG_MUTED=$(_hex "$COLOR_FG_MUTED")
+ANSI_ACCENT=$(_hex "$COLOR_ACCENT")
 ANSI_SUCCESS=$(_hex "$COLOR_SUCCESS")
-ANSI_DANGER=$(_hex "$COLOR_DANGER")
 ANSI_WARNING=$(_hex "$COLOR_WARNING")
+ANSI_DANGER=$(_hex "$COLOR_DANGER")
 ANSI_INFO=$(_hex "$COLOR_INFO")
-ANSI_LIGHT=$(_hex "$COLOR_LIGHT")
-ANSI_DARK=$(_hex "$COLOR_DARK")
-ANSI_PINK=$(_hex "$COLOR_PINK")
-ANSI_PURPLE=$(_hex "$COLOR_PURPLE")
-ANSI_DOG=$(_hex "$COLOR_DOG")
-ANSI_ORANGE=$(_hex "$COLOR_ORANGE")
+ANSI_SECONDARY_A=$(_hex "$COLOR_SECONDARY_A")
+ANSI_SECONDARY_B=$(_hex "$COLOR_SECONDARY_B")
 EOF
 ```
 
@@ -588,18 +601,21 @@ EOF
 
 ```bash
 cat > $HOME/.config/colors/colors.py << 'EOF'
-PRIMARY   = "#3B71CA"
-SECONDARY = "#9FA6B2"
-SUCCESS   = "#14A44D"
-DANGER    = "#DC4C64"
-WARNING   = "#E4A11B"
-INFO      = "#54B4D3"
-LIGHT     = "#FBFBFB"
-DARK      = "#332D2D"
-PINK      = "#C2527A"
-PURPLE    = "#7952B3"
-DOG       = "#C68642"
-ORANGE    = "#E8703A"
+BG           = "#141d2b"
+BG_ALT       = "#1a2433"
+FG           = "#a4b1cd"
+FG_STRONG    = "#fbfbfb"
+FG_MUTED     = "#838ea4"
+
+ACCENT       = "#9fef00"
+
+SUCCESS      = "#9fef00"
+WARNING      = "#ffaf00"
+DANGER       = "#ff3e3e"
+INFO         = "#0086ff"
+
+SECONDARY_A  = "#9f00ff"
+SECONDARY_B  = "#2ee7b6"
 EOF
 ```
 
@@ -610,18 +626,21 @@ EOF
 ```bash
 cat > $HOME/.config/colors/colors.ini << 'EOF'
 [colors]
-primary   = #3B71CA
-secondary = #9FA6B2
-success   = #14A44D
-danger    = #DC4C64
-warning   = #E4A11B
-info      = #54B4D3
-light     = #FBFBFB
-dark      = #332D2D
-pink      = #C2527A
-purple    = #7952B3
-dog       = #C68642
-orange    = #E8703A
+bg          = #141d2b
+bg-alt      = #1a2433
+fg          = #a4b1cd
+fg-strong   = #fbfbfb
+fg-muted    = #838ea4
+
+accent      = #9fef00
+
+success     = #9fef00
+warning     = #ffaf00
+danger      = #ff3e3e
+info        = #0086ff
+
+secondary-a = #9f00ff
+secondary-b = #2ee7b6
 EOF
 ```
 
@@ -644,12 +663,14 @@ cat > $HOME/.config/dunst/dunstrc << 'EOF'
     height = (0, 200)
     notification_limit = 3
 
-    corner_radius = 8
+    corner_radius = 0
     frame_width = 2
-    frame_color = "#cba6f7"
+    gap_size = 8
+    frame_color = "#9fef00"
 
     font = Noto Sans 10
     format = "<b>%s</b>\n%b"
+    line_height = 5
     markup = full
     word_wrap = yes
     alignment = center
@@ -658,20 +679,21 @@ cat > $HOME/.config/dunst/dunstrc << 'EOF'
     ignore_dbusclose = false
 
 [urgency_low]
-    background = "#1e1e2e"
-    foreground = "#cdd6f4"
+    background = "#141d2b"
+    foreground = "#838ea4"
+    frame_color = "#838ea4"
     timeout = 2
 
 [urgency_normal]
-    background = "#1e1e2e"
-    foreground = "#cdd6f4"
-    frame_color = "#cba6f7"
+    background = "#141d2b"
+    foreground = "#fbfbfb"
+    frame_color = "#9fef00"
     timeout = 2
 
 [urgency_critical]
-    background = "#1e1e2e"
-    foreground = "#f38ba8"
-    frame_color = "#f38ba8"
+    background = "#141d2b"
+    foreground = "#fbfbfb"
+    frame_color = "#ff3e3e"
     timeout = 2
 EOF
 ```
@@ -689,8 +711,36 @@ single_window_margin_width 0
 window_padding_width 5
 single_window_padding_width 4 6
 
-background #11111b
+background #141d2b
+foreground #a4b1cd
 font_size 14
+
+cursor #9fef00
+cursor_text_color #141d2b
+
+selection_background #9fef00
+selection_foreground #141d2b
+
+color0 #1a2433
+color1 #ff3e3e
+color2 #9fef00
+color3 #ffaf00
+color4 #0086ff
+color5 #9f00ff
+color6 #2ee7b6
+color7 #a4b1cd
+
+color8 #838ea4
+color9 #ff3e3e
+color10 #9fef00
+color11 #ffaf00
+color12 #0086ff
+color13 #9f00ff
+color14 #2ee7b6
+color15 #fbfbfb
+
+active_border_color #9fef00
+inactive_border_color #838ea4
 
 map ctrl+shift+enter new_window_with_cwd
 map ctrl+shift+t new_tab_with_cwd
@@ -766,6 +816,8 @@ cat > $HOME/.config/polybar/config.ini << 'EOF'
 include-file = $HOME/.config/colors/colors.ini
 
 [bar/main]
+underline = ${colors.accent}
+underline-size = 2
 background = #141d2b
 modules-left = arch desk ip vpn target
 modules-right = dog
@@ -786,23 +838,26 @@ label = [ %{F#1793D1}%{T3}󰣇%{T-}%{F-} ]
 
 [module/desk]
 type = internal/xworkspaces
-label-empty-foreground = ${colors.secondary}
+label-empty-foreground = ${colors.fg-muted}
 label-active-foreground = ${colors.success}
 label-occupied-foreground = ${colors.warning}
 
 [module/ip]
+label-foreground = ${colors.info}
 type = custom/script
 exec = $HOME/.config/polybar/scripts/ip.sh
 click-left = $HOME/.config/polybar/scripts/ip.sh click
 interval = 2
 
 [module/vpn]
+label-foreground = ${colors.success}
 type = custom/script
 exec = $HOME/.config/polybar/scripts/vpn.sh
 click-left = $HOME/.config/polybar/scripts/vpn.sh click
 interval = 2
 
 [module/target]
+label-foreground = ${colors.danger}
 type = custom/script
 exec = $HOME/.config/polybar/scripts/target.sh
 click-left = $HOME/.config/polybar/scripts/target.sh click
@@ -933,11 +988,11 @@ EOF
 ```bash
 cat > $HOME/.config/rofi/keybinds.rasi << 'EOF'
 * {
-    bg:    #1e1e2e;
-    fg:    #cdd6f4;
-    key:   #cba6f7;
-    desc:  #a6adc8;
-    arrow: #6c7086;
+    bg:    #141d2b;
+    fg:    #fbfbfb;
+    key:   #0086ff;
+    desc:  #838ea4;
+    arrow: #838ea4;
 
     background-color: transparent;
     text-color: @fg;
@@ -945,7 +1000,7 @@ cat > $HOME/.config/rofi/keybinds.rasi << 'EOF'
 }
 
 window {
-    width: 700px;
+    width: 675px;
     background-color: @bg;
     border: 0px;
     border-radius: 0px;

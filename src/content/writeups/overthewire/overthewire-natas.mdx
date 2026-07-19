@@ -1762,3 +1762,13 @@ Se trata de una vulnerabilidad de Blind SQL Injection (Boolean-Based) (inyecció
 - Separar completamente el código de los datos mediante consultas parametrizadas anula por completo la vulnerabilidad, haciendo imposible que el motor evalúe condiciones lógicas (`AND`, `OR`, `BINARY`) introducidas por el cliente.
 - Devolver mensajes genéricos para no dar pistas analíticas sobre la existencia exacta de registros específicos, mitigando parcialmente ataques de User Enumeration.
 </Callout>
+
+## Natas Level 15 → Level 16
+
+[Natas Level 15 → Level 16](https://overthewire.org/wargames/natas/natas16.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas16.natas.labs.overthewire.org/ --user natas16:Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
+```
