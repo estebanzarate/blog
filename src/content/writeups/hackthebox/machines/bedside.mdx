@@ -1,0 +1,46 @@
+---
+type: writeup
+title: Bedside
+description: ""
+lang: es
+draft: true
+image: ../../../../images/writeups/hackthebox/machines/bedside/bedside.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Bedside
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.57.112
+```
+
+```plaintext
+PORT     STATE    SERVICE REASON
+22/tcp   open     ssh     syn-ack ttl 63
+80/tcp   open     http    syn-ack ttl 63
+3000/tcp filtered ppp     no-response
+```
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 10.129.57.112
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 10.0p2 Debian 7+deb13u4 (protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.68
+|_http-server-header: Apache/2.4.68 (Debian)
+|_http-title: Bedside Clinic - bedside.htb
+Service Info: Host: default; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://10.129.57.112 -H "Host: FUZZ.bedside.htb" -ic -c -t 100 -fw 21
+```
+
+```plaintext
+research                [Status: 200, Size: 3152, Words: 313, Lines: 80, Duration: 228ms]
+```

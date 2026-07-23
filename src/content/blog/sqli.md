@@ -16,11 +16,12 @@ Para detectarla se pueden enviar a cada punto de entrada, cualquier información
 
 ## SQL
 
-### JOINS
+### DOCS
 
-### INNER JOIN
-
-Proceso que coincide con las filas de la primera tabla y la segunda tabla que tienen la misma clave (definida por la restricción ON) para crear una fila de resultados con las columnas combinadas de ambas tablas.
+- [PostgreSQL](https://www.postgresql.org/docs/)
+- [MySQL](https://dev.mysql.com/doc/)
+- [SQLite](https://www.sqlite.org/docs.html)
+- [SQL Server](https://learn.microsoft.com/en-us/sql/sql-server/?view=sql-server-ver17)
 
 ## Recursos para aprender y practicar SQL y SQLi
 
