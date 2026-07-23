@@ -6,6 +6,10 @@ const posts = await getCollection("post");
 const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
 
 const platformMap: any = {
+	dockerlabs: {
+		label: "Dockerlabs",
+		class: "dockerlabs",
+	},
 	hackthebox: {
 		label: "Hack The Box",
 		class: "htb",
@@ -13,6 +17,10 @@ const platformMap: any = {
 };
 
 const difficultyMap: any = {
+	muyfacil: {
+		label: "Muy Facíl",
+		class: "muy-facil",
+	},
 	veryeasy: {
 		label: "Very Easy",
 		class: "very-easy",
@@ -122,7 +130,9 @@ const osMap: any = {
 		grid-template-columns: repeat(auto-fit, minmax(200px, 250px));
 		gap: 1rem;
 		justify-content: center;
+		max-width: 1200px;
 		margin-top: 5rem;
+		margin-inline: auto;
 	}
 
 	.card {
@@ -162,14 +172,18 @@ const osMap: any = {
 				font-size: 0.9rem;
 				text-align: center;
 			}
+			.dockerlabs {
+				border-color: var(--color-primary);
+			}
 			.htb {
 				color: var(--color-success);
 			}
-
 			.linux {
 			}
 
 			.windows {
+			}
+			.muy-facil {
 			}
 
 			.very-easy {

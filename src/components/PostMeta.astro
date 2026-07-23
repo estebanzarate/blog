@@ -5,6 +5,10 @@ const { post } = Astro.props;
 const data = post.data;
 
 const platformMap: any = {
+    dockerlabs: {
+        label: "Dockerlabs",
+        class: "dockerlabs",
+    },
     hackthebox: {
         label: "Hack The Box",
         class: "htb",
@@ -12,6 +16,10 @@ const platformMap: any = {
 };
 
 const difficultyMap: any = {
+    muyfacil: {
+        label: "Muy Fácil",
+        class: "muy-facil",
+    },
     veryeasy: {
         label: "Very Easy",
         class: "very-easy",
@@ -127,7 +135,9 @@ const os = data.os && osMap[data.os];
         background: var(--bg-surface-alt);
         color: var(--text-secondary);
     }
-
+    .dockerlabs {
+        border-color: var(--color-primary);
+    }
     .htb {
         border-color: var(--color-success);
     }
@@ -137,7 +147,8 @@ const os = data.os && osMap[data.os];
 
     .windows {
     }
-
+    .muy-facil {
+    }
     .very-easy {
     }
 

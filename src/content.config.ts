@@ -13,9 +13,9 @@ const post = defineCollection({
         draft: z.boolean().default(false),
 
         image: image().optional(),
-        platform: z.enum(['hackthebox']).optional(),
+        platform: z.enum(['hackthebox', 'dockerlabs']).optional(),
         url: z.string().optional(),
-        difficulty: z.enum(['veryeasy', 'easy', 'medium', 'hard', 'insane']).optional(),
+        difficulty: z.enum(['muyfacil', 'veryeasy', 'easy', 'medium', 'hard', 'insane']).optional(),
         os: z.enum(["linux", "windows"]).optional(),
         hints: z.array(z.string()).optional(),
     }),
