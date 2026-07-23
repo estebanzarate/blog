@@ -1,7 +1,7 @@
 ---
 type: writeup
 title: BreakMySSH
-description: ""
+description: Laboratorio para practicar ataques de fuerza bruta con Hydra contra el servicio SSH.
 lang: es
 draft: false
 image: ../../../images/writeups/dockerlabs/dockerlabs.webp
@@ -15,7 +15,7 @@ tags: []
 
 ## Enumeration
 
-Hacemos un escaneo con `nmap` para saber que puertos están abierto y qué servicios corren en ellos.
+Hacemos un escaneo con `nmap` para saber que puertos están abiertos y qué servicios corren en ellos.
 
 ```bash
 sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
@@ -26,7 +26,7 @@ PORT   STATE SERVICE REASON
 22/tcp open  ssh     syn-ack ttl 64
 ```
 
-Hacemos otro escaneo con `nmap` al puerto que se encontró abierto para conocer más detalles del servicio que corre en él.
+Escaneamos el puerto abierto encontrado con `nmap` para conocer más detalles del servicio que corre en él.
 
 ```bash
 nmap -p 22 -sCV -oA nmap/openports 172.17.0.2
