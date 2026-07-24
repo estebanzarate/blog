@@ -36,14 +36,6 @@ export default defineConfig({
 
     },
     {
-      name: "Victor Mono",
-      cssVariable: "--font-victor",
-      provider: fontProviders.google(),
-      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-      styles: ["normal", "italic"],
-
-    },
-    {
       name: "Jost",
       cssVariable: "--font-jost",
       provider: fontProviders.google(),
