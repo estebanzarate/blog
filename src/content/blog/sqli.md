@@ -3,6 +3,7 @@ type: post
 title: SQL Injection
 description: Todo sobre inyección SQL
 lang: es
+draft: true
 ---
 
 > Permite a un atacante interferir en las consultas que una aplicación hace a su base de datos, permitiendole ver información que normalmente no podría, como información de otros usuarios o cualquier otra información a la que la aplicación puede acceder. También podría modificar o eliminar esta información.
