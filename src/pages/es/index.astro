@@ -109,8 +109,10 @@ const osMap: any = {
 							</>
 						}
 
-						{post.data.description && (
-							<p>{post.data.description}</p>
+						{post.data.type === "post" && (
+							<p class="card-description">
+								{post.data?.description}
+							</p>
 						)}
 
 						<a class="card-link" href={`/es/${post.id}`}>
@@ -201,6 +203,10 @@ const osMap: any = {
 
 			.insane {
 			}
+		}
+
+		.card-description {
+			font-size: 0.9rem;
 		}
 		.card-link {
 			display: flex;
