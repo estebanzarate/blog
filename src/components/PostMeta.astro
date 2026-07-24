@@ -86,6 +86,19 @@ const os = data.os && osMap[data.os];
                     </span>
                 </p>
             )}
+            {data.url && (
+                <p>
+                    <strong>Url:</strong>
+                    <a
+                        class="badge badge-url"
+                        href={data.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {data.url}
+                    </a>
+                </p>
+            )}
             <strong>- - -</strong>
         </div>
     )
@@ -105,15 +118,6 @@ const os = data.os && osMap[data.os];
         </div>
     )
 }
-{
-    data.url && (
-        <div class="url-container">
-            <a href={data.url} target="_blank" rel="noopener noreferrer">
-                {data.url}
-            </a>
-        </div>
-    )
-}
 
 <style>
     .post-meta {
@@ -128,12 +132,13 @@ const os = data.os && osMap[data.os];
 
     .badge {
         display: inline-flex;
-        border-radius: 0.5rem;
         font-size: 0.875rem;
         font-weight: 600;
-        border: 1px solid var(--border-default);
-        background: var(--bg-surface-alt);
         color: var(--text-secondary);
+    }
+
+    .badge-url {
+        color: var(--text-accent);
     }
     .dockerlabs {
         border-color: var(--color-primary);
@@ -177,7 +182,7 @@ const os = data.os && osMap[data.os];
         display: flex;
         justify-content: center;
         a {
-            font-size: clamp(1rem, 5vw, 1.5rem);
+            font-size: clamp(1rem, 5vw, 1.2rem);
             text-decoration: none;
             line-break: anywhere;
         }

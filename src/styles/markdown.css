@@ -40,12 +40,29 @@
     p {
         line-height: 1.65;
         word-break: break-all;
+
+        a {
+            color: var(--text-accent);
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    p,
+    li {
+        color: var(--text-color-02);
     }
 
     a {
         color: var(--color-accent);
-        text-decoration: underline;
-        text-underline-offset: 3px;
+
+        strong {
+            &:hover {
+                color: var(--color-warning);
+            }
+        }
     }
 
     ul li code,
@@ -56,16 +73,28 @@
 
     li {
         line-height: 1.75;
+
+        a {
+            color: var(--text-accent);
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
     }
 
     code {
         border-radius: 6px;
-        padding: 0.1rem 0.3rem;
-        background: #C3C7CC;
-        color: var(--color-pink);
+        padding: 0.25rem calc(0.25rem * 1.5);
+        background: var(--bg-color-03);
+        color: var(--text-color-03);
         font-weight: 600;
         font-family: var(--font-mono);
         font-size: 0.9rem;
+
+        span {
+            color: var(--text-color-04);
+        }
     }
 
     pre {

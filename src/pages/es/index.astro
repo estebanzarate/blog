@@ -69,51 +69,61 @@ const osMap: any = {
 
 				return (
 					<article class="card">
-						<h2>{post.data.title}</h2>
+						<div>
+							<h2>{post.data.title}</h2>
 
-						{
-							<>
-								{post.data.image && (
-									<div class="card-image-container">
-										<Image
-											src={post.data.image}
-											alt={post.data.title}
-											width={280}
-											height={200}
-											loading="lazy"
-											class="card-image"
-											data-no-zoom
-										/>
-									</div>
-								)}
-
-								<div class="card-meta">
-									{platform && (
-										<p class={`badge ${platform.class}`}>
-											{platform.label}
-										</p>
+							{
+								<>
+									{post.data.image && (
+										<div class="card-image-container">
+											<Image
+												src={post.data.image}
+												alt={post.data.title}
+												width={280}
+												height={200}
+												loading="lazy"
+												class="card-image"
+												data-no-zoom
+											/>
+										</div>
 									)}
-
-									{os && (
-										<p class={`badge ${os.class}`}>
-											{os.label}
-										</p>
+									{post.data.type === "writeup" && (
+										<div class="card-meta">
+											{platform && (
+												<p
+													class={`badge ${platform.class}`}
+												>
+													{platform.label}
+												</p>
+											)}
+											<div class="card-meta-osdifficulty">
+												{os && (
+													<span
+														class={`badge ${os.class}`}
+													>
+														{os.label}
+													</span>
+												)}
+												{os && difficulty && "#"}
+												{difficulty && (
+													<span
+														class={`badge ${difficulty.class}`}
+													>
+														{difficulty.label}
+													</span>
+												)}
+											</div>
+										</div>
 									)}
+								</>
+							}
 
-									{difficulty && (
-										<p class={`badge ${difficulty.class}`}>
-											{difficulty.label}
-										</p>
-									)}
-								</div>
-							</>
-						}
-
-						{post.data.type === "post" && (
-							<p class="card-description">
-								{post.data?.description}
-							</p>
-						)}
+							{post.data.type === "post" && (
+								<p class="card-description">
+									{post.data?.description}
+								</p>
+							)}
+						</div>
 
 						<a class="card-link" href={`/es/${post.id}`}>
 							Leer{" "}
@@ -140,85 +150,87 @@ const osMap: any = {
 	.card {
 		display: flex;
 		flex-direction: column;
-		border: 1px solid var(--color-secondary-light);
-		border-radius: 4px;
-		padding: 0.75rem 1rem;
-		&:hover {
-			border: 1px solid var(--color-secondary);
-		}
-		h2 {
-			margin-block: 0.5rem 1rem;
-			font-size: clamp(1.2rem, 5vw, 1.3rem);
-		}
-		.card-image-container {
-			display: flex;
-			justify-content: center;
-			margin-bottom: 1rem;
-			.card-image {
-				width: 100%;
-				max-width: 150px;
-				height: auto;
+		background-color: var(--bg-color-02);
+		div {
+			padding: 0.75rem 1rem;
+			h2 {
+				margin-block: 0.5rem 1rem;
+				font-size: clamp(1.2rem, 5vw, 1.3rem);
 			}
-		}
-		.card-meta {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			row-gap: 0.25rem;
-			margin-bottom: 1rem;
-			.badge {
-				margin: 0;
-				border: 1px solid var(--color-secondary-light);
-				border-radius: 4px;
-				padding: 0.1rem 0.4rem;
+			.card-image-container {
+				display: flex;
+				justify-content: center;
+				.card-image {
+					width: 100%;
+					max-width: 150px;
+					height: auto;
+				}
+			}
+			.card-meta {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				row-gap: 0.25rem;
+				.card-meta-osdifficulty {
+					width: 100%;
+					display: flex;
+					justify-content: center;
+				}
+				.badge {
+					margin: 0;
+					padding: 0.1rem 0.4rem;
+					font-size: 0.9rem;
+					text-align: center;
+				}
+				.dockerlabs {
+					border-color: var(--color-primary);
+				}
+				.htb {
+					color: var(--color-success);
+				}
+				.linux {
+				}
+
+				.windows {
+				}
+				.muy-facil {
+				}
+
+				.very-easy {
+				}
+
+				.easy {
+				}
+
+				.medium {
+					color: var(--color-warning-light);
+				}
+
+				.hard {
+				}
+
+				.insane {
+				}
+			}
+
+			.card-description {
+				line-height: 1.6rem;
 				font-size: 0.9rem;
-				text-align: center;
 			}
-			.dockerlabs {
-				border-color: var(--color-primary);
-			}
-			.htb {
-				color: var(--color-success);
-			}
-			.linux {
-			}
-
-			.windows {
-			}
-			.muy-facil {
-			}
-
-			.very-easy {
-			}
-
-			.easy {
-			}
-
-			.medium {
-				color: var(--color-warning-light);
-			}
-
-			.hard {
-			}
-
-			.insane {
-			}
-		}
-
-		.card-description {
-			font-size: 0.9rem;
 		}
 		.card-link {
 			display: flex;
 			justify-content: center;
 			margin-top: auto;
-			border: 2px solid var(--color-warning);
-			padding: 0.4rem 0.6rem;
-			background-color: #0d1117;
-			color: var(--color-light);
+			padding: 0.75rem 0.6rem;
+			background-color: var(--bg-color-03);
+			font-weight: 500;
+			text-transform: uppercase;
+			color: var(--text-color-02);
 			text-decoration: none;
-			&:active {
-				transform: scale(0.95);
+			transition: transform 0.2s;
+			&:hover {
+				background-color: var(--bg-color-hover);
 			}
 		}
 	}

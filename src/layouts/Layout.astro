@@ -15,6 +15,15 @@ import "@styles/global.css";
 		<meta name="generator" content={Astro.generator} />
 		<title>no0funny # Blog</title>
 		<Font cssVariable="--font-jost" />
+		<script is:inline>
+			const stored = localStorage.getItem("theme");
+			const theme =
+				stored ??
+				(window.matchMedia("(prefers-color-scheme: dark)").matches
+					? "dark"
+					: "light");
+			document.documentElement.setAttribute("data-theme", theme);
+		</script>
 	</head>
 	<body>
 		<Navbar />
@@ -33,6 +42,6 @@ import "@styles/global.css";
 		height: 100%;
 	}
 	main {
-		padding-inline: 0.5rem;
+		padding-inline: 1rem;
 	}
 </style>
