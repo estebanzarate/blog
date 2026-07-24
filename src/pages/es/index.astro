@@ -6,6 +6,10 @@ const posts = await getCollection("post");
 const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
 
 const platformMap: any = {
+	overthewire: {
+		label: "OverTheWire",
+		class: "overthewire",
+	},
 	dockerlabs: {
 		label: "DockerLabs",
 		class: "dockerlabs",
@@ -118,11 +122,12 @@ const osMap: any = {
 								</>
 							}
 
-							{post.data.type === "post" && (
-								<p class="card-description">
-									{post.data?.description}
-								</p>
-							)}
+							{post.data.type === "post" &&
+								post.data.description && (
+									<p class="card-description">
+										{post.data.description}
+									</p>
+								)}
 						</div>
 
 						<a class="card-link" href={`/es/${post.id}`}>
@@ -175,6 +180,7 @@ const osMap: any = {
 					width: 100%;
 					display: flex;
 					justify-content: center;
+					padding: 0;
 				}
 				.badge {
 					margin: 0;

@@ -1,7 +1,7 @@
 ---
 type: post
 title: CTFs y plataformas vulnerables
-description: Las mejores plataformas, webs vulnerables y CTFs para practicar hacking
+description: Listado de plataformas, webs vulnerables y CTFs para practicar ciberseguridad
 lang: es
 ---
 
