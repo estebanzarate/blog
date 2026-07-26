@@ -299,15 +299,15 @@ ports() {
     dunstify -u normal "[ Ports ]" "Ports copied to clipboard: $result"
 }
 
-_venv_error() {
+_pyvenv_error() {
     echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: $1\n"
 }
 
-_venv_success() {
+_pyvenv_success() {
     echo -e "\n[${ANSI_SUCCESS}+${COLOR_RESET}] $1"
 }
 
-venv() {
+pyvenv() {
     local venv_dir="venv"
     local libs=("$@")
 
@@ -315,18 +315,18 @@ venv() {
         if [[ -d "$venv_dir" ]]; then
             [[ -n "$VIRTUAL_ENV" ]] && deactivate
             rm -rf "$venv_dir"
-            _venv_success "venv removed\n"
+            _pyvenv_success "venv removed\n"
         else
             python3 -m venv "$venv_dir"
             source "$venv_dir/bin/activate"
-            _venv_success "venv created and activated\n"
+            _pyvenv_success "venv created and activated\n"
         fi
         return 0
     fi
 
     if [[ ! -d "$venv_dir" ]]; then
         python3 -m venv "$venv_dir"
-        _venv_success "venv created"
+        _pyvenv_success "venv created"
     fi
 
     if [[ -z "$VIRTUAL_ENV" ]]; then
@@ -340,6 +340,7 @@ venv() {
 _vpn_error() {
     local usage="[${ANSI_WARNING}*${COLOR_RESET}] Usage: vpn <${ANSI_DANGER}htbm${COLOR_RESET}|${ANSI_DANGER}htbc${COLOR_RESET}|${ANSI_DANGER}htba${COLOR_RESET}|${ANSI_DANGER}thm${COLOR_RESET}>
 
+  vpn htbs  → connect to HackTheBox Starting Point
   vpn htbm  → connect to HackTheBox Machines
   vpn htbc  → connect to HackTheBox Competitive
   vpn htba  → connect to HackTheBox Academy
@@ -362,6 +363,7 @@ vpn() {
     fi
     local config
     case "$1" in
+        htbs)  config="$config_dir/htbs.ovpn" ;;
         htbm)  config="$config_dir/htbm.ovpn" ;;
         htbc) config="$config_dir/htbc.ovpn" ;;
         htba) config="$config_dir/htba.ovpn" ;;
