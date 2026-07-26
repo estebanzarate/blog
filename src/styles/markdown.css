@@ -10,7 +10,9 @@
     h6 {
         line-height: 1.2;
         margin-top: 2rem;
-        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        hyphens: auto;
     }
 
     h1 {
@@ -39,7 +41,6 @@
 
     p {
         line-height: 1.65;
-        word-break: break-all;
 
         a {
             color: var(--text-accent);
@@ -68,7 +69,8 @@
     ul li code,
     strong,
     p code {
-        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     li {
