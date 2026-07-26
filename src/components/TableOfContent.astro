@@ -2,17 +2,29 @@
 const { headings } = Astro.props;
 ---
 
-<aside id="index-aside">
+<aside id="index-aside" class="tableofcontent">
     <div class="aside-header">
-        <h2>Índice</h2>
+        <h2>Tabla de contenidos</h2>
         <button id="close-index" class="close-btn" aria-label="Cerrar índice"
-            >✕</button
+            ><svg
+                width="24"
+                height="24"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                class=""
+                ><path
+                    d="M10 11.0623L6.58334 14.479C6.43056 14.6318 6.25695 14.7047 6.06251 14.6978C5.86806 14.6908 5.69445 14.6109 5.54167 14.4582C5.38889 14.3054 5.31251 14.1283 5.31251 13.9269C5.31251 13.7255 5.38889 13.5484 5.54167 13.3957L8.93751 9.99984L5.52084 6.58317C5.36806 6.43039 5.29514 6.25331 5.30209 6.05192C5.30903 5.85053 5.38889 5.67345 5.54167 5.52067C5.69445 5.36789 5.87153 5.2915 6.07292 5.2915C6.27431 5.2915 6.45139 5.36789 6.60417 5.52067L10 8.93734L13.4167 5.52067C13.5694 5.36789 13.7465 5.2915 13.9479 5.2915C14.1493 5.2915 14.3264 5.36789 14.4792 5.52067C14.6319 5.67345 14.7083 5.85053 14.7083 6.05192C14.7083 6.25331 14.6319 6.43039 14.4792 6.58317L11.0625 9.99984L14.4792 13.4165C14.6319 13.5693 14.7083 13.7429 14.7083 13.9373C14.7083 14.1318 14.6319 14.3054 14.4792 14.4582C14.3264 14.6109 14.1493 14.6873 13.9479 14.6873C13.7465 14.6873 13.5694 14.6109 13.4167 14.4582L10 11.0623Z"
+                    fill="currentColor"
+                    class="-fill"></path></svg
+            ></button
         >
     </div>
     <ul>
         {
             headings.map((heading: any) => (
-                <li class={`level-${heading.level}`}>
+                <li class={`level-${heading.depth}`}>
                     <a href={`#${heading.slug}`}>{heading.text}</a>
                 </li>
             ))
@@ -24,120 +36,109 @@ const { headings } = Astro.props;
     const asideEl = document.querySelector<HTMLElement>("#index-aside");
     const openBtn = document.querySelector<HTMLButtonElement>("#open-index");
     const closeBtn = document.querySelector<HTMLButtonElement>("#close-index");
-    const overlay = document.querySelector<HTMLElement>("#index-overlay");
 
-    function openIndex() {
+    if (!asideEl && openBtn) {
+        openBtn.style.display = "none";
+    }
+
+    openBtn?.addEventListener("click", () => {
         asideEl?.classList.add("open");
-        overlay?.classList.add("visible");
-        document.body.classList.add("no-scroll");
-    }
+    });
 
-    function closeIndex() {
+    closeBtn?.addEventListener("click", () => {
         asideEl?.classList.remove("open");
-        overlay?.classList.remove("visible");
-        document.body.classList.remove("no-scroll");
-    }
-
-    openBtn?.addEventListener("click", openIndex);
-    closeBtn?.addEventListener("click", closeIndex);
-    overlay?.addEventListener("click", closeIndex);
+    });
 </script>
 
 <style>
-    aside ul {
-        list-style: none;
-        padding-left: 0;
+    .tableofcontent {
+        box-sizing: border-box;
+        position: sticky;
+        top: calc(var(--nav-offset, 4rem) + 3rem);
+        bottom: 1rem;
+        display: flex;
+        flex: 0 0 0;
+        flex-direction: column;
+        align-self: flex-start;
+        width: 0;
+        min-width: 0;
+        max-height: calc(100vh - var(--nav-offset, 4rem) - 4rem);
+        padding: 0;
+        background-color: var(--bg-color-02);
+        backdrop-filter: blur(12px);
+        border-radius: 6px;
+        transition:
+            flex-basis 0.3s,
+            width 0.3s,
+            padding 0.3s;
+        overflow: hidden;
     }
-    aside a {
-        text-decoration: none;
+    .tableofcontent.open {
+        flex: 0 0 400px;
+        width: 400px;
+        padding: 1rem;
     }
     .aside-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 0.75rem;
+        flex-shrink: 0;
+        h2 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+    }
+    .aside-content {
+        width: 280px;
+        padding: 1.25rem;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
     .close-btn {
-        display: none;
+        display: flex;
         background: none;
         border: none;
         color: inherit;
-        font-size: 1.1rem;
         cursor: pointer;
-        line-height: 1;
         padding: 0.25rem;
     }
-    .index-toggle {
-        display: none;
+    .tableofcontent ul {
+        flex: 1;
+        margin: 0;
+        padding: 0;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        list-style: none;
+        overscroll-behavior: contain;
+        scrollbar-color: #888 transparent;
+        li {
+            border: 1px solid var(--bg-color-border-01);
+            border-radius: 6px;
+            &:hover {
+                background-color: var(--bg-color-hover);
+            }
+            &:not(:last-of-type) {
+                margin-bottom: 0.5rem;
+            }
+            a {
+                display: block;
+                padding: 0.75rem;
+                color: var(--text-color-05);
+                font-size: 1rem;
+                &:hover {
+                    color: var(--text-color-01);
+                }
+            }
+        }
     }
-    .index-overlay {
-        display: none;
+    .tableofcontent li.level-2 {
+        padding-left: 0.75rem;
     }
-
-    @media (max-width: 1200px) {
-        aside {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: min(75vw, 280px);
-            margin: 0;
-            transform: translateX(100%);
-            transition: transform 0.25s ease;
-            background: rgba(30, 30, 46, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 0.75rem 0 0 0.75rem;
-            padding: 1rem;
-            overflow-y: auto;
-            overflow-x: hidden;
-            z-index: 101;
-            font-size: clamp(0.8rem, 2vw, 0.95rem);
-        }
-        aside.open {
-            transform: translateX(0);
-        }
-        aside a {
-            text-decoration: none;
-            color: #cba6f7;
-            transition: color 0.15s ease;
-        }
-        aside a:hover {
-            color: #f5c2e7;
-        }
-        .close-btn {
-            display: block;
-        }
-        .index-toggle {
-            display: block;
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 100;
-            background: rgba(30, 30, 46, 0.75);
-            backdrop-filter: blur(12px);
-            border: none;
-            border-radius: 999px;
-            width: 2.5rem;
-            height: 2.5rem;
-            color: inherit;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-        aside.open ~ .index-toggle {
-            display: none;
-        }
-        .index-overlay {
-            display: block;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0);
-            pointer-events: none;
-            transition: background 0.25s ease;
-            z-index: 99;
-        }
-        .index-overlay.visible {
-            background: rgba(0, 0, 0, 0.5);
-            pointer-events: auto;
-        }
+    .tableofcontent li.level-3 {
+        padding-left: 1.5rem;
+    }
+    .tableofcontent li.level-4 {
+        padding-left: 2.25rem;
     }
 </style>

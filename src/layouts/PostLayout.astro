@@ -6,16 +6,12 @@ const { headings } = Astro.props;
 import "@styles/markdown.css";
 ---
 
-<Layout>
+<Layout showToc={true}>
     <div class="post-layout">
         <div class="markdown-post">
             <slot />
         </div>
-        <!-- <TableOfContent {headings} /> -->
-        <!-- <div id="index-overlay" class="index-overlay"></div>
-        <button id="open-index" class="index-toggle" aria-label="Abrir índice"
-            >☰</button
-        > -->
+        <TableOfContent {headings} />
     </div>
     <Font cssVariable="--font-jost" />
 </Layout>
@@ -65,3 +61,15 @@ import "@styles/markdown.css";
             });
         });
 </script>
+
+<style>
+    .post-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+    .markdown-post {
+        flex: 1;
+        min-width: 0;
+    }
+</style>

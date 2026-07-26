@@ -13,6 +13,8 @@ hints: [ssh, user enumeration, brute force]
 tags: [searchsploit, metasploit, hydra, ssh]
 ---
 
+## Enumeration
+
 Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
 
 ```bash
@@ -46,6 +48,8 @@ searchsploit vsftpd 2.3.4
 vsftpd 2.3.4 - Backdoor Command Execution                                                                                                 | unix/remote/49757.py
 vsftpd 2.3.4 - Backdoor Command Execution (Metasploit)                                                                                    | unix/remote/17491.rb
 ```
+
+## Exploitation
 
 Creamos un script en Python porque los pocs que andan dando vueltas usan librerías de Python obsoletas y no nos queremos volver locos.
 

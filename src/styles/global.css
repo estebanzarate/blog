@@ -9,12 +9,14 @@
     --bg-color-02: #151f2e;
     --bg-color-03: #1e2939;
 
+    --bg-color-border-01: #293547;
     --bg-color-hover: #2f3b4e;
 
     --text-color-01: #f4f4f4;
     --text-color-02: #8799b5;
     --text-color-03: #5e94f3;
     --text-color-04: #babed8;
+    --text-color-05: #526177;
 
     --text-accent: #9fef00;
 
@@ -26,10 +28,13 @@
 }
 
 html {
+    scroll-padding-top: calc(var(--nav-offset, 4rem) + 1rem);
+    scroll-behavior: smooth;
     font-size: 1.2rem;
 }
 
 body {
+    padding-top: calc(var(--nav-offset, 4rem) + 1rem);
     background-color: var(--bg-color-01);
     font-family: var(--font-sans);
     color: var(--text-color-01);

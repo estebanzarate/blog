@@ -3,6 +3,11 @@ import { Font } from "astro:assets";
 import Navbar from "@components/Navbar.astro";
 import Footer from "@components/Footer.astro";
 import "@styles/global.css";
+
+interface Props {
+	showToc?: boolean;
+}
+const { showToc = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -26,7 +31,7 @@ import "@styles/global.css";
 		</script>
 	</head>
 	<body>
-		<Navbar />
+		<Navbar showToc={showToc} />
 		<main>
 			<slot />
 		</main>

@@ -1,7 +1,14 @@
+---
+interface Props {
+	showToc?: boolean;
+}
+const { showToc = false } = Astro.props;
+---
+
 <header class="main-header">
 	<a href="/">
 		<span class="emoji">😐</span>
-		<h1><span>[</span> no0funny <span>]</span></h1>
+		<h1 class="brandname"><span>[</span> no0funny <span>]</span></h1>
 	</a>
 	<div>
 		<div class="social-media-container">
@@ -53,6 +60,28 @@
 				>
 			</a>
 		</div>
+		{
+			showToc && (
+				<button
+					id="open-index"
+					class="index-toggle"
+					aria-label="Abrir índice"
+				>
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<line x1="4" y1="6" x2="20" y2="6" />
+						<line x1="4" y1="12" x2="20" y2="12" />
+						<line x1="4" y1="18" x2="14" y2="18" />
+					</svg>
+				</button>
+			)
+		}
 		<!-- <div>
 			<button
 				id="theme-toggle"
@@ -64,15 +93,14 @@
 </header>
 
 <script>
-	const nav = document.querySelector<HTMLElement>("main-header");
+	const nav = document.querySelector<HTMLElement>(".main-header");
 
 	function setNavHeight() {
 		if (!nav) return;
 		const height = nav.offsetHeight;
-		const top = parseFloat(getComputedStyle(nav).top);
 		document.documentElement.style.setProperty(
 			"--nav-offset",
-			`${height + top * 2}px`,
+			`${height}px`,
 		);
 	}
 
@@ -103,28 +131,53 @@
 
 <style>
 	.main-header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 200;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 1rem;
 		background: var(--bg-color);
 		backdrop-filter: blur(12px);
+		.index-toggle {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: none;
+			padding: 0.4rem;
+			background: unset;
+			color: var(--text-accent, currentColor);
+			cursor: pointer;
+		}
+		.index-toggle:hover {
+			border-radius: 4px;
+			background-color: var(--bg-color-hover);
+		}
 		a {
 			display: flex;
 			align-items: center;
-			column-gap: 0.125rem;
+			column-gap: 0.25rem;
 			h1 {
-				display: flex;
-				align-items: center;
-				column-gap: 0.25rem;
-				margin: 0;
-				font-size: clamp(1rem, 1.5vw, 1.25rem);
-				span {
-					color: var(--color-warning);
+				display: none;
+			}
+			@media screen and (min-width: 480px) {
+				h1 {
+					display: flex;
+					align-items: center;
+					column-gap: 0.25rem;
+					margin: 0;
+					font-size: clamp(1rem, 5vw, 1.75rem);
+					span {
+						color: var(--text-accent);
+					}
 				}
 			}
 			.emoji {
-				margin: 0;
+				margin-right: 0.25rem;
+				font-size: clamp(1rem, 5vw, 1.75rem);
 			}
 		}
 		div {
@@ -135,7 +188,7 @@
 				align-items: center;
 				a {
 					display: flex;
-					padding: 0.5rem;
+					padding: 0.25rem;
 					&:hover {
 						border-radius: 4px;
 						background-color: var(--bg-color-hover);
