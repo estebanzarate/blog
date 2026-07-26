@@ -123,7 +123,7 @@ const { headings } = Astro.props;
             }
             a {
                 display: block;
-                padding: 0.75rem;
+                padding: 0.75rem 0.75rem 0.75rem 1rem;
                 color: var(--text-color-05);
                 font-size: 1rem;
                 &:hover {
@@ -132,13 +132,26 @@ const { headings } = Astro.props;
             }
         }
     }
-    .tableofcontent li.level-2 {
-        padding-left: 0.75rem;
-    }
     .tableofcontent li.level-3 {
-        padding-left: 1.5rem;
+        a {
+            padding-left: 1.25rem;
+            &::before {
+                content: "›";
+                margin-right: 0.25rem;
+                font-weight: 700;
+                color: var(--text-accent);
+            }
+        }
     }
     .tableofcontent li.level-4 {
-        padding-left: 2.25rem;
+        a {
+            padding-left: 1.5rem;
+            &::before {
+                content: "››";
+                margin-right: 0.25rem;
+                font-weight: 700;
+                color: var(--text-accent);
+            }
+        }
     }
 </style>
