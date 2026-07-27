@@ -37,17 +37,24 @@ const { headings } = Astro.props;
     const openBtn = document.querySelector<HTMLButtonElement>("#open-index");
     const closeBtn = document.querySelector<HTMLButtonElement>("#close-index");
 
-    if (!asideEl && openBtn) {
-        openBtn.style.display = "none";
+    function openIndex() {
+        asideEl?.classList.add("open");
     }
 
-    openBtn?.addEventListener("click", () => {
-        asideEl?.classList.add("open");
-    });
-
-    closeBtn?.addEventListener("click", () => {
+    function closeIndex() {
         asideEl?.classList.remove("open");
-    });
+    }
+
+    function toggleIndex() {
+        if (asideEl?.classList.contains("open")) {
+            closeIndex();
+        } else {
+            openIndex();
+        }
+    }
+
+    openBtn?.addEventListener("click", toggleIndex);
+    closeBtn?.addEventListener("click", closeIndex);
 </script>
 
 <style>

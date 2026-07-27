@@ -14,3 +14,50 @@ tags: [sqli]
 ---
 
 ## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.124.16
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+80/tcp open  http    syn-ack ttl 63
+```
+
+Escaneamos el puerto encontrado para ver más detalles sobre el servicio que corre en él.
+
+```bash
+nmap -p 80 -sCV -oA nmap/openports 10.129.124.16
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.38
+|_http-title: Login
+|_http-server-header: Apache/2.4.38 (Debian)
+Service Info: Host: 127.0.0.1
+```
+
+Visitamos la IP para ver el sitio web y encontramos un formulario de inicio de sesión.
+
+![Appointment Web Service](@images/writeups/hackthebox/machines/appointment/appointment-webservice.png)
+
+## Exploitation
+
+Podemos probar inyectar una consulta SQL en alguno de los inputs, por ejemplo, en el `username` `melvin' OR True-- -`.
+
+La comilla después del nombre del usuario cierra la comilla que recibe el `username` y el `OR` nos permite agregar otra sentencia, en este caso el `OR` hace que la query se tome como `True` si una de las dos parte es `True`, si el nombre del usuario en inválido esa parte será `False` pero si la parte derecha es `True` entonces el `OR` va a hacer que la query completa sea `True` porque requiere que solo una parte sea `True`. Los guiones después del `True` comentan el resto de la query, el último espacio es para que se tome como válido los comentarios y el guión final es para evitar que los navegadores eliminen ese espacio.
+
+![Appointment SQLi](@images/writeups/hackthebox/machines/appointment/appointment-sqli.png)
+
+Presionamos `submit` y obtenemos la flag.
+
+![Appointment SQLi](@images/writeups/hackthebox/machines/appointment/appointment-flag.png)
+
+### Flag
+
+<Callout type="success" title="Flag">
+e******************************2
+</Callout>
