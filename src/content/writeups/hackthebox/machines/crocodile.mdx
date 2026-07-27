@@ -154,7 +154,7 @@ Con la información que recolectamos hasta ahora podemos hacer fuerza bruta con 
 `hydra` toma las listas que encontramos con las flags `-L` para el usuario y `-P` para la contraseña, la IP del target, el tipo de formulario y método (`http`, `post` con `http-post-form`), la ruta del archivo que procesa la información `/login.php`, el body con `Username` y `Password` que van a reemplazarse con los diccionarios y con `F` le decimos que si encuentra ese texto en la respuesta significa que la contraseña falló.
 
 ```bash
-hydra -L allowed.userlist -P allowed.userlist.passwd 10.129.1.15 http-post-form "/login.php:Username=^USER^&Password=^PASS^&Submit=Login:F=Incorrect information." -I
+hydra -L allowed.userlist -P allowed.userlist.passwd 10.129.1.15 http-post-form "/login.php:Username=^USER^&Password=^PASS^&Submit=Login:F=Incorrect information." -I -F
 ```
 
 ```plaintext
