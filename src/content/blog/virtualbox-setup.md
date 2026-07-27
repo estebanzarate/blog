@@ -1337,5 +1337,7 @@ sudo mkinitcpio -P
 ## Otras herramientas
 
 ```bash
-sudo pacman -S ascii
+sudo pacman -S ascii valkey
 ```
+
+- `valkey`: Almacén de datos en memoria de código abierto creado como una rama de Redis, por petición de la comunidad en respuesta a los cambios de licencias.
