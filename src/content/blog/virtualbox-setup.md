@@ -1196,7 +1196,7 @@ local options = {
 ## Pacman — Cyber
 
 ```bash
-sudo pacman -S bind gobuster hashcat hydra impacket metasploit nikto nmap openbsd-netcat openldap openvpn pocl proxychains-ng smbclient socat sqlmap tcpdump tor torbrowser-launcher wireshark-qt wpscan php
+sudo pacman -S bind gobuster hashcat hydra impacket john metasploit nikto nmap openbsd-netcat openldap openvpn pocl proxychains-ng smbclient socat sqlmap tcpdump tor torbrowser-launcher wireshark-qt wpscan php
 ```
 
 ## Paru (AUR) — Cyber tools

