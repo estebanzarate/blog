@@ -162,6 +162,8 @@ Iniciamos sesión con las credenciales obtenidas y vemos un dashboard de catálo
 
 La web tiene una función de búsqueda vulnerable a SQLi.
 
+Capturamos la request con `Burpsuite` y la guardamos en un archivo para usarlo en `sqlmap`.
+
 ```bash
 sqlmap -r request.req 
 ```
