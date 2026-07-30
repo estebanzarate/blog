@@ -159,6 +159,12 @@
                     padding: 16px;
                     font-size: 0.875rem;
                     text-align: left;
+
+                    a {
+                        &:hover {
+                            text-decoration: underline;
+                        }
+                    }
                 }
             }
         }
