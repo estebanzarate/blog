@@ -403,6 +403,51 @@ clip() {
     echo -e "\n[${ANSI_SUCCESS}+${COLOR_RESET}] '$1' copied to clipboard\n"
     dunstify -u normal "[ CLIP ]" "'$1' copied to clipboard"
 }
+
+tool() {
+    local base_url="https://github.com/estebanzarate/cibersectools/releases/download/cibersectools"
+    local usage="\n[${ANSI_WARNING}*${COLOR_RESET}] Usage: tool [${ANSI_DANGER}name${COLOR_RESET}]\n\n  tool seatbelt   → downloads Seatbelt.exe\n  tool sharpup    → downloads SharpUp.exe\n  tool watson     → downloads Watson.exe\n"
+    if [[ $# -ne 1 ]]; then
+        echo -e "$usage"
+        return 1
+    fi
+    local remote_name local_name
+    case "$1" in
+        seatbelt)
+            remote_name="Seatbelt.exe"
+            local_name="seatbelt.exe"
+            ;;
+        sharpup)
+            remote_name="SharpUp.exe"
+            local_name="sharpup.exe"
+            ;;
+        watson)
+            remote_name="Watson.exe"
+            local_name="watson.exe"
+            ;;
+        *)
+            echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: unknown tool '$1'"
+            echo -e "$usage"
+            dunstify -u critical "[ Tool ]" "Unknown tool '$1'"
+            return 1
+            ;;
+    esac
+    if [[ -f "$local_name" ]]; then
+        echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: '$local_name' already exists in current directory\n"
+        dunstify -u critical "[ Tool ]" "'$local_name' already exists"
+        return 1
+    fi
+    echo -e "\n[${ANSI_WARNING}*${COLOR_RESET}] Downloading $remote_name"
+    if curl -fsSL -o "$local_name" "$base_url/$remote_name"; then
+        echo -e "\n[${ANSI_SUCCESS}+${COLOR_RESET}] '$local_name' downloaded to current directory\n"
+        dunstify -u normal "[ Tool ]" "'$local_name' downloaded"
+    else
+        rm -f "$local_name"
+        echo -e "\n[${ANSI_DANGER}!${COLOR_RESET}] Error: failed to download '$remote_name'\n"
+        dunstify -u critical "[ Tool ]" "Failed to download '$remote_name'"
+        return 1
+    fi
+}
 EOF
 ```
 
