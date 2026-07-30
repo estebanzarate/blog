@@ -8,6 +8,8 @@ draft: false
 
 ## Herramientas
 
+[Tools Compiladas](https://github.com/estebanzarate/cibersectools): Incluye `Seatbelt`, `SharpUp`, `Watson`. En mi [.bashrc](https://no0funny.vercel.app/es/blog/virtualbox-setup#homebashrc) hay una función para descargar cada herramienta.
+
 | Herramienta | Descripción |
 | - | - |
 | [Seatbelt](https://github.com/GhostPack/Seatbelt) | Proyecto en `C#` que realiza una serie de "comprobaciones de seguridad" orientadas a la seguridad del host, relevantes tanto desde una perspectiva de seguridad ofensiva como defensiva. | 
