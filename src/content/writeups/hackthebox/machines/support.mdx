@@ -1,0 +1,165 @@
+---
+type: writeup
+title: Support
+description: Cuenta con un recurso compartido SMB que permite la autenticación anónima. Tras conectarse al recurso compartido, se descubre un archivo ejecutable que se utiliza para consultar el servidor LDAP de la máquina en busca de usuarios disponibles. Mediante ingeniería inversa, análisis de red o emulación, se identifica la contraseña que el binario utiliza para vincularse al servidor LDAP y se puede utilizar para realizar consultas LDAP adicionales. Se identifica un usuario llamado support en la lista de usuarios, y se encuentra que el campo info contiene su contraseña, lo que permite una conexión WinRM a la máquina. Una vez dentro de la máquina, se puede recopilar información del dominio mediante SharpHound, y BloodHound revela que el grupo Shared Support Accounts, al que pertenece el usuario support, tiene privilegios GenericAll en el controlador de dominio. Se realiza un ataque de delegación restringida basada en recursos y se recibe una shell como NT Authority\System.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/support/support.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Support
+difficulty: easy
+os: windows
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
+```
+
+```plaintext
+PORT      STATE SERVICE          REASON
+53/tcp    open  domain           syn-ack ttl 127
+88/tcp    open  kerberos-sec     syn-ack ttl 127
+135/tcp   open  msrpc            syn-ack ttl 127
+139/tcp   open  netbios-ssn      syn-ack ttl 127
+389/tcp   open  ldap             syn-ack ttl 127
+445/tcp   open  microsoft-ds     syn-ack ttl 127
+464/tcp   open  kpasswd5         syn-ack ttl 127
+593/tcp   open  http-rpc-epmap   syn-ack ttl 127
+636/tcp   open  ldapssl          syn-ack ttl 127
+3268/tcp  open  globalcatLDAP    syn-ack ttl 127
+3269/tcp  open  globalcatLDAPssl syn-ack ttl 127
+5985/tcp  open  wsman            syn-ack ttl 127
+9389/tcp  open  adws             syn-ack ttl 127
+49664/tcp open  unknown          syn-ack ttl 127
+49667/tcp open  unknown          syn-ack ttl 127
+49670/tcp open  unknown          syn-ack ttl 127
+49677/tcp open  unknown          syn-ack ttl 127
+49685/tcp open  unknown          syn-ack ttl 127
+49708/tcp open  unknown          syn-ack ttl 127
+```
+
+Escaneamos los puertos abiertos para conocer más detalles sobre los servicios que corren en ellos.
+
+```bash
+nmap -p 53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49664,49667,49670,49677,49685,49708 -sCV -Pn -oA nmap/openports 10.129.230.181
+```
+
+```plaintext
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-08-01 02:27:03Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+49664/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49677/tcp open  msrpc         Microsoft Windows RPC
+49685/tcp open  msrpc         Microsoft Windows RPC
+49708/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+|_clock-skew: -1s
+| smb2-time: 
+|   date: 2026-08-01T02:27:55
+|_  start_date: N/A
+```
+
+Chequeamos si el servicio `NetBIOS` en el puerto `139` permite autenticación como `Guest` sin la necesidad de ingresar contraseña.
+
+```bash
+nxc smb 10.129.230.181 -u Guest -p ""
+```
+
+```plaintext
+SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
+```
+
+Resuelve al dominio `support.htb`, lo agregamos el archivo `/etc/hosts`.
+
+```bash
+echo "10.129.230.181 support.htb" | sudo tee -a /etc/hosts
+```
+
+Listamos los recursos compartidos.
+
+```bash
+nxc smb 10.129.230.181 -u Guest -p "" --shares
+```
+
+```plaintext
+SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.230.181  445    DC               [+] support.htb\Guest: 
+SMB         10.129.230.181  445    DC               [*] Enumerated shares
+SMB         10.129.230.181  445    DC               Share           Permissions     Remark
+SMB         10.129.230.181  445    DC               -----           -----------     ------
+SMB         10.129.230.181  445    DC               ADMIN$                          Remote Admin
+SMB         10.129.230.181  445    DC               C$                              Default share
+SMB         10.129.230.181  445    DC               IPC$            READ            Remote IPC
+SMB         10.129.230.181  445    DC               NETLOGON                        Logon server share 
+SMB         10.129.230.181  445    DC               support-tools   READ            support staff tools
+SMB         10.129.230.181  445    DC               SYSVOL                          Logon server share
+```
+
+Listamos el contenido del recurso compartido `support-tools` aprovechando que tenemos permisos de lectura.
+
+```bash
+nxc smb 10.129.230.181 -u Guest -p "" --spider support-tools --pattern .
+```
+
+```plaintext
+SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.129.230.181  445    DC               [+] support.htb\Guest: 
+SMB         10.129.230.181  445    DC               [*] Spidering .
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/. [dir]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/.. [dir]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/7-ZipPortable_21.07.paf.exe [lastm:'2022-05-28 08:19' size:2880728]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/npp.8.4.1.portable.x64.zip [lastm:'2022-05-28 08:19' size:5439245]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/putty.exe [lastm:'2022-05-28 08:20' size:1273576]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/SysinternalsSuite.zip [lastm:'2022-05-28 08:19' size:48102161]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/UserInfo.exe.zip [lastm:'2022-07-20 14:01' size:277499]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/windirstat1_1_2_setup.exe [lastm:'2022-05-28 08:20' size:79171]
+SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/WiresharkPortable64_3.6.5.paf.exe [lastm:'2022-05-28 08:19' size:44398000]
+```
+
+Descargamos el archivo que parece contener información sensible.
+
+```bash
+nxc smb 10.129.230.181 -u Guest -p "" --share support-tools --get-file UserInfo.exe.zip UserInfo.exe.zip
+```
+
+Creamos un directorio para extraer el contenido del archivo descargado.
+
+```plaintext
+mkdir UserInfo
+```
+
+Y extraemos el contenido del archivo descargado en el directorio creado.
+
+```bash
+unzip UserInfo.exe.zip -d UserInfo/
+```

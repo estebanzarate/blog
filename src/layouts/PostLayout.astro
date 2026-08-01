@@ -1,7 +1,6 @@
 ---
-import { Font } from "astro:assets";
-import Layout from "@layouts/Layout.astro";
-import TableOfContent from "@components/TableOfContent.astro";
+import Layout from "./Layout.astro";
+import TableOfContent from "../components/TableOfContent.astro";
 const { headings } = Astro.props;
 import "@styles/markdown.css";
 ---
@@ -13,7 +12,6 @@ import "@styles/markdown.css";
         </div>
         <TableOfContent {headings} />
     </div>
-    <Font cssVariable="--font-jost" />
 </Layout>
 
 <script>

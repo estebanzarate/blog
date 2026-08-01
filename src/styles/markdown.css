@@ -93,7 +93,7 @@
         background: var(--bg-color-03);
         color: var(--text-color-03);
         font-weight: 500;
-        font-family: var(--font-mono);
+        font-family: var(--font-sans);
 
         span {
             color: var(--text-color-04);
@@ -106,11 +106,11 @@
         margin-bottom: 1.5rem;
         line-height: 1.65;
         scrollbar-width: none;
-    }
 
-    pre code {
-        background: none;
-        border: none;
+        code {
+            background: none;
+            border: none;
+        }
     }
 
     blockquote {
@@ -129,12 +129,10 @@
         margin-bottom: 1rem;
         border-collapse: separate;
         border-radius: 0.5rem;
-        overflow-x: auto;
         background-color: var(--bg-color-04);
 
         thead {
             tr {
-                width: 100%;
                 border-top: 0 solid var(--border-color);
 
                 th {
@@ -148,7 +146,6 @@
 
         tbody {
             tr {
-                width: 100%;
                 border-top: 1px solid var(--border-color);
 
                 td {

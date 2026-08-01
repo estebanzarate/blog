@@ -1,7 +1,6 @@
 :root,
 :root[data-theme='dark'] {
     --font-sans: var(--font-jost), cursive;
-    --font-mono: var(--font-dejavu), monospace;
 
     --bg-color-01: #101927;
     --bg-color-02: #151f2e;
@@ -30,7 +29,6 @@
 
 html {
     scroll-padding-top: calc(var(--nav-offset, 4rem) + 1rem);
-    /* scroll-behavior: smooth; */
     font-size: 1.2rem;
 }
 
