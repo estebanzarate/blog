@@ -21,4 +21,4 @@ draft: false
 | [Watson](https://github.com/rasta-mouse/Watson) | NET tool designed to enumerate missing KBs and suggest exploits for Privilege Escalation vulnerabilities. |
 | [LaZagne](https://github.com/AlessandroZ/LaZagne) | Used to retrieve lots of passwords stored on a local computer. |
 | [Windows Exploit Suggester - Next Generation](https://github.com/bitsadmin/wesng) | Basado en la información que proporciona la utilidad `systeminfo` de Windows, que ofrece una lista de las vulnerabilidades a las que es vulnerable el sistema operativo, incluyendo cualquier exploit para dichas vulnerabilidades. |
-| [Sysinternals Suite](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) | conjunto de herramientas de administración, diagnóstico y resolución de problemas para sistemas operativos Windows. |
+| [Sysinternals Suite](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) | Conjunto de herramientas de administración, diagnóstico y resolución de problemas para sistemas operativos Windows. |

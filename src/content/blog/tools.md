@@ -6,6 +6,7 @@ lang: es
 draft: false
 ---
 
+- [Netexec](./tools/netexec)
 - [tcpdump](./tools/tcpdump)
 - [wireshark](./tools/wireshark)
 

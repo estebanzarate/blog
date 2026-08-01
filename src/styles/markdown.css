@@ -49,6 +49,11 @@
                 text-decoration: underline;
             }
         }
+
+        img {
+            display: flex;
+            justify-self: center;
+        }
     }
 
     p,

