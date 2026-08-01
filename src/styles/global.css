@@ -1,6 +1,6 @@
 :root,
 :root[data-theme='dark'] {
-    --font-sans: var(--font-jost), cursive;
+    --font-main: var(--font-jost), cursive;
 
     --bg-color-01: #101927;
     --bg-color-02: #151f2e;
@@ -35,7 +35,7 @@ html {
 body {
     padding-top: calc(var(--nav-offset, 4rem) + 1rem);
     background-color: var(--bg-color-01);
-    font-family: var(--font-sans);
+    font-family: var(--font-main);
     color: var(--text-color-01);
 }
 

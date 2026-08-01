@@ -7,3 +7,7 @@ draft: false
 ---
 
 - [tcpdump](./tools/tcpdump)
+
+## Decompiladores
+
+- [AvaloniaILSpy](https://github.com/icsharpcode/AvaloniaILSpy)

