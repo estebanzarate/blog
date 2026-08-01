@@ -1,0 +1,179 @@
+---
+import type { TreeNode } from "@utils/buildTree";
+
+interface Props {
+    node: TreeNode;
+    lang: string;
+    depth: number;
+}
+const { node, lang, depth } = Astro.props;
+const hasChildren = node.children.length > 0;
+const href = `/${lang}/${node.path}`;
+const isActive =
+    Astro.url.pathname === href || Astro.url.pathname === `${href}/`;
+const isSectionHeader = depth === 0 && !node.post;
+const indentStyle = `--depth: ${depth}`;
+---
+
+{
+    isSectionHeader ? (
+        <li class="tree-section">
+            <span class="tree-section-title">{node.name}</span>
+            {hasChildren && (
+                <ul>
+                    {node.children.map((child) => (
+                        <Astro.self
+                            node={child}
+                            lang={lang}
+                            depth={depth + 1}
+                        />
+                    ))}
+                </ul>
+            )}
+        </li>
+    ) : hasChildren ? (
+        <li class="tree-item" style={indentStyle}>
+            <details>
+                <summary>
+                    {node.post ? (
+                        <a
+                            href={href}
+                            class:list={["tree-link", { active: isActive }]}
+                        >
+                            {node.post.data.title}
+                        </a>
+                    ) : (
+                        <span class="tree-folder">{node.name}</span>
+                    )}
+                    <svg
+                        class="chevron"
+                        width="10"
+                        height="10"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                    >
+                        <path
+                            d="M4 2L8 6L4 10"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </summary>
+                <ul>
+                    {node.children.map((child) => (
+                        <Astro.self
+                            node={child}
+                            lang={lang}
+                            depth={depth + 1}
+                        />
+                    ))}
+                </ul>
+            </details>
+        </li>
+    ) : (
+        <li class="tree-item" style={indentStyle}>
+            <a
+                href={href}
+                class:list={["tree-link", "tree-leaf", { active: isActive }]}
+            >
+                {node.post?.data.title ?? node.name}
+            </a>
+        </li>
+    )
+}
+
+<style>
+    li {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .tree-section {
+        margin-top: 1.25rem;
+    }
+    .tree-section:first-child {
+        margin-top: 0;
+    }
+    .tree-section-title {
+        display: block;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-color-05);
+    }
+
+    .tree-item {
+        margin-bottom: 0.1rem;
+    }
+    details summary {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        list-style: none;
+        cursor: pointer;
+        padding: 0.5rem 0.6rem;
+        padding-left: calc(0.6rem + (var(--depth, 1) - 1) * 0.6rem);
+        border-radius: 6px;
+    }
+    details summary::-webkit-details-marker {
+        display: none;
+    }
+    details summary:hover {
+        background-color: var(--bg-color-hover);
+    }
+    .chevron {
+        flex-shrink: 0;
+        margin-left: auto;
+        transition: transform 0.2s ease;
+        color: var(--text-color-05);
+    }
+    details[open] > summary .chevron {
+        transform: rotate(90deg);
+    }
+    .tree-folder {
+        color: var(--text-color-01);
+        font-size: 0.9rem;
+    }
+
+    .tree-link {
+        display: block;
+        padding: 0.5rem 0.6rem;
+        color: var(--text-color-05);
+        text-decoration: none;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+    .tree-link:hover {
+        color: var(--text-color-01);
+        background-color: var(--bg-color-hover);
+    }
+    .tree-link.active {
+        color: var(--text-color-01);
+        background-color: var(--bg-color-03);
+        font-weight: 600;
+    }
+    .tree-leaf {
+        padding-left: calc(0.6rem + (var(--depth, 1) - 1) * 0.6rem);
+    }
+    summary .tree-link {
+        flex: 1;
+        padding: 0;
+        background: none;
+    }
+    summary .tree-link:hover {
+        background: none;
+    }
+</style>

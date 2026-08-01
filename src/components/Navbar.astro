@@ -6,6 +6,20 @@ const { showToc = false } = Astro.props;
 ---
 
 <header class="main-header">
+	<button id="open-tree" class="tree-toggle" aria-label="Abrir menú">
+		<svg
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+		>
+			<line x1="3" y1="6" x2="21" y2="6"></line>
+			<line x1="3" y1="12" x2="21" y2="12"></line>
+			<line x1="3" y1="18" x2="21" y2="18"></line>
+		</svg>
+	</button>
 	<a href="/">
 		<span class="emoji">😐</span>
 		<h1 class="brandname">
@@ -85,13 +99,6 @@ const { showToc = false } = Astro.props;
 				</button>
 			)
 		}
-		<!-- <div>
-			<button
-				id="theme-toggle"
-				class="theme-toggle"
-				aria-label="Cambiar tema">🌙</button
-			>
-		</div> -->
 	</div>
 </header>
 
@@ -221,6 +228,27 @@ const { showToc = false } = Astro.props;
 					cursor: pointer;
 				}
 			}
+		}
+	}
+
+	.tree-toggle {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		border: none;
+		padding: 0.4rem;
+		background: unset;
+		color: var(--text-color-05);
+		cursor: pointer;
+	}
+	.tree-toggle:hover {
+		border-radius: 4px;
+		background-color: var(--bg-color-hover);
+	}
+
+	@media (max-width: 1024px) {
+		.tree-toggle {
+			display: flex;
 		}
 	}
 </style>

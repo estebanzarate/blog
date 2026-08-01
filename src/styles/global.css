@@ -1,5 +1,3 @@
-:root[data-theme="light"] {}
-
 :root,
 :root[data-theme='dark'] {
     --font-sans: var(--font-jost), cursive;

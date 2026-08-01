@@ -1,0 +1,155 @@
+---
+import { getCollection } from "astro:content";
+import { buildTree } from "@utils/buildTree";
+import TreeItem from "@components/TreeItem.astro";
+
+const lang = Astro.currentLocale ?? "es";
+const allPosts = await getCollection("post");
+const posts = allPosts.filter(
+    (post) => post.data.lang === lang && !post.data.draft,
+);
+const tree = buildTree(posts);
+---
+
+<div id="tree-overlay" class="tree-overlay"></div>
+<nav id="post-tree" class="post-tree">
+    <div class="tree-drawer-header">
+        <span class="tree-brand">[ no0funny ]</span>
+        <button id="close-tree" class="close-tree-btn" aria-label="Cerrar menú">
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <path
+                    d="M10 11.0623L6.58334 14.479C6.43056 14.6318 6.25695 14.7047 6.06251 14.6978C5.86806 14.6908 5.69445 14.6109 5.54167 14.4582C5.38889 14.3054 5.31251 14.1283 5.31251 13.9269C5.31251 13.7255 5.38889 13.5484 5.54167 13.3957L8.93751 9.99984L5.52084 6.58317C5.36806 6.43039 5.29514 6.25331 5.30209 6.05192C5.30903 5.85053 5.38889 5.67345 5.54167 5.52067C5.69445 5.36789 5.87153 5.2915 6.07292 5.2915C6.27431 5.2915 6.45139 5.36789 6.60417 5.52067L10 8.93734L13.4167 5.52067C13.5694 5.36789 13.7465 5.2915 13.9479 5.2915C14.1493 5.2915 14.3264 5.36789 14.4792 5.52067C14.6319 5.67345 14.7083 5.85053 14.7083 6.05192C14.7083 6.25331 14.6319 6.43039 14.4792 6.58317L11.0625 9.99984L14.4792 13.4165C14.6319 13.5693 14.7083 13.7429 14.7083 13.9373C14.7083 14.1318 14.6319 14.3054 14.4792 14.4582C14.3264 14.6109 14.1493 14.6873 13.9479 14.6873C13.7465 14.6873 13.5694 14.6109 13.4167 14.4582L10 11.0623Z"
+                    fill="currentColor"></path>
+            </svg>
+        </button>
+    </div>
+    <ul>
+        {tree.map((node) => <TreeItem node={node} lang={lang} depth={0} />)}
+    </ul>
+</nav>
+
+<script>
+    const treeEl = document.querySelector<HTMLElement>("#post-tree");
+    const openBtn = document.querySelector<HTMLButtonElement>("#open-tree");
+    const closeBtn = document.querySelector<HTMLButtonElement>("#close-tree");
+    const overlay = document.querySelector<HTMLElement>("#tree-overlay");
+
+    function openTree() {
+        treeEl?.classList.add("open");
+        overlay?.classList.add("visible");
+        document.body.classList.add("no-scroll");
+    }
+
+    function closeTree() {
+        treeEl?.classList.remove("open");
+        overlay?.classList.remove("visible");
+        document.body.classList.remove("no-scroll");
+    }
+
+    openBtn?.addEventListener("click", openTree);
+    closeBtn?.addEventListener("click", closeTree);
+    overlay?.addEventListener("click", closeTree);
+</script>
+
+<style>
+    .tree-drawer-header {
+        display: none;
+    }
+    .post-tree {
+        box-sizing: border-box;
+        position: sticky;
+        top: calc(var(--nav-offset, 4rem) + 1rem);
+        flex: 0 0 260px;
+        width: 260px;
+        max-height: calc(100vh - var(--nav-offset, 4rem) - 2rem);
+        padding: 1rem;
+        background-color: var(--bg-color-02);
+        backdrop-filter: blur(12px);
+        border-radius: 6px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--bg-color-border-01) transparent;
+    }
+    .post-tree > ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .post-tree::-webkit-scrollbar {
+        width: 6px;
+    }
+    .post-tree::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .post-tree::-webkit-scrollbar-thumb {
+        background-color: var(--bg-color-border-01);
+        border-radius: 3px;
+    }
+    .tree-overlay {
+        display: none;
+    }
+
+    @media (max-width: 1024px) {
+        .tree-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--bg-color-border-01);
+        }
+        .tree-brand {
+            font-weight: 700;
+            color: var(--text-accent);
+            font-size: 1.1rem;
+        }
+        .close-tree-btn {
+            display: flex;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        .post-tree {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            flex: none;
+            width: min(85vw, 300px);
+            max-height: none;
+            border-radius: 0 8px 8px 0;
+            padding: 1.25rem 1rem;
+            z-index: 300;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+        }
+        .post-tree.open {
+            transform: translateX(0);
+        }
+        .tree-overlay {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            transition: background 0.3s ease;
+            z-index: 290;
+        }
+        .tree-overlay.visible {
+            background: rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+        }
+    }
+</style>

@@ -2,9 +2,9 @@
 type: writeup
 title: Archetype
 description: Presenta un servidor Microsoft SQL mal configurado, recursos compartidos SMB expuestos y datos confidenciales expuestos. Se puede acceder a un recurso compartido SMB expuesto sin autenticación, donde se encuentran archivos confidenciales con credenciales en texto plano. Estas credenciales se pueden usar para autenticarse en MSSQL como el usuario de la cuenta de servicio mediante la herramienta mssqlclient de Impacket. Posteriormente, se puede ejecutar comandos habilitando xp_cmdshell, tras lo cual se puede cargar y activar una shell inversa para obtener acceso al host. Finalmente, se puede usar WinPeas para buscar vulnerabilidades, lo que revela un archivo de historial de PowerShell que contiene la contraseña necesaria para lograr una escalada de privilegios completa.
-
 lang: es
 draft: false
+featured: true
 image: ../../../../images/writeups/hackthebox/machines/archetype/archetype.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Archetype

@@ -2,8 +2,14 @@
 import { Image } from "astro:assets";
 import Layout from "@layouts/Layout.astro";
 import { getCollection } from "astro:content";
+const lang = Astro.currentLocale ?? "es";
 const posts = await getCollection("post");
-const filteredPosts = posts.filter((writeup) => writeup.data.draft != true);
+const filteredPosts = posts.filter(
+	(post) =>
+		post.data.draft != true &&
+		post.data.featured === true &&
+		post.data.lang === lang,
+);
 
 const platformMap: any = {
 	overthewire: {
@@ -59,7 +65,7 @@ const osMap: any = {
 };
 ---
 
-<Layout>
+<Layout showTree={true}>
 	<div class="cards">
 		{
 			filteredPosts.map((post) => {
@@ -145,11 +151,14 @@ const osMap: any = {
 	.cards {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(200px, 250px));
-		gap: 1rem;
 		justify-content: center;
+		gap: 1rem;
 		max-width: 1200px;
 		margin-top: 5rem;
 		margin-inline: auto;
+		@media screen and (min-width: 1000px) {
+			justify-content: start;
+		}
 	}
 
 	.card {

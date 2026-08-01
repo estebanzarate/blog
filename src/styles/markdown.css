@@ -49,10 +49,6 @@
                 text-decoration: underline;
             }
         }
-
-        code {
-            line-height: 2rem;
-        }
     }
 
     p,
@@ -77,26 +73,27 @@
         word-break: break-word;
     }
 
-    li {
-        line-height: 1.75;
+    ul {
+        li {
+            line-height: 1.9rem;
 
-        a {
-            color: var(--text-accent);
+            a {
+                color: var(--text-accent);
 
-            &:hover {
-                text-decoration: underline;
+                &:hover {
+                    text-decoration: underline;
+                }
             }
         }
     }
 
     code {
         border-radius: 6px;
-        padding: 0.25rem calc(0.25rem * 1.5);
+        padding: 0.1rem 0.4rem;
         background: var(--bg-color-03);
         color: var(--text-color-03);
-        font-weight: 600;
+        font-weight: 500;
         font-family: var(--font-mono);
-        font-size: 0.9rem;
 
         span {
             color: var(--text-color-04);
@@ -114,8 +111,6 @@
     pre code {
         background: none;
         border: none;
-        padding: 0;
-        font-size: var(--font-size-sm);
     }
 
     blockquote {
@@ -130,16 +125,16 @@
     }
 
     table {
-        display: block;
         width: 100%;
         margin-bottom: 1rem;
-        border-collapse: collapse;
+        border-collapse: separate;
         border-radius: 0.5rem;
         overflow-x: auto;
         background-color: var(--bg-color-04);
 
         thead {
             tr {
+                width: 100%;
                 border-top: 0 solid var(--border-color);
 
                 th {
@@ -153,6 +148,7 @@
 
         tbody {
             tr {
+                width: 100%;
                 border-top: 1px solid var(--border-color);
 
                 td {

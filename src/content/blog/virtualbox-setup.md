@@ -3,6 +3,7 @@ type: post
 title: Setup de Arch Linux
 description: Instalación de Arch Linux en Virtual Box
 lang: es
+featured: true
 image: ../../images/blog/arch/arch.png
 ---
 

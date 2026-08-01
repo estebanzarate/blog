@@ -3,6 +3,7 @@ type: post
 title: CTFs y plataformas vulnerables
 description: Listado de plataformas, webs vulnerables y CTFs para practicar ciberseguridad
 lang: es
+featured: true
 ---
 
 - [**Arcanum**](https://arcanum-sec.github.io/ai-sec-resources/): Labs, CTFs, competitions, bounties & tooling for AI red teaming and prompt-injection testing.

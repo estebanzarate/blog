@@ -11,7 +11,7 @@ const post = defineCollection({
         lang: z.enum(['en', 'es']),
         tags: z.array(z.string()).optional(),
         draft: z.boolean().default(false),
-
+        featured: z.boolean().default(false),
         image: image().optional(),
         platform: z.enum(['hackthebox', 'dockerlabs', 'overthewire']).optional(),
         url: z.string().optional(),
