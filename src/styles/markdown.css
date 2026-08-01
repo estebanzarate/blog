@@ -79,7 +79,7 @@
 
     ul {
         li {
-            line-height: 1.9rem;
+            line-height: 1.5rem;
 
             a {
                 color: var(--text-accent);
@@ -87,6 +87,10 @@
                 &:hover {
                     text-decoration: underline;
                 }
+            }
+
+            code {
+                padding: 2px 0.3rem;
             }
         }
     }

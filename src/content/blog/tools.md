@@ -7,6 +7,7 @@ draft: false
 ---
 
 - [tcpdump](./tools/tcpdump)
+- [wireshark](./tools/wireshark)
 
 ## Decompiladores
 
