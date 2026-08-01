@@ -334,6 +334,8 @@ internal class LdapQuery
 }
 ```
 
+## Exploitation
+
 Con esta información podemos obtener la contraseña haciendo el proceso inverso con `Python`.
 
 `getpass.py`
@@ -515,6 +517,8 @@ Exportamos la variable de entorno `KRB5CCNAME` para que se use el ticket guardad
 ```bash
 export KRB5CCNAME=administrator@cifs_dc.support.htb@SUPPORT.HTB.ccache
 ```
+
+Agregamos `dc.support.htb` al archivo `/etc/hosts`.
 
 Nos autenticamos en el `DC` usando el ticket de `Kerberos` del `Administrator`.
 
