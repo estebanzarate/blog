@@ -45,6 +45,7 @@
         a {
             color: var(--text-accent);
 
+
             &:hover {
                 text-decoration: underline;
             }
@@ -73,7 +74,8 @@
 
     ul li code,
     strong,
-    p code {
+    p code,
+    p a {
         overflow-wrap: break-word;
         word-break: break-word;
     }
