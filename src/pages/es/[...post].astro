@@ -22,7 +22,13 @@ const { post } = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<PostLayout {headings}>
+<PostLayout
+    {headings}
+    title={post.data.title}
+    description={post.data.description}
+    image={post.data.image?.src}
+    type="article"
+>
     <h1>{post.data.title}</h1>
     <p>{post.data.description}</p>
     <PostMeta post={post} />

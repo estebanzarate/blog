@@ -3,13 +3,25 @@ import { Font } from "astro:assets";
 import Navbar from "@components/Navbar.astro";
 import Footer from "@components/Footer.astro";
 import PostTree from "@components/PostTree.astro";
+import Head from "@components/Head.astro";
 import "@styles/global.css";
 
 interface Props {
 	showToc?: boolean;
 	showTree?: boolean;
+	title?: string;
+	description?: string;
+	image?: string;
+	type?: "website" | "article";
 }
-const { showToc = false, showTree = false } = Astro.props;
+const {
+	showToc = false,
+	showTree = false,
+	title,
+	description,
+	image,
+	type,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -20,18 +32,14 @@ const { showToc = false, showTree = false } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>noØfunny # Blog</title>
+		<Head
+			title={title}
+			description={description}
+			image={image}
+			type={type}
+		/>
 		<Font cssVariable="--font-jost" />
 		<Font cssVariable="--font-dejavu" />
-		<script is:inline>
-			const stored = localStorage.getItem("theme");
-			const theme =
-				stored ??
-				(window.matchMedia("(prefers-color-scheme: dark)").matches
-					? "dark"
-					: "light");
-			document.documentElement.setAttribute("data-theme", theme);
-		</script>
 	</head>
 	<body>
 		<Navbar showToc={showToc} />

@@ -1,31 +1,40 @@
 ---
-// import Favicon from "../assets/Favicon.astro";
-// import SomeOtherTags from "./SomeOtherTags.astro";
+interface Props {
+    title?: string;
+    description?: string;
+    image?: string;
+    type?: "website" | "article";
+}
 
-const { title = "My Astro Website", ...props } = Astro.props;
+const {
+    title = "noØfunny",
+    description = "Blog de ciberseguridad, CTFs y writeups.",
+    image = "/og-default.png",
+    type = "website",
+} = Astro.props;
+
+const pageTitle = title === "noØfunny" ? title : `${title} # noØfunny`;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const imageURL = new URL(image, Astro.site);
 ---
 
-<link rel="sitemap" href="/sitemap-index.xml" />
-<title>{title}</title>
-<meta name="description" content="Welcome to my new Astro site!" />
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
 
-<!-- Web analytics -->
-<script
-    data-goatcounter="https://my-account.goatcounter.com/count"
-    async
-    src="//gc.zgo.at/count.js"></script>
-
-<!-- Open Graph tags -->
-<meta property="og:title" content="My New Astro Website" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="http://www.example.com/" />
-<meta property="og:description" content="Welcome to my new Astro site!" />
+<!-- Open Graph -->
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={imageURL} />
 <meta
-    property="og:image"
-    content="https://www.example.com/_astro/seo-banner.BZD7kegZ.webp"
+    property="og:locale"
+    content={Astro.currentLocale === "en" ? "en_US" : "es_AR"}
 />
-<meta property="og:image:alt" content="" />
 
-<!-- <SomeOtherTags /> -->
-
-<!-- <Favicon /> -->
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageURL} />

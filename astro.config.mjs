@@ -7,6 +7,7 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://no0funny.vercel.app',
   integrations: [mdx()],
   adapter: vercel({
     imageService: true,

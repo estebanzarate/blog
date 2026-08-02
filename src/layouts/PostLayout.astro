@@ -1,11 +1,18 @@
 ---
 import Layout from "./Layout.astro";
 import TableOfContent from "../components/TableOfContent.astro";
-const { headings } = Astro.props;
+const { headings, title, description, image, type } = Astro.props;
 import "@styles/markdown.css";
 ---
 
-<Layout showToc={true} showTree={true}>
+<Layout
+    showToc={true}
+    showTree={true}
+    title={title}
+    description={description}
+    image={image}
+    type={type}
+>
     <div class="post-layout">
         <div class="markdown-post">
             <slot />

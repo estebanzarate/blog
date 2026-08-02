@@ -120,23 +120,6 @@ const { showToc = false } = Astro.props;
 		const resizeObserver = new ResizeObserver(setNavHeight);
 		resizeObserver.observe(nav);
 	}
-
-	const themeBtn = document.querySelector<HTMLButtonElement>("#theme-toggle");
-
-	function updateIcon() {
-		const current = document.documentElement.getAttribute("data-theme");
-		if (themeBtn) themeBtn.textContent = current === "dark" ? "🌙" : "☀️";
-	}
-
-	updateIcon();
-
-	themeBtn?.addEventListener("click", () => {
-		const current = document.documentElement.getAttribute("data-theme");
-		const next = current === "dark" ? "light" : "dark";
-		document.documentElement.setAttribute("data-theme", next);
-		localStorage.setItem("theme", next);
-		updateIcon();
-	});
 </script>
 
 <style>
