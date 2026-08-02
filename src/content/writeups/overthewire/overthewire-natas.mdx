@@ -1810,6 +1810,10 @@ Output:
 </html>
 ```
 
+Revisamos el archivo que contiene el código que procesa nuestro input.
+
+`index-source.html`
+
 ```php
 <?
 ini_set('pcre.jit', 0);
@@ -1828,6 +1832,8 @@ if($key != "") {
 }
 ?>
 ```
+
+`natas16.py`
 
 ```python
 import requests
@@ -1868,6 +1874,32 @@ with ThreadPoolExecutor(max_workers=10) as executor:
 
 progress.success(password)
 ```
+
+Ejecutamos el script y obtenemos la contraseña para **natas17**.
+
+```bash
+python3 natas16.py
+```
+
+```plaintext
+[+] Password: KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx
+```
+
+<Callout type="success" title="Password natas17">
+KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de **Blind Command Injection (Boolean-Based)** (inyección de comandos a ciegas basada en respuestas booleanas). Ocurre cuando una aplicación web pasa la entrada del usuario directamente a una función que ejecuta comandos del sistema operativo (como `passthru()`) utilizando comillas dobles. Aunque la aplicación filtre operadores comunes como `;`, `|`, `&` o comillas, la sintaxis de Bash permite la sustitución de comandos mediante la estructura `$()`. Un atacante puede inyectar un comando secundario dentro del comando principal para realizar búsquedas condicionales en archivos del sistema (como la contraseña buscada). Si la condición coincide, el comando inyectado devuelve una cadena existente que altera la búsqueda original eliminando una palabra conocida de la salida HTML, lo cual permite inferir el contenido carácter por carácter mediante fuerza bruta basada en estados booleanos.
+- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html).
+- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html).
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- **Evitar la ejecución de comandos de shell mediante funciones del sistema**: Siempre que sea posible, utilizar funciones nativas del lenguaje de programación (como funciones internas de búsqueda de patrones o lectura de archivos) en lugar de invocar utilidades del sistema operativo como `grep`.
+- **Escapar argumentos del shell de forma estricta**: Si la llamada al sistema es inevitable, utilizar funciones dedicadas como `escapeshellarg()` o `escapeshellcmd()` en PHP para neutralizar todos los metacaracteres del shell (incluyendo la sintaxis de sustitución `$()`).
+- Implementar listas blancas (whitelisting): Validar la entrada del usuario asegurando que solo contenga los caracteres estrictamente necesarios (por ejemplo, mediante expresiones regulares que permitan únicamente caracteres alfanuméricos) en lugar de intentar bloquear caracteres maliciosos mediante listas negras.
+</Callout>
 
 ## Natas Level 16 → Level 17
 
@@ -2003,6 +2035,10 @@ if(array_key_exists("username", $_REQUEST)) {
 ?>
 ```
 
+Creamos un script en **Python** para automatizar la SQLi y obtener la contraseña.
+
+`natas18.py`
+
 ```python
 from requests.auth import HTTPBasicAuth
 import requests
@@ -2038,3 +2074,29 @@ while len(password) < 32:
 
 progress.success("".join(password))
 ```
+
+Ejecutamos el script y obtenemos la contraseña para natas18.
+
+```bash
+python3 natas18.py
+```
+
+```plaintext
+[+] Password: fDGn2A6Gsc0BUp3bZw0RNXpg0PZt40op
+```
+
+<Callout type="success" title="Password natas18">
+fDGn2A6Gsc0BUp3bZw0RNXpg0PZt40op
+</Callout>
+
+<Callout type="warning" title="Vulnerabilidad">
+Se trata de una vulnerabilidad de Time-Based Blind SQL Injection (inyección SQL a ciegas basada en tiempo). Ocurre cuando una aplicación web concatena entradas del usuario directamente en una consulta SQL sin previa sanitización ni parametrización, y además la interfaz no devuelve ninguna respuesta visual, datos ni mensajes de error sobre el resultado de la consulta. Un atacante puede explotar este comportamiento inyectando funciones como `SLEEP()` junto con operadores condicionales (como `LIKE BINARY`). Si la condición evaluada es verdadera, la base de datos detiene la ejecución durante el tiempo especificado, lo que permite exfiltrar información carácter por carácter midiendo simplemente el retardo en la respuesta HTTP del servidor.
+- [**CWE-89**: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html).
+- [CWE-20: Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html).
+</Callout>
+
+<Callout type="tip" title="Mitigación">
+- **Separar completamente el código de los datos mediante consultas parametrizadas**: Anula por completo la vulnerabilidad, haciendo imposible que el motor de la base de datos interprete las funciones de retraso (`SLEEP()`) o las condiciones lógicas introducidas por el cliente como código ejecutable.
+- **Configurar timeouts estrictos en las consultas**: Establecer un tiempo máximo de ejecución para las queries en la base de datos de modo que se aborten las peticiones que intenten congelar o pausar el proceso de forma maliciosa.
+- **Restringir privilegios de funciones en la base de datos**: Deshabilitar o limitar el acceso a funciones de retraso o administración para la cuenta de usuario con la que se conecta la aplicación web a la base de datos.
+</Callout>
