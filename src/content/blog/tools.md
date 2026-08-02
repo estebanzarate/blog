@@ -6,8 +6,9 @@ lang: es
 draft: false
 ---
 
-- [Netexec](./tools/netexec)
+- [NetExec](./tools/netexec)
 - [tcpdump](./tools/tcpdump)
+- [tshark](./tools/tshark)
 - [wireshark](./tools/wireshark)
 
 ## Decompiladores

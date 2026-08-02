@@ -1,10 +1,12 @@
 ---
 type: post
 title: tcpdump
-description: Como utilizar tcpdump
+description: Analizador de paquetes de línea de comandos; y libpcap, una biblioteca portátil de C/C++ para la captura de tráfico de red.
 lang: es
 draft: false
 ---
+
+[tcpdump web site](https://www.tcpdump.org/)
 
 En Linux se ejecuta con `sudo`. Si no le indicamos la interfaz escucha en todas las tarjetas activasa.
 
