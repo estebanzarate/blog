@@ -1,0 +1,151 @@
+---
+type: writeup
+title: Ghostlink
+description: "Cuenta con un controlador de dominio de Active Directory y un servidor web. La enumeración revela un servicio MQTT crítico utilizado para el seguimiento de nodos, que expone dos hosts internos: una aplicación segura para compartir archivos y un host de código de Gogs. El atacante modifica la comprobación de estado de MQTT para activar la autenticación NTLM, retransmitiendo credenciales para autenticarse como la cuenta de servicio svc_canary. Utilizando esta autenticación, el atacante explota una vulnerabilidad de recorrido de ruta con doble codificación URL para extraer el archivo ntuser.dat de la cuenta de servicio. El análisis del registro revela un documento reciente para db.zip, que contiene credenciales de KeePass para la aplicación Gogs. Estas credenciales se utilizan para explotar una vulnerabilidad RCE CVE-2025-8110 en Gogs y obtener acceso. Una vez en el sistema, el atacante descifra un hash de Gogs para iniciar sesión como el usuario local nvirelli. Por último, la vulnerabilidad ESC11 en ADCS permite al atacante solicitar un certificado de controlador de dominio y comprometer el dominio."
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/machines/ghostlink/ghostlink.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Ghostlink
+difficulty: hard
+os: windows
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.102.147
+```
+
+```plaintext
+PORT      STATE SERVICE          REASON
+53/tcp    open  domain           syn-ack ttl 127
+80/tcp    open  http             syn-ack ttl 127
+88/tcp    open  kerberos-sec     syn-ack ttl 127
+135/tcp   open  msrpc            syn-ack ttl 127
+139/tcp   open  netbios-ssn      syn-ack ttl 127
+389/tcp   open  ldap             syn-ack ttl 127
+445/tcp   open  microsoft-ds     syn-ack ttl 127
+464/tcp   open  kpasswd5         syn-ack ttl 127
+593/tcp   open  http-rpc-epmap   syn-ack ttl 127
+636/tcp   open  ldapssl          syn-ack ttl 127
+1883/tcp  open  mqtt             syn-ack ttl 127
+2179/tcp  open  vmrdp            syn-ack ttl 127
+3268/tcp  open  globalcatLDAP    syn-ack ttl 127
+3269/tcp  open  globalcatLDAPssl syn-ack ttl 127
+5985/tcp  open  wsman            syn-ack ttl 127
+9389/tcp  open  adws             syn-ack ttl 127
+49576/tcp open  unknown          syn-ack ttl 127
+49664/tcp open  unknown          syn-ack ttl 127
+49676/tcp open  unknown          syn-ack ttl 127
+49677/tcp open  unknown          syn-ack ttl 127
+49681/tcp open  unknown          syn-ack ttl 127
+49682/tcp open  unknown          syn-ack ttl 127
+49904/tcp open  unknown          syn-ack ttl 127
+49946/tcp open  unknown          syn-ack ttl 127
+```
+
+Otro escaneo para ver si encontramos frutas maduras ejecutandole algunos scripts a los puertos abiertos y sustraer much information.
+
+```bash
+nmap -p 53,80,88,135,139,389,445,464,593,636,1883,2179,3268,3269,5985,9389,49576,49664,49676,49677,49681,49682,49904,49946 -sCV -oA nmap/openports 10.129.102.147
+```
+
+```plaintext
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-title: Ghost Protocol Zero
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods:
+|_  Potentially risky methods: TRACE
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-08-13 06:18:11Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=dc01.ghostlink.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc01.ghostlink.htb
+| Not valid before: 2026-03-03T16:53:53
+|_Not valid after:  2027-03-03T16:53:53
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: ghostlink.htb, Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=dc01.ghostlink.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc01.ghostlink.htb
+| Not valid before: 2026-03-03T16:53:53
+|_Not valid after:  2027-03-03T16:53:53
+1883/tcp  open  mqtt
+| mqtt-subscribe:
+|   Topics and their most recent payloads:
+|     $SYS/brokers/client_status/mqttui-e2ad0e31: {"status":"offline", "username":"(null)","ts":1786601949791,"reason_code":"0","client_id":"mqttui-e2ad0e31","IPv4":"127.0.0.1"}
+|     $SYS/brokers/client_status/mqttui-bb252590: {"status":"online", "username":"(null)", "ts":1786601952284,"proto_name":"MQTT","keepalive":60,"return_code":"0","proto_ver":4,"client_id":"mqttui-bb252590","clean_start":1, "IPv4":"127.0.0.1"}
+|_    $SYS/brokers/client_status/mqttui-f7354b7e: {"status":"online", "username":"(null)", "ts":1786601956605,"proto_name":"MQTT","keepalive":60,"return_code":"0","proto_ver":4,"client_id":"mqttui-f7354b7e","clean_start":1, "IPv4":"127.0.0.1"}
+2179/tcp  open  vmrdp?
+3268/tcp  open  ldap
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=dc01.ghostlink.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc01.ghostlink.htb
+| Not valid before: 2026-03-03T16:53:53
+|_Not valid after:  2027-03-03T16:53:53
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: ghostlink.htb, Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=dc01.ghostlink.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc01.ghostlink.htb
+| Not valid before: 2026-03-03T16:53:53
+|_Not valid after:  2027-03-03T16:53:53
+|_ssl-date: TLS randomness does not represent time
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49576/tcp open  msrpc         Microsoft Windows RPC
+49664/tcp open  msrpc         Microsoft Windows RPC
+49676/tcp open  msrpc         Microsoft Windows RPC
+49677/tcp open  msrpc         Microsoft Windows RPC
+49681/tcp open  msrpc         Microsoft Windows RPC
+49682/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49904/tcp open  msrpc         Microsoft Windows RPC
+49946/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time:
+|   date: 2026-08-13T06:19:13
+|_  start_date: N/A
+| smb2-security-mode:
+|   3.1.1:
+|_    Message signing enabled and required
+|_clock-skew: 8h10m49s
+```
+
+El servicio que llama la atención es el servicio o protocolo MQTT (Message Queuing Telemetry Transport) que transporta datos de manera ligera entre dispositivos con recursos limitados, siendo el estándar principal para el Internet de las Cosas (IoT) y la domótica.
+
+- **Modelo de publicación/suscripción**: Los dispositivos no se comunican directamente entre sí. Usan un servidor central llamado bróker o agente.
+- **Publicación**: Un dispositivo (cliente editor) envía información (como la lectura de un sensor de temperatura) etiquetada bajo un tema o topic específico hacia el bróker.
+- **Suscripción**: Otros dispositivos (clientes suscriptores) le piden al bróker recibir los mensajes de esos topics particulares para reaccionar ante ellos.
+- **Optimización de recursos**: Consume muy poco ancho de banda y energía, lo que permite su uso en microcontroladores, sensores pequeños o redes lentas.
+
+Vamos a interceptar toda la información que los dispositivos conectados al broker le están enviando.
+
+```bash
+mosquitto_sub -h 10.129.102.147 -t "#" -v
+```
+
+```plaintext
+GhostProtocolZero/energy/grid/frequency {"timestamp":"2026-12-08-23:03:20","node":"node-1","telemetry":{"ip":"10.1.12.34","loadPercent":40,"hz":150784801.9}}
+GhostProtocolZero/identity/trust-provider/state {"timestamp":"2026-12-08-23:03:20","node":"node-1","telemetry":{"ip":"10.1.12.34","tokenValidation":"delayed","authErrors":10}}
+GhostProtocolZero/network/node/healthcheck {"timestamp":"2026-12-08-23:03:20","node":"node-1","telemetry":{"healthy":false,"url":"https://core-telecom.ghostlink.htb/keepalive","lastCheckSecAgo":1,"ip":"10.1.12.34"}}
+GhostProtocolZero/network/node/keepalive {"timestamp":"2026-12-08-23:03:20","node":"node-2","telemetry":{"rttMs":180,"status":"alive","url":"https://energy-grid.ghostlink.htb/canary","ip":"10.2.45.56"}}
+GhostProtocolZero/space/satellite/timing-drift {"timestamp":"2026-12-08-23:03:20","node":"node-3","telemetry":{"driftNs":157,"ip":"10.4.23.11","syncState":"unstable"}}
+GhostProtocolZero/telecom/core-routing/health {"timestamp":"2026-12-08-23:03:20","node":"node-1","telemetry":{"ip":"10.1.12.34","packetLoss":985711805,"routeStability":"stable"}}
+GhostProtocolZero/transport/logistics/status {"timestamp":"2026-12-08-23:03:20","node":"node-1","telemetry":{"throughput":73,"anomaly":"none","ip":"10.1.12.34"}}
+GhostProtocolZero/systems/node/domain/healthcheck {"timestamp":"2026-12-08-23:03:35","node":"node-4","telemetry":{"healthy":true,"url":"dc01.ghostlink.htb/healthcheck","latencyMs":266,"ip":"10.129.102.147"}}
+GhostProtocolZero/systems/node/repository/healthcheck {"timestamp":"2026-12-08-23:03:35","node":"node-5","telemetry":{"healthy":true,"url":"gpz-op26-toolkits.ghostlink.htb/healthcheck","lastCheckSecAgo":20,"responseCode":"200","ip":"172.16.20.20"}}
+GhostProtocolZero/systems/node/secureshare/healthcheck {"timestamp":"2026-12-08-23:03:35","node":"node-6","telemetry":{"healthy":true,"url":"gpz-op26-secure.ghostlink.htb/healthcheck","lastCheckSecAgo":7,"responseCode":"200","ip":"172.16.20.10"}}
+```

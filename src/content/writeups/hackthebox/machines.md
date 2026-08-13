@@ -11,6 +11,7 @@ draft: false
 - [Crocodile](./machines/crocodile)
 - [Dancing](./machines/dancing)
 - [Fawn](./machines/fawn)
+- [Ghostlink](./machines/ghostlink)
 - [Helix](./machines/helix)
 - [Meow](./machines/meow)
 - [Oopsie](./machines/oopsie)
