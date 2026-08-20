@@ -1,0 +1,34 @@
+---
+type: writeup
+title: Phishing_Email
+description: Hay un correo electrónico sospechoso de PayPal.
+lang: es
+draft: false
+image: ../../../../images/writeups/hackthebox/sherlocks/phishingemail/phishingemail.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/Phishing_Email
+difficulty: veryeasy
+os: linux
+hints: [sqli]
+tags: [sqli]
+---
+
+## What is the return path of the email?
+
+En el source del email encontramos el **return path**.
+
+![Return path](@images/writeups/hackthebox/sherlocks/phishingemail/return-path.png)
+
+<Callout type="success" title="Return path of the email">
+bounce@rjttznyzjjzydnillquh.designclub.uk.com
+</Callout>
+
+## What is the domain name of the url in this mail?
+
+En el source del email encontramos el nombre del dominio de la url, si buscamos `Setzen Sie die Lieferung fort` que es el contenido del link lo encontramos más rápido.
+
+![Domain name of the url](@images/writeups/hackthebox/sherlocks/phishingemail/domain-name.png)
+
+<Callout type="success" title="Domain name of the url">
+storage.googleapis.com
+</Callout>
