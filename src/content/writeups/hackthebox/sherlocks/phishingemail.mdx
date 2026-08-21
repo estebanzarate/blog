@@ -4,6 +4,7 @@ title: Phishing_Email
 description: Hay un correo electrónico sospechoso de PayPal.
 lang: es
 draft: false
+featured: true
 image: ../../../../images/writeups/hackthebox/sherlocks/phishingemail/phishingemail.png
 platform: hackthebox
 url: https://app.hackthebox.com/sherlocks/Phishing_Email
@@ -31,4 +32,32 @@ En el source del email encontramos el nombre del dominio de la url, si buscamos 
 
 <Callout type="success" title="Domain name of the url">
 storage.googleapis.com
+</Callout>
+
+## Is the domain mentioned in the previous question suspicious?
+
+![Suspicious domain](@images/writeups/hackthebox/sherlocks/phishingemail/suspicious-domain.png)
+
+<Callout type="success" title="Suspicious domain?">
+Yes
+</Callout>
+
+## What is the body SHA-256 of the domain?
+
+VirusTotal no muestra ningún campo al día de hoy con el hash así que obtenemos el hash de la siguiente manera.
+
+```bash
+curl -s https://storage.googleapis.com/ | sha256sum | awk '{print $1}'
+```
+
+<Callout type="success" title="Body SHA-256">
+13945ecc33afee74ac7f72e1d5bb73050894356c4bf63d02a1a53e76830567f5
+</Callout>
+
+## Is this email a phishing email?
+
+![Phishing email](@images/writeups/hackthebox/sherlocks/phishingemail/phishing-email.png)
+
+<Callout type="success" title="Phishing email?">
+Yes
 </Callout>
