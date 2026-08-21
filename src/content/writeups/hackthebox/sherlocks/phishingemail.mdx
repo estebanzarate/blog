@@ -9,9 +9,9 @@ image: ../../../../images/writeups/hackthebox/sherlocks/phishingemail/phishingem
 platform: hackthebox
 url: https://app.hackthebox.com/sherlocks/Phishing_Email
 difficulty: veryeasy
-os: linux
-hints: [sqli]
-tags: [sqli]
+os: windows
+hints: []
+tags: []
 ---
 
 ## What is the return path of the email?
@@ -21,7 +21,7 @@ En el source del email encontramos el **return path**.
 ![Return path](@images/writeups/hackthebox/sherlocks/phishingemail/return-path.png)
 
 <Callout type="success" title="Return path of the email">
-bounce@rjttznyzjjzydnillquh.designclub.uk.com
+  bounce@rjttznyzjjzydnillquh.designclub.uk.com
 </Callout>
 
 ## What is the domain name of the url in this mail?
@@ -31,7 +31,7 @@ En el source del email encontramos el nombre del dominio de la url, si buscamos 
 ![Domain name of the url](@images/writeups/hackthebox/sherlocks/phishingemail/domain-name.png)
 
 <Callout type="success" title="Domain name of the url">
-storage.googleapis.com
+  storage.googleapis.com
 </Callout>
 
 ## Is the domain mentioned in the previous question suspicious?
@@ -39,7 +39,7 @@ storage.googleapis.com
 ![Suspicious domain](@images/writeups/hackthebox/sherlocks/phishingemail/suspicious-domain.png)
 
 <Callout type="success" title="Suspicious domain?">
-Yes
+  Yes
 </Callout>
 
 ## What is the body SHA-256 of the domain?
@@ -51,7 +51,7 @@ curl -s https://storage.googleapis.com/ | sha256sum | awk '{print $1}'
 ```
 
 <Callout type="success" title="Body SHA-256">
-13945ecc33afee74ac7f72e1d5bb73050894356c4bf63d02a1a53e76830567f5
+  13945ecc33afee74ac7f72e1d5bb73050894356c4bf63d02a1a53e76830567f5
 </Callout>
 
 ## Is this email a phishing email?
@@ -59,5 +59,5 @@ curl -s https://storage.googleapis.com/ | sha256sum | awk '{print $1}'
 ![Phishing email](@images/writeups/hackthebox/sherlocks/phishingemail/phishing-email.png)
 
 <Callout type="success" title="Phishing email?">
-Yes
+  Yes
 </Callout>

