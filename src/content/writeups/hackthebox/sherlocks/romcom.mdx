@@ -1,0 +1,204 @@
+---
+type: writeup
+title: RomCom
+description: En este Sherlock, los jugadores analizarán un sistema que fue objeto de una vulnerabilidad en la aplicación WinRAR y que fue explotado por grupos como RomCom y Paper WereWolf en 2025.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/romcom/romcom.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/RomCom
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## What is the CVE assigned to the WinRAR vulnerability exploited by the RomCom threat group in 2025?
+
+Con una búsqueda en Google podemos encontrar el CVE asignado.
+
+<Callout type="success" title="CVE">
+  CVE-2025-8088
+</Callout>
+
+## What is the nature of this vulnerability?
+
+Mirando los detalles del CVE encontramos la naturaleza de la vulnerabilidad [CVE-2025-8088 Detail](https://nvd.nist.gov/vuln/detail/cve-2025-8088).
+
+<Callout type="success" title="Nature of this vulnerability">
+  Path Traversal
+</Callout>
+
+## What is the name of the archive file under Susan's documents folder that exploits the vulnerability upon opening the archive file?
+
+```bash
+file 2025-09-02T083211_pathology_department_incidentalert.vhdx
+```
+
+```plaintext
+2025-09-02T083211_pathology_department_incidentalert.vhdx: Microsoft Disk Image eXtended, by .NET DiscUtils, sequence 0x4, NO Log Signature Microsoft Disk Image Extended; region, 2 entries, id Metadata, at 0x200000, Required 1, id BAT, at 0x300000, Required 1
+```
+
+Cargamos el módulo NBD en el kernel para habilitar los dispositivos de bloque de red (`/dev/nbd0`), los que `qemu-nbd` va a usar como puente para conectar el archivo `.vhdx` al sistema".
+
+```bash
+sudo modprobe nbd max_part=8
+```
+
+Conectamos el disco virtual al sistema.
+
+```bash
+sudo qemu-nbd --connect=/dev/nbd0 2025-09-02T083211_pathology_department_incidentalert.vhdx
+```
+
+Listamos las particiones para ver que partición montar.
+
+```bash
+sudo fdisk -l /dev/nbd0
+```
+
+```plaintext
+/dev/nbd0p1 *       63 1038239 1038177 506.9M  7 HPFS/NTFS/exFAT
+```
+
+Creamos un directorio que vamos a usar para montar la partición.
+
+```bash
+sudo mkdir -p /mnt/romcom
+```
+
+Montamos la partición.
+
+```bash
+sudo mount -t ntfs-3g -o ro,force /dev/nbd0p1 /mnt/romcom
+```
+
+Copiamos el archivo `$MFT` al directorio de trabajo actual.
+
+```bash
+cp /mnt/romcom/C/\$MFT .
+```
+
+Transferimos el archivo a una máquina Windows levantando un servidor en la máquina donde montamos la partición y descargamos el archivo desde PowerShell.
+
+```bash
+python3 -m http.server
+```
+
+```powershell
+curl 'http://192.168.56.101:8000/$MFT' -o '$MFT'
+```
+
+Usamos [MFTECmd](https://ericzimmerman.github.io/?utm_source=chatgpt.com#forensic-tools) para convertir el binario `$MFT` en un archivo `csv` para analizarlo.
+
+```powershell
+.\MFTECmd.exe -f '.\$MFT' --csv .
+```
+
+Usamos [Timeline Explorer](https://ericzimmerman.github.io/?utm_source=chatgpt.com#forensic-tools) para analizar el binario `MFT`.
+
+En la columna `Extension` filtramos archivos `rar` y en la columna `Parent Path` filtramos `.\Users\susan\Documents` y damos con el nombre del archivo.
+
+![Archive filename](@images/writeups/hackthebox/sherlocks/romcom/romcom-archive-filename.png)
+
+<Callout type="success" title="Archive filename">
+  Pathology-Department-Research-Records.rar
+</Callout>
+
+## When was the archive file created on the disk?
+
+Copiamos el archivo `/mnt/romcom/C/$Extend/$J` al directorio de trabajo actual.
+
+```bash
+cp /mnt/romcom/C/\$Extend/\$J .
+```
+
+Transferimos el archivo a nuestra máquina Windows.
+
+```bash
+python3 -m http.server
+```
+
+```powershell
+curl 'http://192.168.56.101:8000/$J' -o '$J'
+```
+
+Usamos [MFTECmd](https://ericzimmerman.github.io/?utm_source=chatgpt.com#forensic-tools) para convertir el binario `$J` en un archivo `csv` para analizarlo.
+
+```powershell
+.\MFTECmd.exe -f '.\$J' --csv .
+```
+
+Usamos [Timeline Explorer](https://ericzimmerman.github.io/?utm_source=chatgpt.com#forensic-tools) para analizar el binario `J`. Filtramos por el nombre del archivo `Pathology-Department-Research-Records.rar` y en la columna `Update Reasons` buscamos donde dice `FileCreate`.
+
+![File created](@images/writeups/hackthebox/sherlocks/romcom/romcom-filecreated.png)
+
+<Callout type="success" title="File created">
+  2025-09-02 08:13:50
+</Callout>
+
+## When was the archive file opened?
+
+Filtramos por `.ink`, en la columna `Update Reasons` filtramos por `FileCreate` y buscamos el nombre del archivo `Pathology-Department-Research-Records.rar`.
+
+![File opened](@images/writeups/hackthebox/sherlocks/romcom/romcom-fileopened.png)
+
+<Callout type="success" title="File opened">
+  2025-09-02 08:14:04
+</Callout>
+
+## What is the name of the decoy document extracted from the archive file, meant to appear legitimate and distract the user?
+
+En la columna `Parent Path` filtramos por `\Users\Susan\Documents`, buscamos un archivo creado cerca al tiempo de apertura del archivo `.rar`.
+
+![Decoy document](@images/writeups/hackthebox/sherlocks/romcom/romcom-decoy-document.png)
+
+<Callout type="success" title="Name of the decoy document">
+  Genotyping_Results_B57_Positive.pdf
+</Callout>
+
+## What is the name and path of the actual backdoor executable dropped by the archive file?
+
+En `USN Journal` filtramos por `.exe` y buscamos un archivo cercano al horario de apertura del `.rar`.
+
+![Backdoor](@images/writeups/hackthebox/sherlocks/romcom/romcom-backdoor-exe.png)
+
+En `$MFT` filtramos por el nombre del archivo del backdoor `ApbxHelper.exe` y buscamos en la columna `Parent Path` para reconstruir la ruta completa del backdoor.
+
+![Backdoor fullpath](@images/writeups/hackthebox/sherlocks/romcom/romcom-backdoor-fullpath.png)
+
+<Callout type="success" title="Backdoor fullpath">
+  C:\Users\Susan\Appdata\Local\ApbxHelper.exe
+</Callout>
+
+## The exploit also drops a file to facilitate the persistence and execution of the backdoor. What is the path and name of this file?
+
+En `$J` filtramos por `FileCreate` en la columna `Update Reasons` y buscamos un archivo creado cercano en el tiempo en el que fue creado el backdoor.
+
+![Persistence](@images/writeups/hackthebox/sherlocks/romcom/romcom-persistence.png)
+
+![Persistence fullpath](@images/writeups/hackthebox/sherlocks/romcom/romcom-persistence-fullpath.png)
+
+<Callout type="success" title="Persistence fullpath">
+  C:\Users\Susan\AppData\Roaming\Microsoft\Windows\Start
+  Menu\Programs\Startup\Display Settings.lnk
+</Callout>
+
+## What is the associated MITRE Technique ID discussed in the previous question?
+
+[Boot or Logon Autostart Execution: Shortcut Modification](https://attack.mitre.org/techniques/T1547/009/)
+
+<Callout type="success" title="MITRE Technique ID">
+  T1547.009
+</Callout>
+
+## When was the decoy document opened by the end user, thinking it to be a legitimate document?
+
+En `$MFT` filtramos por el nombre del decoy `Genotyping_Results_B57_Positive` y buscamos un archivo `lnk`.
+
+![Decoy opened](@images/writeups/hackthebox/sherlocks/romcom/romcom-decoy-opened.png)
+
+<Callout type="success" title="Decoy opened">
+  2025-09-02 08:15:05
+</Callout>

@@ -6,4 +6,6 @@ lang: es
 draft: false
 ---
 
+- [MangoBleed](./sherlocks/mangobleed)
 - [Phishing_Email](./sherlocks/phishingemail)
+- [RomCom](./sherlocks/romcom)
