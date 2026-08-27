@@ -1,0 +1,91 @@
+---
+type: writeup
+title: Fireflow
+description: Comienza con un flow_id de Langflow filtrado. Con esto, un atacante puede explotar la vulnerabilidad CVE-2026-33017 sin autenticación y obtener una shell como www-data en la máquina remota. Allí, encontrará que una contraseña en el archivo .env de Langflow es reutilizada por el usuario nightfall, quien puede acceder a la máquina mediante SSH. En el directorio principal de nightfall, un archivo de configuración filtra información confidencial sobre cómo conectarse a un servidor MCP personalizado. A partir de ahí, se descubre que un atacante puede crear un token JWT malicioso y suplantar la identidad de un usuario administrador, ya que los algoritmos de firma del token también tienen la opción None. Luego, puede registrar una herramienta maliciosa personalizada y obtener una shell en el pod MCP. La enumeración del entorno de Kubernetes revela que el permiso nodes/proxy está configurado. Esto permite al atacante ejecutar comandos arbitrarios en pods privilegiados y, finalmente, obtener acceso de root en el sistema de archivos del host.
+lang: es
+draft: true
+image: ../../../../images/writeups/hackthebox/machines/fireflow/fireflow.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Fireflow
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/fireflow 10.129.112.67
+```
+
+```plaintext
+PORT    STATE SERVICE REASON
+22/tcp  open  ssh     syn-ack ttl 63
+443/tcp open  https   syn-ack ttl 63
+```
+
+```bash
+nmap -p 22,443 -sCV -oA nmap/openports 10.129.112.67
+```
+
+```plaintext
+PORT    STATE SERVICE   VERSION
+22/tcp  open  ssh       OpenSSH 9.6p1 Ubuntu 3ubuntu13.16 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 0c:4b:d2:76:ab:10:06:92:05:dc:f7:55:94:7f:18:df (ECDSA)
+|_  256 2d:6d:4a:4c:ee:2e:11:b6:c8:90:e6:83:e9:df:38:b0 (ED25519)
+443/tcp open  ssl/https nginx
+|_http-server-header: nginx
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=fireflow.htb/organizationName=Task Force Nightfall/countryName=US
+| Subject Alternative Name: DNS:fireflow.htb, DNS:*.fireflow.htb
+| Not valid before: 2026-04-14T16:35:31
+|_Not valid after:  2028-07-17T16:35:31
+| tls-alpn:
+|   http/1.1
+|   http/1.0
+|_  http/0.9
+|_http-title: 400 The plain HTTP request was sent to HTTPS port
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Agregamos el dominio `fireflow.htb` al archivo `/etc/hosts`.
+
+```plaintext
+10.129.112.67 fireflow.hbt
+```
+
+![HTTPS Nginx](@images/writeups/hackthebox/machines/fireflow/fireflow-https-nginx.png)
+
+El botón `Open Agent` redirecciona al subdominio `flow.fireflow.htb`, lo agregamos al archivo `/etc/hosts`.
+
+![HTTPS Nginx Button](@images/writeups/hackthebox/machines/fireflow/fireflow-https-nginx-button.png)
+
+```plaintext
+10.129.112.67 fireflow.hbt flow.fireflow.htb
+```
+
+El subdominio aloja Langflow que es un framework de código abierto basado en Python para la creación de aplicaciones de IA.
+
+![Langflow subdomain](@images/writeups/hackthebox/machines/fireflow/fireflow-flow-subdomain.png)
+
+En la documentación encontramos como obtener la versión a través de la API.
+
+[Langflow API](https://docs.langflow.org/api-reference-api-examples#get-version)
+
+```bash
+curl -sk https://flow.fireflow.htb/api/v1/version | jq
+```
+
+```json
+{
+  "version": "1.8.2",
+  "main_version": "1.8.2",
+  "package": "Langflow"
+}
+```
+
+Buscamos vulnerabilidades en esa versión y encontramos [CVE-2026-33017](https://nvd.nist.gov/vuln/detail/CVE-2026-33017). En este link un loco explica como logró explotar la vulnerabilidad [CVE-2026–33017: How I Found an Unauthenticated RCE in Langflow by Reading the Code They Already Fixed](https://medium.com/@aviral23/cve-2026-33017-how-i-found-an-unauthenticated-rce-in-langflow-by-reading-the-code-they-already-dc96cdce5896).

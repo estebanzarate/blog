@@ -1,0 +1,121 @@
+---
+type: writeup
+title: "Operation Blackout 2025: Phantom Check"
+description: Muestra algunas de las técnicas comunes de detección de virtualización utilizadas por los atacantes. Los jugadores podrán crear reglas de detección identificando consultas WMI específicas, comparando procesos para la detección de máquinas virtuales y analizando claves de registro o rutas de archivo asociadas con entornos virtuales.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/operationblackout2025phantomcheck/operationblackout2025phantomcheck.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/Operation%2520Blackout%25202025%253A%2520Phantom%2520Check
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Which WMI class did the attacker use to retrieve model and manufacturer information for virtualization detection?
+
+Vamos a ver que eventos tiene el archivo `Windows-Powershell-Operational.evtx`.
+
+```powershell
+Get-WinEvent -Path .\Windows-Powershell-Operational.evtx |
+    Group-Object Id |
+    Sort-Object Count -Descending |
+    Select-Object Count, Name
+```
+
+```plaintext
+Count Name
+----- ----
+  385 4104
+   74 4105
+   73 4106
+   67 4103
+   11 40961
+   11 53504
+   10 40962
+```
+
+El evento 4104 (Event ID 4104) en el Visor de eventos de Windows corresponde al Registro de bloques de scripts de PowerShell (Script Block Logging).
+
+Agarramos el archivo `Windows-Powershell-Operational.evtx` y ejecutamos el siguiente comando dentro del directorio donde se encuentra, no vaya a ser que lo ejecutes en otro lado y no funcione. Filtra los eventos `4104`.
+
+```powershel
+Get-WinEvent -FilterHashtable @{
+    Path = ".\Windows-Powershell-Operational.evtx"
+    Id   = 4104
+} |
+Select-Object TimeCreated, Message |
+Out-GridView
+```
+
+En el cuadro `Filter` filtramos por `WMI`.
+
+![Class](@images/writeups/hackthebox/sherlocks/operationblackout2025phantomcheck/operationblackout2025phantomcheck-class.png)
+
+<Callout type="success" title="WMI class">
+  Win32_ComputerSystem
+</Callout>
+
+## Which WMI query did the attacker execute to retrieve the current temperature value of the machine?
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    Path = ".\Windows-Powershell-Operational.evtx"
+    Id   = 4104
+} |
+Where-Object {
+    $_.Message -match 'temperature'
+} |
+Select-Object Message |
+Format-List
+```
+
+```plaintext
+Message : Creando texto de bloque de script (1 de 1):
+          Get-WmiObject -Query "SELECT * FROM MSAcpi_ThermalZoneTemperature" -ErrorAction SilentlyContinue
+
+          Id. de bloque de script: 5bede686-4917-4326-ab5e-ccd7fba2662c
+          Ruta de acceso:
+```
+
+<Callout type="success" title="WMI query">
+  SELECT * FROM MSAcpi_ThermalZoneTemperature
+</Callout>
+
+## The attacker loaded a PowerShell script to detect virtualization. What is the function name of the script?
+
+Filtramos por el evento `4104` donde el mensaje tengo algo relacionado a virtualización y lo mostramos de una forma bella para nuestros ojos.
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    Path = ".\Windows-Powershell-Operational.evtx"
+    Id   = 4104
+} |
+Where-Object {
+    $_.Message -match 'virtual|vmware|virtualbox|hyper-v|hyperv|qemu|xen|vbox|sandbox'
+} |
+Select-Object RecordId, Message |
+Out-GridView
+```
+
+![Function name](@images/writeups/hackthebox/sherlocks/operationblackout2025phantomcheck/operationblackout2025phantomcheck-checkvm.png)
+
+A primera vista aparece una función en el evento `3047`. Mostramos el contenido y copiamos el nombre de la función.
+
+```powershell
+Get-WinEvent -Path .\Windows-Powershell-Operational.evtx |
+    Where-Object RecordId -eq 3047 |
+    Select-Object -ExpandProperty Message
+```
+
+<Callout type="success" title="Function name">
+  Check-VM
+</Callout>
+
+## Which registry key did the above script query to retrieve service details for virtualization detection?
+
+## The VM detection script can also identify VirtualBox. Which processes is it comparing to determine if the system is running VirtualBox?
+
+## The VM detection script prints any detection with the prefix 'This is a'. Which two virtualization platforms did the script detect?

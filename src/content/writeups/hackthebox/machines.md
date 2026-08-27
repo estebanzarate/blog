@@ -12,6 +12,7 @@ draft: false
 - [Dancing](./machines/dancing)
 - [Fawn](./machines/fawn)
 - [Ghostlink](./machines/ghostlink)
+- [Fireflow](./machines/fireflow)
 - [Helix](./machines/helix)
 - [Meow](./machines/meow)
 - [Oopsie](./machines/oopsie)
