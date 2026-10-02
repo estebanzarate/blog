@@ -1,0 +1,48 @@
+---
+type: writeup
+title: Layover
+description: Soon
+lang: es
+draft: true
+featured: false
+image: ../../../../images/writeups/hackthebox/machines/layover/layover.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/Layover
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+<Callout type="note" title="Credenciales">
+
+- **Usuario**: contractor
+- **Contraseña**: Contractor2026!
+
+</Callout>
+
+## Enumeration
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -oA nmap/layover 10.129.152.95
+```
+
+```plaintext
+PORT     STATE SERVICE
+22/tcp   open  ssh
+3389/tcp open  ms-wbt-server
+```
+
+```bash
+nmap -p 22,3389 -sCV --min-rate 5000 -Pn -n -oA nmap/openports 10.129.152.95
+```
+
+```plaintext
+PORT     STATE SERVICE       VERSION
+22/tcp   open  ssh           OpenSSH 9.6p1 Ubuntu 3ubuntu13.19 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 0c:4b:d2:76:ab:10:06:92:05:dc:f7:55:94:7f:18:df (ECDSA)
+|_  256 2d:6d:4a:4c:ee:2e:11:b6:c8:90:e6:83:e9:df:38:b0 (ED25519)
+3389/tcp open  ms-wbt-server Microsoft Terminal Service
+Service Info: OSs: Linux, Windows; CPE: cpe:/o:linux:linux_kernel, cpe:/o:microsoft:windows
+```

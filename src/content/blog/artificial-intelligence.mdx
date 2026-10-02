@@ -3,15 +3,15 @@ type: post
 title: Inteligencia Artificial
 description: Todo sobre inteligencia artificial
 lang: es
-draft: true
+draft: false
 ---
 
 > Artificial Intelligence (AI) busca que las computadoras realicen tareas que normalmente requieren inteligencia humana: reconocer imágenes, entender texto, tomar decisiones, una amplia categoría de sistemas informáticos que pueden reconocer patrones, hacer predicciones y ayudar a generar u organizar información.
 
 ## Subcampos
 
-- **Machine Learning**: se le dan datos al sistema y él aprende las reglas solo.
-- **Deep Learning**: usa redes neuronales con muchas capas.
+- **Machine Learning**: se le dan datos al sistema y él aprende las reglas solo, descubre patrones y hace predicciones.
+- **Deep Learning**: es un subcampo de Machine Learning que usa redes neuronales como el cerebro humano con muchas capas, extrae características complejas de una cantidad amplia de datos para lograr resultados más precisos.
 - **Large Language Models (LLMs)**: modelos de Deep Learning entrenados con cantidades masivas de texto que aprenden a predecir y generar lenguaje.
 
 ### Prompt
@@ -35,22 +35,22 @@ Un prompt útil suele tener tres partes
 **Supervised Learning**: el modelo aprende de ejemplos etiquetados. Se le dice cuál es la respuesta correcta.
 
 <Callout type="example" title="Ejemplo">
-Dataset: 1000 emails → cada uno marcado como `spam` o `not spam`  
-El modelo aprende la relación entre el contenido y la etiqueta.
+  Dataset: 1000 emails → cada uno marcado como `spam` o `not spam` El modelo
+  aprende la relación entre el contenido y la etiqueta.
 </Callout>
 
 **Unsupervised Learning**: el modelo recibe datos sin etiquetas y encuentra patrones por su cuenta.
 
 <Callout type="example" title="Ejemplo">
-Dataset: 1000 emails sin etiquetas  
-El modelo agrupa los similares entre sí, sin saber qué son.
+  Dataset: 1000 emails sin etiquetas El modelo agrupa los similares entre sí,
+  sin saber qué son.
 </Callout>
 
 **Reinforcement Learning**: el modelo aprende por prueba y error, recibiendo recompensas o penalizaciones según sus acciones.
 
 <Callout type="example" title="Ejemplo">
-El modelo juega al ajedrez, gana puntos si gana partidas, los pierde si las pierde.  
-Con el tiempo aprende qué movimientos son buenos.
+  El modelo juega al ajedrez, gana puntos si gana partidas, los pierde si las
+  pierde. Con el tiempo aprende qué movimientos son buenos.
 </Callout>
 
 ### Supervised Learning
@@ -60,12 +60,14 @@ Con el tiempo aprende qué movimientos son buenos.
 - **Dataset**: la colección de pares `(features → label)` con los que se entrena.
 
 <Callout type="example" title="Ejemplo">
-| `file_size` | `has_network_calls` | `entropy` | label |
-| - | - | - | - |
-| 1200 | 1 | 7.8 | `malicious` |
-| 340 | 0 | 3.2 | `benign` |
-| 980 | 1 | 6.5 | `malicious` |
-| 210 | 0 | 2.1 | `benign` |
+
+| `file_size` | `has_network_calls` | `entropy` | label       |
+| ----------- | ------------------- | --------- | ----------- |
+| 1200        | 1                   | 7.8       | `malicious` |
+| 340         | 0                   | 3.2       | `benign`    |
+| 980         | 1                   | 6.5       | `malicious` |
+| 210         | 0                   | 2.1       | `benign`    |
+
 </Callout>
 
 - Las primeras tres columnas son features
@@ -91,16 +93,16 @@ El modelo aprende cometiendo errores y corrigiéndose.
 Mide qué tan equivocado está el modelo. Toma la predicción del modelo y el label correcto, y devuelve un número.
 
 <Callout type="note" title="">
-Número alto → el modelo está muy equivocado  
-Número bajo → el modelo está acertando  
-Número cero → predicción perfecta  
+  Número alto → el modelo está muy equivocado Número bajo → el modelo está
+  acertando Número cero → predicción perfecta
 </Callout>
 
 <Callout type="example" title="Ejemplo">
 prediction: 0.2  (modelo dice 20% probabilidad de malware)  
-real label: 1.0  (era malware)  
+real label: 1.0  (era malware)
 
 loss = qué tan lejos está 0.2 de 1.0 → número alto
+
 </Callout>
 
 El objetivo del entrenamiento es minimizar ese número.
@@ -110,7 +112,7 @@ El objetivo del entrenamiento es minimizar ese número.
 El modelo tiene internamente miles o millones de números llamados weights (pesos). Son los únicos valores que cambian durante el entrenamiento.
 
 <Callout type="note" title="">
-features → [model weights] → prediction
+  features → [model weights] → prediction
 </Callout>
 
 Al inicio los weights son aleatorios. Por eso al principio el modelo predice basura. El entrenamiento consiste en ajustar esos weights hasta que las predicciones sean buenas.
@@ -122,12 +124,14 @@ Valor independiente que se suma a la predicción. Le da al modelo un punto de pa
 <Callout type="example" title="Ejemplo">
 prediction = weight * feature + bias
 
-Sin bias:  0.15 * 0.0 = 0.0       (atrapado en cero)  
-Con bias:  0.15 * 0.0 + 0.3 = 0.3 (puede predecir cualquier valor)
+Sin bias: 0.15 _ 0.0 = 0.0 (atrapado en cero)  
+Con bias: 0.15 _ 0.0 + 0.3 = 0.3 (puede predecir cualquier valor)
+
 </Callout>
 
 <Callout type="info" title="Analogía">
-El weight es la pendiente de una línea, el bias es dónde esa línea corta el eje Y. Juntos definen cualquier línea posible.
+  El weight es la pendiente de una línea, el bias es dónde esa línea corta el
+  eje Y. Juntos definen cualquier línea posible.
 </Callout>
 
 ### Hyperparameters
@@ -138,9 +142,10 @@ Valores que se definen antes de entrenar. El modelo nunca los toca.
 - `epochs`: Cuántas veces el modelo ve el dataset completo
 
 <Callout type="info" title="">
-`learning_rate` muy alto **→** los pasos son grandes **→** el modelo salta sobre el mínimo **→** nunca converge  
-`learning_rate` muy bajo **→** los pasos son tiny   **→** converge, pero tarda demasiado  
-`learning_rate` correcto **→** baja suave y converge  
+  `learning_rate` muy alto **→** los pasos son grandes **→** el modelo salta
+  sobre el mínimo **→** nunca converge `learning_rate` muy bajo **→** los pasos
+  son tiny **→** converge, pero tarda demasiado `learning_rate` correcto **→**
+  baja suave y converge
 </Callout>
 
 ### Gradient Descent
@@ -171,17 +176,10 @@ El loss baja con cada iteración → el modelo mejora.
 Una pasada completa por todo el dataset. Típicamente se entrena por muchos epochs hasta que el loss converge (deja de bajar significativamente).
 
 <Callout type="note" title="">
-Initialize random weights  
-&emsp;**↓**  
-[  Forward pass: features → prediction  ]  
-&emsp;**↓**    
-[  Calculate loss: prediction vs label  ]  
-&emsp;**↓**    
-[  Backward pass: calculate gradients   ]  
-&emsp;**↓**    
-[  Update weights                       ]  
-&emsp;**↓**    
-Repeat → Epoch → Repeat → until loss converges
+  Initialize random weights &emsp;**↓** [ Forward pass: features → prediction ]
+  &emsp;**↓** [ Calculate loss: prediction vs label ] &emsp;**↓** [ Backward
+  pass: calculate gradients ] &emsp;**↓** [ Update weights ] &emsp;**↓** Repeat
+  → Epoch → Repeat → until loss converges
 </Callout>
 
 ### 01_gradient_descent.py
@@ -276,8 +274,7 @@ Epoch 90 → Loss: 0.0029 # converge, ya no baja mucho más
 El modelo predice un valor continuo — cualquier número dentro de un rango.
 
 <Callout type="note" title="">
-Entrada: entropy = 7.0  
-Salida:  maliciousness score = 0.79  ← número continuo
+  Entrada: entropy = 7.0 Salida: maliciousness score = 0.79 ← número continuo
 </Callout>
 
 Útil cuando la respuesta es una cantidad: precio, temperatura, score.
@@ -287,50 +284,48 @@ Salida:  maliciousness score = 0.79  ← número continuo
 El modelo predice una categoría discreta — una clase entre opciones definidas.
 
 <Callout type="note" title="">
-Entrada: entropy = 7.0
-Salida:  "malicious" o "benign"  ← una de dos categorías
+  Entrada: entropy = 7.0 Salida: "malicious" o "benign" ← una de dos categorías
 </Callout>
 
-| Tipo | Salida | Ejemplo |
-| - | - | - |
-| Regression | Número continuo | Score de 0.0 a 1.0 |
-| Binary Classification | Una de dos clases | malicious / benign |
-| Multi-class Classification | Una de N clases | trojan / ransomware / adware / benign |
+| Tipo                       | Salida            | Ejemplo                               |
+| -------------------------- | ----------------- | ------------------------------------- |
+| Regression                 | Número continuo   | Score de 0.0 a 1.0                    |
+| Binary Classification      | Una de dos clases | malicious / benign                    |
+| Multi-class Classification | Una de N clases   | trojan / ransomware / adware / benign |
 
 ### Activation Functions
 
 Transforma la salida del modelo antes de entregarla. En clasificación binaria se usa sigmoid:
 
 <Callout type="note" title="Función matemática">
-sigmoid(x) = 1 / (1 + e^(-x))
+  sigmoid(x) = 1 / (1 + e^(-x))
 </Callout>
 
 No importa qué número entre — sigmoid siempre devuelve algo entre 0 y 1
 
 <Callout type="note" title="">
-sigmoid(-10) → 0.00004  (casi seguro clase 0)  
-sigmoid(0)   → 0.5      (el modelo no sabe)  
-sigmoid(10)  → 0.99995  (casi seguro clase 1)
+  sigmoid(-10) → 0.00004 (casi seguro clase 0) sigmoid(0) → 0.5 (el modelo no
+  sabe) sigmoid(10) → 0.99995 (casi seguro clase 1)
 </Callout>
 
 La salida del modelo pasa por sigmoid antes de ser una predicción final
 
 <Callout type="note" title="">
-raw output = weight × feature + bias **←** puede ser cualquier número  
-prediction = sigmoid(raw output) **←** siempre entre 0 y 1
+  raw output = weight × feature + bias **←** puede ser cualquier número
+  prediction = sigmoid(raw output) **←** siempre entre 0 y 1
 </Callout>
 
 ### Binary Cross-Entropy (BCE)
 
 <Callout type="note" title="">
-BCE = -mean( label × log(prediction) + (1 - label) × log(1 - prediction) )
+  BCE = -mean( label × log(prediction) + (1 - label) × log(1 - prediction) )
 </Callout>
 
 Castiga mucho más cuando el modelo está muy seguro y se equivoca
 
 <Callout type="example" title="Ejemplo">
-prediction = 0.99, label = 0  **→** loss enorme  (muy seguro, muy equivocado)  
-prediction = 0.51, label = 0  **→** loss pequeño (apenas se equivocó)
+  prediction = 0.99, label = 0 **→** loss enorme (muy seguro, muy equivocado)
+  prediction = 0.51, label = 0 **→** loss pequeño (apenas se equivocó)
 </Callout>
 
 ### 02_binary_classifier.py
@@ -419,11 +414,11 @@ for sample in test_samples:
 ```
 
 El dataset tiene `file_entropy` y `has_network_calls`. Por eso `weights` es un array de dos valores, uno por feature.  
-**Matrix multiplication** (`@`) — en vez de `weight * feature` hacemos `features @ weights`. Es la misma operación pero para múltiples features a la vez. El resultado es una predicción por cada sample del dataset.  
+**Matrix multiplication** (`@`) — en vez de `weight * feature` hacemos `features @ weights`. Es la misma operación pero para múltiples features a la vez. El resultado es una predicción por cada sample del dataset.
 
 <Callout type="example" title="Ejemplo">
-features (8,2) @ weights (2,) = raw_output (8,)  
-8 samples, 2 features cada uno → 8 predicciones
+  features (8,2) @ weights (2,) = raw_output (8,) 8 samples, 2 features cada uno
+  → 8 predicciones
 </Callout>
 
 `np.clip` — sigmoid puede devolver exactamente 0 o 1 con valores extremos, y `log(0)` es indefinido. Clip limita los valores a un rango seguro antes de calcular el loss.  
@@ -432,16 +427,17 @@ features (8,2) @ weights (2,) = raw_output (8,)
 Lo que muestra la salida
 
 <Callout type="example" title="Ejemplo">
-Epoch  0 **→** Loss: 1.06   # weights aleatorios  
-Epoch 90 **→** Loss: 0.38   # el modelo aprendió
+  Epoch 0 **→** Loss: 1.06 # weights aleatorios Epoch 90 **→** Loss: 0.38 # el
+  modelo aprendió
 </Callout>
 
 Y la inferencia
 
 <Callout type="example" title="Ejemplo">
-entropy=7.5, network=1 **→** 0.85 **→** malicious   # alta confianza, correcto  
-entropy=2.0, network=0 **→** 0.37 **→** benign      # correctamente benign  
-entropy=6.0, network=0 **→** 0.60 **→** malicious   # ambiguo, entropy alta pesa más
+  entropy=7.5, network=1 **→** 0.85 **→** malicious # alta confianza, correcto
+  entropy=2.0, network=0 **→** 0.37 **→** benign # correctamente benign
+  entropy=6.0, network=0 **→** 0.60 **→** malicious # ambiguo, entropy alta pesa
+  más
 </Callout>
 
 ## Neural Networks
@@ -513,3 +509,18 @@ output error → gradiente W2 → gradiente W1
      ↑                              ↑
   lo que ya sabíamos          backpropagation lo calcula
 ```
+
+## Machine Learning
+
+Ciclo de vida
+
+1. Definición del problema.
+2. Recolección de datos.
+3. Limpieza y preprocesamiento de datos.
+4. Análisis exploratorio de datos (EDA): Para encontrar patrones escondidos en los datos.
+5. Ingeniería y selección de características: Seleccionar características relevantes para mejorar la eficacia del modelo y sus predicciones mientras se reduce la complejidad.
+6. Selección del modelo.
+7. Entrenar el modelo.
+8. Evaluación y ajuste del modelo.
+9. Despliegue del modelo.
+10. Monitoreo y mantenimiento del modelo.

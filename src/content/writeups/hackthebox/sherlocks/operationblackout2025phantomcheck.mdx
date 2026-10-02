@@ -116,6 +116,54 @@ Get-WinEvent -Path .\Windows-Powershell-Operational.evtx |
 
 ## Which registry key did the above script query to retrieve service details for virtualization detection?
 
+Obtenemos el evento con el ID `3047` y buscamos la key del registro que se está consultando para obtener detalles del servicio de virtualización.
+
+```powershell
+Get-WinEvent -Path .\Windows-Powershell-Operational.evtx |
+    Where-Object RecordId -eq 3047 |
+    Select-Object -ExpandProperty Message
+```
+
+En distintos lugares de la función `Check-VM` se hace la consulta `Get-ChildItem HKLM:\SYSTEM\ControlSet001\Services`.
+
+<Callout type="success" title="Registry key">
+  HKLM:\SYSTEM\ControlSet001\Services
+</Callout>
+
 ## The VM detection script can also identify VirtualBox. Which processes is it comparing to determine if the system is running VirtualBox?
 
+En el evento con ID `3047` buscamos donde se hace una comparación entre procesos.
+
+```powershell
+Get-WinEvent -Path .\Windows-Powershell-Operational.evtx |
+    Where-Object RecordId -eq 3047 |
+    Select-Object -ExpandProperty Message
+```
+
+```powershell
+<SNIP>
+    #Virtual Box
+
+    $vb = Get-Process
+    if (($vb -eq "vboxservice.exe") -or ($vb -match "vboxtray.exe"))
+        {
+
+        $vbvm = $true
+
+        }
+<SNIP>
+```
+
+<Callout type="success" title="Processes">
+  vboxservice.exe, vboxtray.exe
+</Callout>
+
 ## The VM detection script prints any detection with the prefix 'This is a'. Which two virtualization platforms did the script detect?
+
+Abrir el `Visor de eventos`, `Abrir registro guardado` y seleccionar el archivo `Microsoft-Windows-Powershell.evtx`. Seleccionar `Buscar` y poner el prefijo `This is a` como palabras a buscar. En los detalles del evento encontrado está la respuesta.
+
+![Virtualization platforms](@images/writeups/hackthebox/sherlocks/operationblackout2025phantomcheck/task6.png)
+
+<Callout type="success" title="Virtualizations platforms">
+  Hyper-V, Vmware
+</Callout>
