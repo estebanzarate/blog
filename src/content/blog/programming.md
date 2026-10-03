@@ -6,4 +6,5 @@ lang: es
 draft: false
 ---
 
+- [Bash](./programming/bash)
 - [Go](./programming/go)

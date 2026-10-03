@@ -1,0 +1,146 @@
+---
+type: post
+title: Bash
+description: ""
+lang: es
+draft: false
+---
+
+## Tipos de shell
+
+- `sh`: Shell original con pocas features.
+- `bash` (Bourne Again shell): Shell standard.
+- `csh` (C shell): La sintaxis se parece al lenguaje de programación C.
+- `tcsh` (TENEX C shell): Versión mejorada de C shell.
+- `ksh` (Korn shell): Versión mejorada de Bourne Shell.
+
+El archivo `/etc/shells` contiene las shells permitidas en el OS.
+
+<Callout type="info" title="Ver la shell del usuario actual">
+`grep $USER /etc/passwd`
+</Callout>
+
+## Archivos de inicio de Bash
+
+Scripts que Bash lee y ejecuta cuando inicia.
+
+### Interprete de comandos interactivo o con `--login`
+
+Interactivo significa que se pueden ejecutar comandos. Una shell de inicio de sesión significa que se obtuvo después de iniciar sesión en el sistema, normalmente ingresando usuario y contraseña.
+
+Archivos leídos:
+
+- `/etc/profile`
+- `~/.bash_profile`, `~/.bash_login`, `~/.profile` (sSe lee el primer archivo legible existente)
+- `~/.bash_logout` (al cerrar sesión)
+
+### Intérprete de comandos interactivo sin inicio de sesión
+
+Una sesión sin inicio de sesión significa que no hay que iniciar sesión en el sistema.
+
+Archivos leídos:
+
+- `~/.bashrc`
+
+### Invocado de forma no interactiva
+
+Todos los scripts usan shells no interactivas, se programan para realizar ciertas tareas y no pueden realizar otras.
+
+Archivos leídos:
+
+- Definido por `BASH_ENV` (apunta a un archivo de inicio de Bash que se lee cuando se ejecuta un script)
+
+### Se invoca con el comando `sh`
+
+Bash intenta comportarse como el programa histórico Bourne sh, al tiempo que se ajusta al estándar POSIX.
+
+Archivos leídos:
+
+- `/etc/profile`
+- `~/.profile`
+
+Cuando se invoca de forma interactiva la variable `ENV` puede apuntar a información de inicio adicional.
+
+### Modo POSIX
+
+Se habilita usando la función integrada `set -o posix`, ejecutando `bash --posix` o configurando la variable `POSIXLY_CORRECT`.
+
+Archivos leídos:
+
+- Definido por la variable `ENV`.
+
+## Shells interactivas
+
+Un intérprete de comandos interactivo generalmente lee y escribe en la terminal del usuario: la entrada y la salida están conectadas a una terminal.
+
+<Callout type="info" title="Cómo saber si la shell es interactiva">
+Contiene una `i` si lo es.
+
+`echo $-`  
+`himBHs`
+</Callout>
+
+### Comportamiento interactivo del intérprete de comandos
+
+- El historial de comandos y la expansión del historial están habilitados por defecto. El historial se guarda en el archivo especificado por `HISTFILE` al finalizar la sesión. Por defecto, `HISTFILE` apunta a `~/.bash_history`.
+- Se habilita la salida automática una vez transcurrido el tiempo especificado en la variable TMOUT (`TMOUT=10` cierra la terminal después de 10 segundos).
+
+## Condicionales
+
+Las expresiones condicionales se utilizan por el comando compuesto `[[` y por los comandos integrados `test` y `[`.
+
+
+## Aritmética en el intérprete de comandos
+
+El intérprete de comandos permite evaluar expresiones aritméticas mediante una de las expansiones o mediante la función integrada `let`.
+
+## Alias
+
+Permiten reemplazar una palabra por una cadena de texto cuando se utiliza como primera palabra de un comando simple. El intérprete de comandos mantiene una lista de alias que se pueden establecer y eliminar con los comandos `alias` y `unalias`.
+
+## Arrays
+
+Bash proporciona variables de array unidimensionales. Cualquier variable puede usarse como array; el comando integrado `declare` declara explícitamente un array. No hay límite máximo para el tamaño de un array, ni se requiere que los elementos se indexen o asignen de forma contigua. Los array tienen índice base cero.
+
+## Stack de directorios
+
+El stack de directorios es una lista de los directorios visitados recientemente. El comando integrado `pushd` agrega directorios al stack al cambiar el directorio actual, y el comando integrado `popd` elimina los directorios especificados del stack y cambia el directorio actual al directorio eliminado. El contenido se puede ver con el comando `dirs` o comprobando el contenido de la variable `DIRSTACK`.
+
+## Intérprete de comandos restringido
+
+- El comando integrado `cd` está deshabilitado.
+- No es posible configurar ni desconfigurar `SHELL`, `PATH`, `ENV` ni `BASH_ENV`.
+- Los nombres de los comandos ya no pueden contener barras diagonales.
+- No se permiten nombres de archivo con barras diagonales con el comando integrado `.` (`source`).
+- El comando integrado `hash` no acepta barras diagonales con la opción `-p`.
+- La importación de funciones al inicio está deshabilitada.
+- `SHELLOPTS` se ignora al inicio.
+- La redirección de salida mediante `>`, `>|`, `><`, `>&`, `&>` y `>>` está deshabilitada.
+- El comando integrado `exec` está deshabilitado.
+- Las opciones `-f` y `-d` están deshabilitadas para el comando integrado `enable`.
+- No se puede especificar una ruta predeterminada con el comando integrado `command`.
+- No es posible desactivar el modo restringido.
+
+## Ejecución de comandos
+
+Bash determina el tipo de programa que se va a ejecutar. Los programas normales son comandos del sistema que existen compilados en el sistema. Cuando se ejecuta un programa de este tipo, se crea un nuevo proceso porque Bash hace una copia exacta de sí mismo. Este proceso hijo tiene el mismo entorno que su padre; solo cambia su ID. Este procedimiento se denomina *forking*.
+
+Tras el proceso de *forking*, el espacio de direcciones del proceso hijo se sobrescribe con los datos del nuevo proceso. Esto se realiza mediante una llamada `exec` al sistema.
+
+### Comandos integrados
+
+Los comandos integrados se encuentran dentro del propio intérprete de comandos. Cuando el nombre de un comando integrado se utiliza como la primera palabra de un comando simple, el intérprete de comandos ejecuta el comando directamente, sin crear un nuevo proceso.
+
+#### Tipos de comandos integrados
+
+1. Bourne shell: `:`, `.`, `break`, `cd`, `continue`, `eval`, `exec`, `exit`, `export`, `getopts`, `hash`, `pwd`, `readonly`, `return`, `set`, `shift`, `test`, `[`, `times`, `trap`, `umask` and `unset`.
+2. Bash: `alias`, `bind`, `builtin`, `command`, `declare`, `echo`, `enable`, `help`, `let`, `local`, `logout`, `printf`, `read`, `shopt`, `type`, `typeset`, `ulimit` and `unalias`.
+3. Especiales: `:`, `.`, `break`, `continue`, `eval`, `exec`, `exit`, `export`, `readonly`, `return`, `set`, `shift`, `trap` and `unset`.
+
+Cuando Bash se ejecuta en modo POSIX, los comandos integrados especiales difieren de otros comandos integrados en tres aspectos:
+    - Las funciones integradas especiales se encuentran antes que las funciones del intérprete de comandos durante la búsqueda de comandos.
+    - Si una función integrada especial devuelve un estado de error, el intérprete de comandos no interactivo finaliza.
+
+### Ejecutar programas desde un script
+
+Cuando el programa que se ejecuta es un script de shell, bash crea un nuevo proceso bash mediante un proceso hijo. Este subproceso lee las líneas del script una a una. Los comandos de cada línea se leen, interpretan y ejecutan como si se hubieran introducido directamente desde el teclado. Mientras el subproceso procesa cada línea del script, el shell principal espera a que el proceso hijo termine. Cuando ya no quedan líneas por leer en el script, el subproceso finaliza. El shell principal se reactiva y muestra un nuevo indicador de comandos.
