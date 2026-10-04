@@ -170,7 +170,7 @@ export LS_COLORS="di=1;38;2;159;239;0:ln=1;38;2;46;231;186:ex=1;38;2;159;239;0:*
 [[ $- != *i* ]] && return
 
 export _JAVA_AWT_WM_NONREPARENTING=1
-export WPSCAN_API_TOKEN=
+export WPSCAN_API_TOKEN=u*****************************************E
 
 alias ls='ls --color=auto'
 alias burp='/usr/bin/burpsuite > /dev/null 2>&1 & disown'
@@ -186,6 +186,7 @@ _git_prompt() {
     [[ -n $(git status --porcelain 2>/dev/null) ]] && dirty="*"
     echo -e " ${ANSI_SECONDARY_A}(${branch}${dirty})${COLOR_RESET}"
 }
+
 PS1="\[${ANSI_FG_STRONG}\]\w\[${COLOR_RESET}\]\$(_git_prompt) "
 
 target() {
@@ -341,7 +342,8 @@ pyvenv() {
 _vpn_error() {
     local usage="[${ANSI_WARNING}*${COLOR_RESET}] Usage: vpn <${ANSI_DANGER}htbm${COLOR_RESET}|${ANSI_DANGER}htbc${COLOR_RESET}|${ANSI_DANGER}htba${COLOR_RESET}|${ANSI_DANGER}thm${COLOR_RESET}>
 
-  vpn htbs  → connect to HackTheBox Starting Point
+  vpn htbsp → connect to HackTheBox Starting Point
+  vpn htbs  → connect to HackTheBox Sherlocks
   vpn htbm  → connect to HackTheBox Machines
   vpn htbc  → connect to HackTheBox Competitive
   vpn htba  → connect to HackTheBox Academy
@@ -364,7 +366,8 @@ vpn() {
     fi
     local config
     case "$1" in
-        htbs)  config="$config_dir/htbs.ovpn" ;;
+        htbsp)  config="$config_dir/htbsp.ovpn" ;;
+        htbs) config="$config_dir/htbs.ovpn" ;;
         htbm)  config="$config_dir/htbm.ovpn" ;;
         htbc) config="$config_dir/htbc.ovpn" ;;
         htba) config="$config_dir/htba.ovpn" ;;
@@ -883,6 +886,7 @@ cursor-scroll = ns-resize
 [module/arch]
 type = custom/text
 label = [ %{F#1793D1}%{T3}󰣇%{T-}%{F-} ]
+click-left = $HOME/.config/sxhkd/scripts/keybinds.sh
 
 [module/desk]
 type = internal/xworkspaces
@@ -914,6 +918,7 @@ interval = 2
 [module/dog]
 type = custom/text
 label = [ %{F#C68642}%{T3}󰩃%{T-}%{F-} ]
+click-left = $HOME/.config/sxhkd/scripts/keybinds.sh
 EOF
 ```
 
