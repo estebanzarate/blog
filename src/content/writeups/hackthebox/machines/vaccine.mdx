@@ -3,8 +3,8 @@ type: writeup
 title: Vaccine
 description: Se centra en la enumeración y el descifrado de contraseñas. El acceso FTP anónimo expone un archivo de copia de seguridad protegido con contraseña que puede descifrarse para recuperar las credenciales de la aplicación web. Estas credenciales otorgan acceso a una aplicación PHP vulnerable a la inyección SQL, lo que permite la ejecución de comandos y una shell inicial como el usuario postgres. Finalmente, se puede lograr la escalada de privilegios abusando de los permisos sudo mal configurados en vi.
 lang: es
-draft: false
-featured: true
+draft: true
+featured: false
 image: ../../../../images/writeups/hackthebox/machines/vaccine/vaccine.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Vaccine
@@ -40,8 +40,8 @@ PORT   STATE SERVICE VERSION
 21/tcp open  ftp     vsftpd 3.0.3
 | ftp-anon: Anonymous FTP login allowed (FTP code 230)
 |_-rwxr-xr-x    1 0        0            2533 Apr 13  2021 backup.zip
-| ftp-syst: 
-|   STAT: 
+| ftp-syst:
+|   STAT:
 | FTP server status:
 |      Connected to ::ffff:10.10.15.41
 |      Logged in as ftpuser
@@ -54,15 +54,15 @@ PORT   STATE SERVICE VERSION
 |      vsFTPd 3.0.3 - secure, fast, stable
 |_End of status
 22/tcp open  ssh     OpenSSH 8.0p1 Ubuntu 6ubuntu0.1 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
+| ssh-hostkey:
 |   3072 c0:ee:58:07:75:34:b0:0b:91:65:b2:59:56:95:27:a4 (RSA)
 |   256 ac:6e:81:18:89:22:d7:a7:41:7d:81:4f:1b:b8:b2:51 (ECDSA)
 |_  256 42:5b:c3:21:df:ef:a2:0b:c9:5e:03:42:1d:69:d0:28 (ED25519)
 80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
 |_http-title: MegaCorp Login
-| http-cookie-flags: 
-|   /: 
-|     PHPSESSID: 
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
 |_      httponly flag not set
 |_http-server-header: Apache/2.4.41 (Ubuntu)
 Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
@@ -85,7 +85,7 @@ ls -la
 Descargamos el archivo `backup.zip`.
 
 ```bash
-get backup.zip 
+get backup.zip
 ```
 
 ```plaintext
@@ -113,7 +113,7 @@ Loaded 1 password hash (PKZIP [32/64])
 Will run 4 OpenMP threads
 Note: Passwords longer than 21 [worst case UTF-8] to 63 [ASCII] rejected
 Press 'q' or Ctrl-C to abort, 'h' for help, almost any other key for status
-741852963        (backup.zip)     
+741852963        (backup.zip)
 1g 0:00:00:00 DONE (2026-07-28 14:48) 14.29g/s 117028p/s 117028c/s 117028C/s 123456..total90
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed
@@ -166,7 +166,7 @@ La web tiene una función de búsqueda vulnerable a SQLi.
 Capturamos la request con `Burpsuite` y la guardamos en un archivo para usarlo en `sqlmap`.
 
 ```bash
-sqlmap -r request.req 
+sqlmap -r request.req
 ```
 
 ```plaintext
@@ -237,7 +237,7 @@ En el directorio `/var/lib/postgresql` encontramos la flag del user.
 ### User flag
 
 <Callout type="success" title="User flag">
-e******************************7
+  e******************************7
 </Callout>
 
 ## Privilege Escalation
@@ -292,7 +292,7 @@ sudo -l
 ```
 
 ```plaintext
-[sudo] password for postgres: 
+[sudo] password for postgres:
 Matching Defaults entries for postgres on vaccine:
     env_keep+="LANG LANGUAGE LINGUAS LC_* _XKB_CHARSET", env_keep+="XAPPLRESDIR XFILESEARCHPATH XUSERFILESEARCHPATH",
     secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, mail_badpass
@@ -336,5 +336,5 @@ cat root.txt
 ### Root flag
 
 <Callout type="success" title="Root flag">
-d******************************9
+  d******************************9
 </Callout>

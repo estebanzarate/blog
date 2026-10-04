@@ -3,7 +3,7 @@ type: post
 title: Linux Privilege Escalation
 description: Enumeración de un sistema Linux después de obtener acceso no autorizado, diversas técnicas de escalada de privilegios 
 lang: es
-draft: false
+draft: true
 ---
 
 - [LinEnum](https://github.com/rebootuser/LinEnum)

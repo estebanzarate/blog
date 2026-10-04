@@ -3,7 +3,7 @@ type: writeup
 title: Dancing
 description: Introduce el protocolo Server Message Block (SMB), su enumeración y su explotación cuando se configura incorrectamente para permitir el acceso sin contraseña.
 lang: es
-draft: false
+draft: true
 image: ../../../../images/writeups/hackthebox/machines/dancing/dancing.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Dancing
@@ -62,11 +62,11 @@ Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 
 Host script results:
 |_clock-skew: 3h59m40s
-| smb2-time: 
+| smb2-time:
 |   date: 2026-07-27T04:33:03
 |_  start_date: N/A
-| smb2-security-mode: 
-|   3.1.1: 
+| smb2-security-mode:
+|   3.1.1:
 |_    Message signing enabled but not required
 ```
 
@@ -98,7 +98,7 @@ SMB         10.129.193.219  445    DANCING          -----           ----------- 
 SMB         10.129.193.219  445    DANCING          ADMIN$                          Remote Admin
 SMB         10.129.193.219  445    DANCING          C$                              Default share
 SMB         10.129.193.219  445    DANCING          IPC$            READ            Remote IPC
-SMB         10.129.193.219  445    DANCING          WorkShares      READ,WRITE 
+SMB         10.129.193.219  445    DANCING          WorkShares      READ,WRITE
 ```
 
 Enumeramos el contenido del recurso `WorkShares`.
@@ -145,5 +145,5 @@ cat flag.txt
 ### Flag
 
 <Callout type="success" title="Flag">
-5******************************4
+  5******************************4
 </Callout>

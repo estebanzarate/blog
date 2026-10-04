@@ -1,0 +1,71 @@
+---
+type: writeup
+title: SmartHire
+description: Centrada en una plataforma de reclutamiento basada en aprendizaje automático. La aplicación web es un SaaS de reclutamiento basado en Flask que permite a los usuarios registrados entrenar modelos de puntuación de candidatos y realizar predicciones con los currículums cargados. La enumeración de hosts virtuales revela un segundo host que sirve un registro de modelos MLflow protegido únicamente por credenciales de autenticación básica predeterminadas débiles. La versión 2.14.1 de MLflow desplegada está afectada por CVE-2024-37054, una vulnerabilidad de deserialización insegura en pyfunc.load_model(). Al registrar un modelo PyFunc malicioso que sobrescribe el modelo cargado por la aplicación web en el momento de la predicción, obtenemos ejecución remota de código como svcweb en el instante en que se activa una predicción. Para la escalada de privilegios, se permite a svcweb ejecutar un script de mantenimiento de MLflow como root que añade un directorio de complementos con permisos de escritura para el grupo a la ruta del sitio de Python. El gancho de configuración del sitio .pth de Python puede ser utilizado indebidamente para colocar un archivo que ejecute código durante el inicio del intérprete, lo que resulta en una consola de administrador.
+lang: es
+draft: true
+featured: false
+image: ../../../../images/writeups/hackthebox/machines/smarthire/smarthire.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/SmartHire
+difficulty: medium
+os: linux
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Enumerar todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.245.215
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 63
+80/tcp open  http    syn-ack ttl 63
+```
+
+```bash
+nmap -p 22,80 -sCV -Pn -n -vv -oA nmap/openports 10.129.245.215
+```
+
+```plaintext
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.15 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 41:3c:e3:bb:88:70:99:7f:b8:96:59:48:9b:85:98:69 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLg1Y2xxe0euIHDjjKTIrxL+XZXgsBabs0FMAMKBL8arUuELui3vhlkgcDVGcZ4vFWnsiu4osw5INjfcQGkp2BY=
+|   256 d5:9d:fd:6b:be:d8:39:6f:3f:43:ab:0e:f6:3e:22:db (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPc/kqsR+WxwGPMNTukcYPjzZRGjQL6N+0HsGIS1NV4U
+80/tcp open  http    syn-ack nginx 1.18.0 (Ubuntu)
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Did not follow redirect to http://smarthire.htb/
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Agregar el dominio al archivo `/etc/hosts` para que la IP resuelva al dominio encontrado.
+
+Enumerar subdominios.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -u http://smarthire.htb/ -H "Host: FUZZ.smarthire.htb" -i -ic -t 100 -fs 178
+```
+
+```plaintext
+models                  [Status: 401, Size: 137, Words: 11, Lines: 1, Duration: 234ms]
+```
+
+Agregar el subdominio encontrado al archivo `/etc/hosts` para que la IP resuelva al subdominio encontrado.
+
+Al visitar el subdominio aparece un cuadro para iniciar sesión y pide ingresar `username` y `password`.
+
+![Subdominio Models](@images/writeups/hackthebox/machines/smarthire/subdomain-models.png)
+
+Al presionar en `Cancel` la web muestra un enlace a la documentación de la plataforma MLflow que es una plataforma de código abierto diseñada para agilizar y gestionar el ciclo de vida del aprendizaje automático.
+
+![Not Login](@images/writeups/hackthebox/machines/smarthire/notlogin-models.png)

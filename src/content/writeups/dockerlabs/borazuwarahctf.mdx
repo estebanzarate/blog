@@ -3,7 +3,7 @@ type: writeup
 title: BorazuwarahCTF
 description: Combina enumeración web, análisis de metadatos, esteganografía, fuerza bruta sobre SSH y una configuración insegura de sudo.
 lang: es
-draft: false
+draft: true
 image: ../../../images/writeups/dockerlabs/dockerlabs.webp
 platform: dockerlabs
 url: https://dockerlabs.es/
@@ -36,7 +36,7 @@ nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
 ```plaintext
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
-| ssh-hostkey: 
+| ssh-hostkey:
 |   256 3d:fd:d7:c8:17:97:f5:12:b1:f5:11:7d:af:88:06:fe (ECDSA)
 |_  256 43:b3:ba:a9:32:c9:01:43:ee:62:d0:11:12:1d:5d:17 (ED25519)
 80/tcp open  http    Apache httpd 2.4.59 ((Debian))
@@ -72,7 +72,7 @@ Title                           : ---------- Password:  ----------
 Vemos si la imagen contiene datos ocultos.
 
 ```bash
-steghide info imagen.jpeg 
+steghide info imagen.jpeg
 ```
 
 Como no tiene contraseña no le pasamos `passphrase`.
@@ -82,7 +82,7 @@ Como no tiene contraseña no le pasamos `passphrase`.
   format: jpeg
   capacity: 704.0 Byte
 Try to get information about embedded data ? (y/n) y
-Enter passphrase: 
+Enter passphrase:
   embedded file "secreto.txt":
     size: 104.0 Byte
     encrypted: rijndael-128, cbc
@@ -92,20 +92,20 @@ Enter passphrase:
 Extraemos el archivo oculto.
 
 ```bash
-steghide extract -sf imagen.jpeg 
+steghide extract -sf imagen.jpeg
 ```
 
 Como no tiene contraseña no le pasamos `passphrase`.
 
 ```
-Enter passphrase: 
+Enter passphrase:
 wrote extracted data to "secreto.txt".
 ```
 
 Leemos el archivo `secreto.txt`.
 
 ```bash
-cat secreto.txt 
+cat secreto.txt
 ```
 
 ```plaintext

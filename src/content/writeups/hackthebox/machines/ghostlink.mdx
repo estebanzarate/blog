@@ -3,7 +3,7 @@ type: writeup
 title: Ghostlink
 description: "Cuenta con un controlador de dominio de Active Directory y un servidor web. La enumeración revela un servicio MQTT crítico utilizado para el seguimiento de nodos, que expone dos hosts internos: una aplicación segura para compartir archivos y un host de código de Gogs. El atacante modifica la comprobación de estado de MQTT para activar la autenticación NTLM, retransmitiendo credenciales para autenticarse como la cuenta de servicio svc_canary. Utilizando esta autenticación, el atacante explota una vulnerabilidad de recorrido de ruta con doble codificación URL para extraer el archivo ntuser.dat de la cuenta de servicio. El análisis del registro revela un documento reciente para db.zip, que contiene credenciales de KeePass para la aplicación Gogs. Estas credenciales se utilizan para explotar una vulnerabilidad RCE CVE-2025-8110 en Gogs y obtener acceso. Una vez en el sistema, el atacante descifra un hash de Gogs para iniciar sesión como el usuario local nvirelli. Por último, la vulnerabilidad ESC11 en ADCS permite al atacante solicitar un certificado de controlador de dominio y comprometer el dominio."
 lang: es
-draft: false
+draft: true
 image: ../../../../images/writeups/hackthebox/machines/ghostlink/ghostlink.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Ghostlink

@@ -3,7 +3,7 @@ type: post
 title: OverTheWire
 description: Writeups de la plataforma OverTheWire
 lang: es
-draft: false
+draft: true
 ---
 
 - [Bandit](./overthewire/overthewire-bandit)

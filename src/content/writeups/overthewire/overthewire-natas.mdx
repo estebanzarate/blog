@@ -3,7 +3,7 @@ type: writeup
 title: Over The Wire - Natas
 description: Resolución de todos los niveles de Natas en Over The Wire
 lang: es
-draft: false
+draft: true
 image: ../../../images/writeups/overthewire/overthewire.png
 platform: overthewire
 url: https://overthewire.org/wargames/natas/
@@ -46,15 +46,19 @@ You can find the password for the next level on this page.
 ```
 
 <Callout type="success" title="Password natas1">
-scfWG6qNEIdzqVyfRwEGXyNUfFZkZeQ7
+  scfWG6qNEIdzqVyfRwEGXyNUfFZkZeQ7
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Esta vulnerabilidad se puede clasificar como [**CWE-615** Inclusion of Sensitive Information in Source Code Comments](https://cwe.mitre.org/data/definitions/615.html) inclusión de información sensible en los comentarios del código fuente
+  Esta vulnerabilidad se puede clasificar como [**CWE-615** Inclusion of
+  Sensitive Information in Source Code
+  Comments](https://cwe.mitre.org/data/definitions/615.html) inclusión de
+  información sensible en los comentarios del código fuente
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Eliminar comentarios orientados a la depuración antes de subir el sitio a un entorno de producción.
+  - Eliminar comentarios orientados a la depuración antes de subir el sitio a un
+  entorno de producción.
 </Callout>
 
 ## Natas Level 0 → Level 1
@@ -93,15 +97,19 @@ next level on this page, but rightclicking has been blocked!
 Al acceder al sitio web se indica que se puede obtener el password en el sitio pero que el click derecho está bloqueado. Usando `curl` podemos acceder al código fuente y ver el password para el siguiente nivel.
 
 <Callout type="success" title="Password natas2">
-vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
+  vsDOxoXyq3wckCP1ZmTZ71ngIA606odB
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Esta vulnerabilidad se puede clasificar como [**CWE-615** Inclusion of Sensitive Information in Source Code Comments](https://cwe.mitre.org/data/definitions/615.html) inclusión de información sensible en los comentarios del código fuente
+  Esta vulnerabilidad se puede clasificar como [**CWE-615** Inclusion of
+  Sensitive Information in Source Code
+  Comments](https://cwe.mitre.org/data/definitions/615.html) inclusión de
+  información sensible en los comentarios del código fuente
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Eliminar comentarios orientados a la depuración antes de subir el sitio a un entorno de producción.
+  - Eliminar comentarios orientados a la depuración antes de subir el sitio a un
+  entorno de producción.
 </Callout>
 
 ## Natas Level 1 → Level 2
@@ -141,23 +149,54 @@ curl -L http://natas2.natas.labs.overthewire.org/files --user natas2:vsDOxoXyq3w
 ```
 
 ```html
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
- <head>
-  <title>Index of /files</title>
- </head>
- <body>
-<h1>Index of /files</h1>
-  <table>
-   <tr><th valign="top"><img src="/icons/blank.gif" alt="[ICO]"></th><th><a href="?C=N;O=D">Name</a></th><th><a href="?C=M;O=A">Last modified</a></th><th><a href="?C=S;O=A">Size</a></th><th><a href="?C=D;O=A">Description</a></th></tr>
-   <tr><th colspan="5"><hr></th></tr>
-<tr><td valign="top"><img src="/icons/back.gif" alt="[PARENTDIR]"></td><td><a href="/">Parent Directory</a></td><td>&nbsp;</td><td align="right">  - </td><td>&nbsp;</td></tr>
-<tr><td valign="top"><img src="/icons/image2.gif" alt="[IMG]"></td><td><a href="pixel.png">pixel.png</a></td><td align="right">2026-06-24 14:52  </td><td align="right">303 </td><td>&nbsp;</td></tr>
-<tr><td valign="top"><img src="/icons/text.gif" alt="[TXT]"></td><td><a href="users.txt">users.txt</a></td><td align="right">2026-06-24 14:52  </td><td align="right">145 </td><td>&nbsp;</td></tr>
-   <tr><th colspan="5"><hr></th></tr>
-</table>
-<address>Apache/2.4.66 (Ubuntu) Server at natas2.natas.labs.overthewire.org Port 80</address>
-</body></html>
+  <head>
+    <title>Index of /files</title>
+  </head>
+  <body>
+    <h1>Index of /files</h1>
+    <table>
+      <tr>
+        <th valign="top"><img src="/icons/blank.gif" alt="[ICO]" /></th>
+        <th><a href="?C=N;O=D">Name</a></th>
+        <th><a href="?C=M;O=A">Last modified</a></th>
+        <th><a href="?C=S;O=A">Size</a></th>
+        <th><a href="?C=D;O=A">Description</a></th>
+      </tr>
+      <tr>
+        <th colspan="5"><hr /></th>
+      </tr>
+      <tr>
+        <td valign="top"><img src="/icons/back.gif" alt="[PARENTDIR]" /></td>
+        <td><a href="/">Parent Directory</a></td>
+        <td>&nbsp;</td>
+        <td align="right">-</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top"><img src="/icons/image2.gif" alt="[IMG]" /></td>
+        <td><a href="pixel.png">pixel.png</a></td>
+        <td align="right">2026-06-24 14:52</td>
+        <td align="right">303</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top"><img src="/icons/text.gif" alt="[TXT]" /></td>
+        <td><a href="users.txt">users.txt</a></td>
+        <td align="right">2026-06-24 14:52</td>
+        <td align="right">145</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <th colspan="5"><hr /></th>
+      </tr>
+    </table>
+    <address>
+      Apache/2.4.66 (Ubuntu) Server at natas2.natas.labs.overthewire.org Port 80
+    </address>
+  </body>
+</html>
 ```
 
 Vemos que se lista un archivo `users.txt` conteniendo usuarios y contraseñas en el que se incluye el password para el próximo nivel.
@@ -177,17 +216,23 @@ mallory:9urtcpzBmH
 ```
 
 <Callout type="success" title="Password natas3">
-K30JrSRHzjxq3paUQuwozY4MNvmNFyhI
+  K30JrSRHzjxq3paUQuwozY4MNvmNFyhI
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Esta vulnerabilidad se puede clasificar como [**CWE-548** Exposure of Information Through Directory Listing](https://cwe.mitre.org/data/definitions/548.html) exposición de información a través de listados en directorios
+  Esta vulnerabilidad se puede clasificar como [**CWE-548** Exposure of
+  Information Through Directory
+  Listing](https://cwe.mitre.org/data/definitions/548.html) exposición de
+  información a través de listados en directorios
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Deshabilitar el listado automático de directorios en el servidor web para que devuelva un error (como 403 Forbidden) en lugar de mostrar los archivos.
-- Colocar un archivo vacío llamado `index.html` o `index.php` en los directorios públicos para que el servidor cargue esa página en blanco por defecto.
-- Restringir el acceso a carpetas sensibles (/uploads, /images) mediante reglas de firewall o políticas de la aplicación.
+  - Deshabilitar el listado automático de directorios en el servidor web para
+  que devuelva un error (como 403 Forbidden) en lugar de mostrar los archivos. -
+  Colocar un archivo vacío llamado `index.html` o `index.php` en los directorios
+  públicos para que el servidor cargue esa página en blanco por defecto. -
+  Restringir el acceso a carpetas sensibles (/uploads, /images) mediante reglas
+  de firewall o políticas de la aplicación.
 </Callout>
 
 ## Natas Level 2 → Level 3
@@ -271,17 +316,23 @@ natas4:JDrPnuZAKyl6MkiqQGFIddrqpvgOASth
 ```
 
 <Callout type="success" title="Password natas4">
-JDrPnuZAKyl6MkiqQGFIddrqpvgOASth
+  JDrPnuZAKyl6MkiqQGFIddrqpvgOASth
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Cuando un archivo `robots.txt` expone rutas privadas o directorios internos de un sitio web, la vulnerabilidad se puede clasificar como [**CWE-200** Exposure of Sensitive Information to an Unauthorized Actor](https://cwe.mitre.org/data/definitions/200.html) exposición de información sensible a un agente no autorizado.
+  Cuando un archivo `robots.txt` expone rutas privadas o directorios internos de
+  un sitio web, la vulnerabilidad se puede clasificar como [**CWE-200** Exposure
+  of Sensitive Information to an Unauthorized
+  Actor](https://cwe.mitre.org/data/definitions/200.html) exposición de
+  información sensible a un agente no autorizado.
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Eliminar referencias a endpoints privados.
-- Bloquear todos los bots por defecto y permitir solo rastreadores específicos y necesarios.
-- Utilizar un firewall de aplicaciones web (**WAF**) o un servicio de gestión de bots como **Cloudflare** para bloquear o limitar la velocidad de los user agents maliciosos a nivel de red.
+  - Eliminar referencias a endpoints privados. - Bloquear todos los bots por
+  defecto y permitir solo rastreadores específicos y necesarios. - Utilizar un
+  firewall de aplicaciones web (**WAF**) o un servicio de gestión de bots como
+  **Cloudflare** para bloquear o limitar la velocidad de los user agents
+  maliciosos a nivel de red.
 </Callout>
 
 ## Natas Level 3 → Level 4
@@ -349,15 +400,20 @@ Access granted. The password for natas5 is e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
 Modificando el header referer obtenemos el password para el siguiente nivel.
 
 <Callout type="success" title="Password natas5">
-e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
+  e4z2Noy3oqwPJUWzJH0dseN67Cn1sy2M
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Si el servidor confía ciegamente en el header HTTP (Referer) que el usuario controla por completo se puede producir un `Broken Access Control`. Esta vulnerabilidad se puede asociar al [**CWE-293** Using Referer Field for Authentication](https://cwe.mitre.org/data/definitions/293.html) uso del campo Referer para autenticación.
+  Si el servidor confía ciegamente en el header HTTP (Referer) que el usuario
+  controla por completo se puede producir un `Broken Access Control`. Esta
+  vulnerabilidad se puede asociar al [**CWE-293** Using Referer Field for
+  Authentication](https://cwe.mitre.org/data/definitions/293.html) uso del campo
+  Referer para autenticación.
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- En lugar de verificar de dónde viene el usuario, verifica quién es el usuario y si tiene permiso mediante sesiones seguras en el servidor.
+  - En lugar de verificar de dónde viene el usuario, verifica quién es el
+  usuario y si tiene permiso mediante sesiones seguras en el servidor.
 </Callout>
 
 ## Natas Level 4 → Level 5
@@ -396,11 +452,8 @@ curl -I http://natas5.natas.labs.overthewire.org/index.php --user natas5:e4z2Noy
 ```
 
 ```html
-HTTP/1.1 200 OK
-Date: Sat, 11 Jul 2026 17:32:14 GMT
-Server: Apache/2.4.66 (Ubuntu)
-Set-Cookie: loggedin=0
-Content-Type: text/html; charset=UTF-8
+HTTP/1.1 200 OK Date: Sat, 11 Jul 2026 17:32:14 GMT Server: Apache/2.4.66
+(Ubuntu) Set-Cookie: loggedin=0 Content-Type: text/html; charset=UTF-8
 ```
 
 Vemos que hay una cookie `loggedin` con un valor de `0`. Probamos modificarle el valor a `1` para ver si así el servidor cree que estamos logueados.
@@ -431,17 +484,29 @@ Access granted. The password for natas6 is 7mhjtShJAcld2NYbKHEadnhEwRn2P8VT</div
 Nos logueamos modificando la cookie y obtenemos el password para el siguiente nivel.
 
 <Callout type="success" title="Password natas6">
-7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
+  7mhjtShJAcld2NYbKHEadnhEwRn2P8VT
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-El servidor web asume incorrectamente que cualquier dato enviado por el navegador (en este caso, la cookie `loggedin`) es seguro y no se alteró. Al no validar la integridad de la cookie ni mantener el estado de la sesión en el lado del servidor, un atacante puede simplemente modificar el valor a `1` para engañar a la aplicación. Esta vulnerabilidad se puede asociar al [**CWE-565** Reliance on Cookies without Validation and Integrity Checking](https://cwe.mitre.org/data/definitions/565.html) confianza en cookies sin validación ni verificación de integridad.
+  El servidor web asume incorrectamente que cualquier dato enviado por el
+  navegador (en este caso, la cookie `loggedin`) es seguro y no se alteró. Al no
+  validar la integridad de la cookie ni mantener el estado de la sesión en el
+  lado del servidor, un atacante puede simplemente modificar el valor a `1` para
+  engañar a la aplicación. Esta vulnerabilidad se puede asociar al [**CWE-565**
+  Reliance on Cookies without Validation and Integrity
+  Checking](https://cwe.mitre.org/data/definitions/565.html) confianza en
+  cookies sin validación ni verificación de integridad.
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- En lugar de almacenar el estado de autenticación directamente en una cookie legible y modificable por el usuario, se debe utilizar un mecanismo de sesión en el servido.
-- Si por arquitectura no se desea almacenar sesiones en el servidor (arquitectura stateless), se deben utilizar tokens firmados como los JSON Web Tokens (JWT).
-- Para proteger las cookies de sesión contra otros ataques (como robo por XSS o interceptación de tráfico), siempre deben configurarse con las siguientes banderas: `Secure`, `HttpOnly` y `SameSite=Strict` o `Lax`.
+  - En lugar de almacenar el estado de autenticación directamente en una cookie
+  legible y modificable por el usuario, se debe utilizar un mecanismo de sesión
+  en el servido. - Si por arquitectura no se desea almacenar sesiones en el
+  servidor (arquitectura stateless), se deben utilizar tokens firmados como los
+  JSON Web Tokens (JWT). - Para proteger las cookies de sesión contra otros
+  ataques (como robo por XSS o interceptación de tráfico), siempre deben
+  configurarse con las siguientes banderas: `Secure`, `HttpOnly` y
+  `SameSite=Strict` o `Lax`.
 </Callout>
 
 ## Natas Level 5 → Level 6
@@ -515,7 +580,7 @@ $secret = "FOEIUWGHFEEUHOFUOIU";
 Enviamos el `secret` en el form y obtenemos el password para el siguiente nivel.
 
 ```bash
-curl -X POST http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT -d 
+curl -X POST http://natas6.natas.labs.overthewire.org/ --user natas6:7mhjtShJAcld2NYbKHEadnhEwRn2P8VT -d
 "secret=FOEIUWGHFEEUHOFUOIU" -d "submit=Submit Query"
 ```
 
@@ -547,17 +612,36 @@ Input secret: <input name=secret><br>
 ```
 
 <Callout type="success" title="Password natas7">
-B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
+  B1szg95UcTnrzwnF3i3TzYHlyYh8iBV0
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Information Disclosure (exposición de datos sensibles) debido a la presencia de un archivo de configuración (`secret.inc`) dentro del Web Root (directorio público del servidor). Como el servidor web no está configurado para realizar el server-side parsing de archivos con extensión `.inc`, los sirve como texto plano, lo que permite a un atacante realizar un source code disclosure y leer credenciales críticas directamente a través de una petición HTTP. Esta vulnerabilidad se puede asociar con [**CWE-552** Files or Directories Accessible to External Parties](https://cwe.mitre.org/data/definitions/552.html) el servidor web permite el acceso directo a recursos que deberían ser privados, [**CWE-538** Insertion of Sensitive Information into Externally-Accessible File](https://cwe.mitre.org/data/definitions/538.html) guardar credenciales o secretos en un archivo accesible desde el exterior y [**CWE-200** Exposure of Sensitive Information to an Unauthorized Actor](https://cwe.mitre.org/data/definitions/200.html) revelar información confidencial a actores no autorizados.
+  Se trata de una vulnerabilidad de Information Disclosure (exposición de datos
+  sensibles) debido a la presencia de un archivo de configuración (`secret.inc`)
+  dentro del Web Root (directorio público del servidor). Como el servidor web no
+  está configurado para realizar el server-side parsing de archivos con
+  extensión `.inc`, los sirve como texto plano, lo que permite a un atacante
+  realizar un source code disclosure y leer credenciales críticas directamente a
+  través de una petición HTTP. Esta vulnerabilidad se puede asociar con
+  [**CWE-552** Files or Directories Accessible to External
+  Parties](https://cwe.mitre.org/data/definitions/552.html) el servidor web
+  permite el acceso directo a recursos que deberían ser privados, [**CWE-538**
+  Insertion of Sensitive Information into Externally-Accessible
+  File](https://cwe.mitre.org/data/definitions/538.html) guardar credenciales o
+  secretos en un archivo accesible desde el exterior y [**CWE-200** Exposure of
+  Sensitive Information to an Unauthorized
+  Actor](https://cwe.mitre.org/data/definitions/200.html) revelar información
+  confidencial a actores no autorizados.
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Almacenar todos los inclusion files y archivos de configuración en un directorio superior no accesible vía URL.
-- Cambiar la extensión de `.inc` a `.php`. De esta forma, si alguien intenta acceder directamente, el código se ejecutará en el servidor y mostrará una página en blanco en lugar de revelar el código fuente.
-- Configurar el servidor web (usando reglas en `.htaccess` para Apache o bloques location en Nginx) para denegar explícitamente el acceso HTTP a directorios de soporte como `includes/`.
+  - Almacenar todos los inclusion files y archivos de configuración en un
+  directorio superior no accesible vía URL. - Cambiar la extensión de `.inc` a
+  `.php`. De esta forma, si alguien intenta acceder directamente, el código se
+  ejecutará en el servidor y mostrará una página en blanco en lugar de revelar
+  el código fuente. - Configurar el servidor web (usando reglas en `.htaccess`
+  para Apache o bloques location en Nginx) para denegar explícitamente el acceso
+  HTTP a directorios de soporte como `includes/`.
 </Callout>
 
 ## Natas Level 6 → Level 7
@@ -630,20 +714,33 @@ ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
 ```
 
 <Callout type="success" title="Password natas8">
-ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
+  ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de un fallo de `Local File Inclusion (LFI)` (inclusión de archivos locales). La aplicación web toma el valor del parámetro page provisto por el usuario y lo pasa directamente a una función de lectura o inclusión de archivos (como include() o require() en PHP) sin realizar ningún tipo de input validation o sanitization. Esto permite a un atacante abusar del flujo para realizar un directory traversal o cargar directamente archivos arbitrarios del sistema de archivos local (como `/etc/natas_webpass/natas8`).
-- [**CWE-98** Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion')](https://cwe.mitre.org/data/definitions/98.html)
-- [**CWE-22** Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')](https://cwe.mitre.org/data/definitions/22.html)
-- [**CWE-73** External Control of File Name or Path](https://cwe.mitre.org/data/definitions/73.html)
+  Se trata de un fallo de `Local File Inclusion (LFI)` (inclusión de archivos
+  locales). La aplicación web toma el valor del parámetro page provisto por el
+  usuario y lo pasa directamente a una función de lectura o inclusión de
+  archivos (como include() o require() en PHP) sin realizar ningún tipo de input
+  validation o sanitization. Esto permite a un atacante abusar del flujo para
+  realizar un directory traversal o cargar directamente archivos arbitrarios del
+  sistema de archivos local (como `/etc/natas_webpass/natas8`). - [**CWE-98**
+  Improper Control of Filename for Include/Require Statement in PHP Program
+  ('PHP Remote File Inclusion')](https://cwe.mitre.org/data/definitions/98.html)
+  - [**CWE-22** Improper Limitation of a Pathname to a Restricted Directory
+  ('Path Traversal')](https://cwe.mitre.org/data/definitions/22.html) -
+  [**CWE-73** External Control of File Name or
+  Path](https://cwe.mitre.org/data/definitions/73.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Validar el parámetro contra una lista estricta de valores permitidos en el código (por ejemplo, si page no es exactamente "home" o "about", se rechaza la petición).
-- No pasar parámetros de la query directamente a funciones del sistema de archivos. Es mejor asociar cada página a un ID interno o índice numérico seguro.
-- Utilizar funciones de sanitización que limpien y extraigan solo el nombre del archivo (como basename() en PHP) para prevenir el uso de rutas absolutas o el uso de secuencias de retroceso de directorio como `../`.
+  - Validar el parámetro contra una lista estricta de valores permitidos en el
+  código (por ejemplo, si page no es exactamente "home" o "about", se rechaza la
+  petición). - No pasar parámetros de la query directamente a funciones del
+  sistema de archivos. Es mejor asociar cada página a un ID interno o índice
+  numérico seguro. - Utilizar funciones de sanitización que limpien y extraigan
+  solo el nombre del archivo (como basename() en PHP) para prevenir el uso de
+  rutas absolutas o el uso de secuencias de retroceso de directorio como `../`.
 </Callout>
 
 ## Natas Level 7 → Level 8
@@ -719,7 +816,7 @@ oubWYf2kBq
 Enviamos el secret en el formulario.
 
 ```bash
-curl -X POST http://natas8.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8 --user 
+curl -X POST http://natas8.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8 --user
 natas8:ugXL95KQmUAJJj6bMezOlBNDyI9Imwkc -d 'secret=oubWYf2kBq' -d 'submit=Submit Query'
 ```
 
@@ -753,19 +850,34 @@ Input secret: <input name=secret><br>
 Obtenemos el password para el próximo nivel.
 
 <Callout type="success" title="Password natas9">
-UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9
+  UdxmI27dTaXmnd1rxKQTfws6jihTdcQ9
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de un fallo de Security through Obscurity (seguridad a través de la oscuridad) y el uso de Symmetric Cryptography/Encoding reversible en el lado del cliente. El desarrollador intentó proteger un secreto utilizando funciones de encoding y manipulación de strings (`base64_encode`, `strrev`, `bin2hex`) en lugar de emplear un algoritmo de hashing criptográfico unidireccional seguro (como SHA-256 o bcrypt). Al ser un proceso completamente reversible, cualquier atacante con acceso al código fuente puede realizar la ingeniería inversa del algoritmo para revelar el secreto original.
-- [**CWE-327** Use of a Broken or Risky Cryptographic Algorithm](https://cwe.mitre.org/data/definitions/327.html)
-- [**CWE-656** Reliance on Security Through Obscurity](https://cwe.mitre.org/data/definitions/656.html)
-- [**CWE-259** Use of Hard-coded Password](https://cwe.mitre.org/data/definitions/259.html)
+  Se trata de un fallo de Security through Obscurity (seguridad a través de la
+  oscuridad) y el uso de Symmetric Cryptography/Encoding reversible en el lado
+  del cliente. El desarrollador intentó proteger un secreto utilizando funciones
+  de encoding y manipulación de strings (`base64_encode`, `strrev`, `bin2hex`)
+  en lugar de emplear un algoritmo de hashing criptográfico unidireccional
+  seguro (como SHA-256 o bcrypt). Al ser un proceso completamente reversible,
+  cualquier atacante con acceso al código fuente puede realizar la ingeniería
+  inversa del algoritmo para revelar el secreto original. - [**CWE-327** Use of
+  a Broken or Risky Cryptographic
+  Algorithm](https://cwe.mitre.org/data/definitions/327.html) - [**CWE-656**
+  Reliance on Security Through
+  Obscurity](https://cwe.mitre.org/data/definitions/656.html) - [**CWE-259** Use
+  of Hard-coded Password](https://cwe.mitre.org/data/definitions/259.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Para validar secretos o contraseñas, nunca se deben usar métodos reversibles. El secreto debe guardarse en el servidor como un hash seguro (por ejemplo, utilizando `password_hash()` en PHP con `bcrypt` o `Argon2`). La validación se hace comparando los hashes mediante `password_verify()`.
-- No almacenar credenciales o secretos directamente (hardcoded) en el código de la aplicación. Estos deben guardarse de forma segura en variables de entorno o archivos de configuración protegidos fuera del alcance de los usuarios finales.
+  - Para validar secretos o contraseñas, nunca se deben usar métodos
+  reversibles. El secreto debe guardarse en el servidor como un hash seguro (por
+  ejemplo, utilizando `password_hash()` en PHP con `bcrypt` o `Argon2`). La
+  validación se hace comparando los hashes mediante `password_verify()`. - No
+  almacenar credenciales o secretos directamente (hardcoded) en el código de la
+  aplicación. Estos deben guardarse de forma segura en variables de entorno o
+  archivos de configuración protegidos fuera del alcance de los usuarios
+  finales.
 </Callout>
 
 ## Natas Level 8 → Level 9
@@ -862,19 +974,34 @@ dictionary.txt:Allah
 ```
 
 <Callout type="success" title="Password natas10">
-EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv
+  EgjlkzB6E8LJyf2Obt4q7q4ewt5ZWSNv
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Command Injection (inyección de comandos del sistema operativo). La aplicación web utiliza la función passthru() de PHP para ejecutar un comando del sistema (grep) concatenando directamente el input del usuario ($key) sin ningún tipo de input sanitization o escaping. Al no limpiar la entrada, un atacante puede insertar metacaracteres del shell (como espacios, punto y coma ;, pipes |, o redirecciones) para modificar la lógica del comando original o inyectar y ejecutar comandos adicionales en el sistema operativo con los privilegios del servidor web.
-- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html)
-- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+  Se trata de una vulnerabilidad de Command Injection (inyección de comandos del
+  sistema operativo). La aplicación web utiliza la función passthru() de PHP
+  para ejecutar un comando del sistema (grep) concatenando directamente el input
+  del usuario ($key) sin ningún tipo de input sanitization o escaping. Al no
+  limpiar la entrada, un atacante puede insertar metacaracteres del shell (como
+  espacios, punto y coma ;, pipes |, o redirecciones) para modificar la lógica
+  del comando original o inyectar y ejecutar comandos adicionales en el sistema
+  operativo con los privilegios del servidor web. - [**CWE-78** Improper
+  Neutralization of Special Elements used in an OS Command ('OS Command
+  Injection')](https://cwe.mitre.org/data/definitions/78.html) - [**CWE-20**
+  Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- No utilizar funciones que llamen directamente al sistema operativo (como `passthru`, `system`, `exec`, o `shell_exec`). Para buscar palabras en un archivo en PHP, es mucho más seguro utilizar funciones nativas del lenguaje como `file()`, `fgets()`, o expresiones regulares (`preg_match()`).
-- En caso de ser estrictamente necesario interactuar con el sistema operativo, se debe sanitizar el argumento utilizando funciones específicas que escapan los caracteres especiales del shell `escapeshellarg()` o `escapeshellcmd()`.
-- Asegurar que el usuario que ejecuta el servidor web (como `www-data`) tenga permisos estrictamente limitados en el sistema de archivos para mitigar el impacto en caso de una inyección exitosa.
+  - No utilizar funciones que llamen directamente al sistema operativo (como
+  `passthru`, `system`, `exec`, o `shell_exec`). Para buscar palabras en un
+  archivo en PHP, es mucho más seguro utilizar funciones nativas del lenguaje
+  como `file()`, `fgets()`, o expresiones regulares (`preg_match()`). - En caso
+  de ser estrictamente necesario interactuar con el sistema operativo, se debe
+  sanitizar el argumento utilizando funciones específicas que escapan los
+  caracteres especiales del shell `escapeshellarg()` o `escapeshellcmd()`. -
+  Asegurar que el usuario que ejecuta el servidor web (como `www-data`) tenga
+  permisos estrictamente limitados en el sistema de archivos para mitigar el
+  impacto en caso de una inyección exitosa.
 </Callout>
 
 ## Natas Level 9 → Level 10
@@ -978,19 +1105,34 @@ dictionary.txt:Allah's
 ```
 
 <Callout type="success" title="Password natas11">
-VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
+  VUMQDmuITOEHzhviLE5V0VG9cPMQkyxd
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-El desarrollador intentó mitigar el fallo del nivel anterior validando el input con una blacklist basada en una expresión regular (`preg_match('/[;|&]/', $key)`). Sin embargo, el control es insuficiente porque solo bloquea metacaracteres específicos de encadenamiento de comandos, pero no impide que el atacante pase múltiples argumentos nativos al propio binario del sistema operativo (en este caso, inyectando un archivo adicional `/etc/natas_webpass/natas11` como segundo argumento para el comando `grep`).
-- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html)
-- [**CWE-184** Incomplete List of Disallowed Inputs](https://cwe.mitre.org/data/definitions/184.html)
+  El desarrollador intentó mitigar el fallo del nivel anterior validando el
+  input con una blacklist basada en una expresión regular
+  (`preg_match('/[;|&]/', $key)`). Sin embargo, el control es insuficiente
+  porque solo bloquea metacaracteres específicos de encadenamiento de comandos,
+  pero no impide que el atacante pase múltiples argumentos nativos al propio
+  binario del sistema operativo (en este caso, inyectando un archivo adicional
+  `/etc/natas_webpass/natas11` como segundo argumento para el comando `grep`). -
+  [**CWE-78** Improper Neutralization of Special Elements used in an OS Command
+  ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html) -
+  [**CWE-184** Incomplete List of Disallowed
+  Inputs](https://cwe.mitre.org/data/definitions/184.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Evitar por completo el uso de `passthru()`. Reemplazar la ejecución en consola por lógica nativa en PHP (como leer el archivo `dictionary.txt` con `file()` y buscar la coincidencia usando `preg_match()`).
-- En lugar de buscar qué caracteres no permitir, validar que la entrada contenga únicamente caracteres permitidos (por ejemplo, permitir estrictamente caracteres alfanuméricos usando `^[\w]+$`).
-- Si es obligatorio usar comandos de consola, se debe aplicar `escapeshellarg()` al parámetro `$key`. Esto encapsula el input entre comillas simples y neutraliza cualquier intento de pasar argumentos extra a grep, forzando al sistema a tratar toda la entrada como una cadena de texto de búsqueda literal.
+  - Evitar por completo el uso de `passthru()`. Reemplazar la ejecución en
+  consola por lógica nativa en PHP (como leer el archivo `dictionary.txt` con
+  `file()` y buscar la coincidencia usando `preg_match()`). - En lugar de buscar
+  qué caracteres no permitir, validar que la entrada contenga únicamente
+  caracteres permitidos (por ejemplo, permitir estrictamente caracteres
+  alfanuméricos usando `^[\w]+$`). - Si es obligatorio usar comandos de consola,
+  se debe aplicar `escapeshellarg()` al parámetro `$key`. Esto encapsula el
+  input entre comillas simples y neutraliza cualquier intento de pasar
+  argumentos extra a grep, forzando al sistema a tratar toda la entrada como una
+  cadena de texto de búsqueda literal.
 </Callout>
 
 ## Natas Level 10 → Level 11
@@ -1227,19 +1369,36 @@ Background color: <input name=bgcolor value="#adbdcd">
 ```
 
 <Callout type="success" title="Password natas12">
-EAGkE8uzFTxeoTT2mMst9Xy7PX6guEng
+  EAGkE8uzFTxeoTT2mMst9Xy7PX6guEng
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Cryptographic Flaw (fallo criptográfico) combinada con Insufficiently Protected Credentials. El servidor confía ciegamente en el contenido de una cookie enviada por el usuario para controlar los privilegios de sesión (`showpassword`). Para protegerla de modificaciones, utiliza un cifrado XOR con clave repetitiva (XOR Cipher), que es una forma de Weak Cryptography. Debido a las propiedades matemáticas de la operación XOR, conocer tanto un bloque de texto plano como su equivalente cifrado permite deducir la clave secreta fácilmente (Known-Plaintext Attack o KPA). Una vez obtenida la clave, el atacante tiene la capacidad de forjar cookies válidas con privilegios elevados (Privilege Escalation).
-- [**CWE-326** Inadequate Encryption Strength](https://cwe.mitre.org/data/definitions/326.html)
-- [**CWE-565** Reliance on Cookies without Validation and Integrity Checking](https://cwe.mitre.org/data/definitions/565)
+  Se trata de una vulnerabilidad de Cryptographic Flaw (fallo criptográfico)
+  combinada con Insufficiently Protected Credentials. El servidor confía
+  ciegamente en el contenido de una cookie enviada por el usuario para controlar
+  los privilegios de sesión (`showpassword`). Para protegerla de modificaciones,
+  utiliza un cifrado XOR con clave repetitiva (XOR Cipher), que es una forma de
+  Weak Cryptography. Debido a las propiedades matemáticas de la operación XOR,
+  conocer tanto un bloque de texto plano como su equivalente cifrado permite
+  deducir la clave secreta fácilmente (Known-Plaintext Attack o KPA). Una vez
+  obtenida la clave, el atacante tiene la capacidad de forjar cookies válidas
+  con privilegios elevados (Privilege Escalation). - [**CWE-326** Inadequate
+  Encryption Strength](https://cwe.mitre.org/data/definitions/326.html) -
+  [**CWE-565** Reliance on Cookies without Validation and Integrity
+  Checking](https://cwe.mitre.org/data/definitions/565)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- La operación XOR simple no provee integridad. Se debe evitar diseñar protocolos de cifrado propios.
-- La mejor práctica consiste en almacenar los datos sensibles (como los privilegios de usuario o el estado de autenticación) del lado del servidor, dejando en la cookie únicamente un identificador de sesión único, aleatorio y de alta entropía.
-- En caso de requerir almacenar datos del lado del cliente, se deben usar estándares seguros con firmas criptográficas no manipulables, tales como HMAC (Hash-based Message Authentication Code) o JSON Web Tokens (JWT) firmados con algoritmos fuertes (como HS256 o RS256), manteniendo la clave de firma estrictamente resguardada en el servidor.
+  - La operación XOR simple no provee integridad. Se debe evitar diseñar
+  protocolos de cifrado propios. - La mejor práctica consiste en almacenar los
+  datos sensibles (como los privilegios de usuario o el estado de autenticación)
+  del lado del servidor, dejando en la cookie únicamente un identificador de
+  sesión único, aleatorio y de alta entropía. - En caso de requerir almacenar
+  datos del lado del cliente, se deben usar estándares seguros con firmas
+  criptográficas no manipulables, tales como HMAC (Hash-based Message
+  Authentication Code) o JSON Web Tokens (JWT) firmados con algoritmos fuertes
+  (como HS256 o RS256), manteniendo la clave de firma estrictamente resguardada
+  en el servidor.
 </Callout>
 
 ## Natas Level 11 → Level 12
@@ -1376,20 +1535,36 @@ g8ba0olAzaSJuyS4gnmbdVVigAICLG1k
 ```
 
 <Callout type="success" title="Password natas13">
-g8ba0olAzaSJuyS4gnmbdVVigAICLG1k
+  g8ba0olAzaSJuyS4gnmbdVVigAICLG1k
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Unrestricted File Upload (subida de archivos no restringida) que resulta en Remote Code Execution (RCE) (ejecución remota de código). El fallo principal radica en que el servidor web confía en un parámetro manipulable del lado del cliente (`$_POST["filename"]`) para determinar la extensión final del archivo subido en lugar de validar y forzar la extensión desde el backend. Al cambiar este parámetro a `.php`, un atacante puede subir un script malicioso en PHP (Webshell) en vez de la imagen esperada y luego solicitarlo directamente vía HTTP para ejecutar comandos arbitrarios en el sistema operativo del servidor.
-- [**CWE-434** Unrestricted Upload of File with Dangerous Type](https://cwe.mitre.org/data/definitions/434.html)
-- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+  Se trata de una vulnerabilidad de Unrestricted File Upload (subida de archivos
+  no restringida) que resulta en Remote Code Execution (RCE) (ejecución remota
+  de código). El fallo principal radica en que el servidor web confía en un
+  parámetro manipulable del lado del cliente (`$_POST["filename"]`) para
+  determinar la extensión final del archivo subido en lugar de validar y forzar
+  la extensión desde el backend. Al cambiar este parámetro a `.php`, un atacante
+  puede subir un script malicioso en PHP (Webshell) en vez de la imagen esperada
+  y luego solicitarlo directamente vía HTTP para ejecutar comandos arbitrarios
+  en el sistema operativo del servidor. - [**CWE-434** Unrestricted Upload of
+  File with Dangerous Type](https://cwe.mitre.org/data/definitions/434.html) -
+  [**CWE-20** Improper Input
+  Validation](https://cwe.mitre.org/data/definitions/20.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- El servidor debe ignorar el nombre y la extensión provistos por el cliente. La extensión del archivo debe ser generada estrictamente en el backend basándose en el tipo de archivo permitido por el negocio (por ejemplo, forzar siempre la extensión a `.jpg` o `.png`).
-- Utilizar funciones robustas en el backend para validar que el contenido del archivo subido coincida con el tipo permitido (por ejemplo, a través de la extensión `fileinfo` de PHP o leyendo las firmas de bytes mágicos del archivo).
-- Configurar el servidor web para que no interprete scripts (como PHP) dentro del directorio de destino (ej. `/upload`).
-- Guardar los archivos subidos en una carpeta inaccesible directamente por URL pública y servirlos de forma indirecta mediante un script intermedio que lea y devuelva el flujo de bytes.
+  - El servidor debe ignorar el nombre y la extensión provistos por el cliente.
+  La extensión del archivo debe ser generada estrictamente en el backend
+  basándose en el tipo de archivo permitido por el negocio (por ejemplo, forzar
+  siempre la extensión a `.jpg` o `.png`). - Utilizar funciones robustas en el
+  backend para validar que el contenido del archivo subido coincida con el tipo
+  permitido (por ejemplo, a través de la extensión `fileinfo` de PHP o leyendo
+  las firmas de bytes mágicos del archivo). - Configurar el servidor web para
+  que no interprete scripts (como PHP) dentro del directorio de destino (ej.
+  `/upload`). - Guardar los archivos subidos en una carpeta inaccesible
+  directamente por URL pública y servirlos de forma indirecta mediante un script
+  intermedio que lea y devuelva el flujo de bytes.
 </Callout>
 
 ## Natas Level 12 → Level 13
@@ -1443,12 +1618,12 @@ printf '\xFF\xD8\xFF\xE0' | dd of=shell.php bs=1 count=4 conv=notrunc
 ```
 
 ```bash
-xxd shell.php 
+xxd shell.php
 ```
 
 ```plaintext
 00000000: ffd8 ffe0 3c3f 7068 7020 7379 7374 656d  ....<?php system
-00000010: 2824 5f47 4554 5b22 636d 6422 5d29 3b20  ($_GET["cmd"]); 
+00000010: 2824 5f47 4554 5b22 636d 6422 5d29 3b20  ($_GET["cmd"]);
 00000020: 3f3e 0a                                  ?>.
 ```
 
@@ -1487,19 +1662,37 @@ curl -s -G --user natas13:g8ba0olAzaSJuyS4gnmbdVVigAICLG1k --data-urlencode "cmd
 ```
 
 <Callout type="success" title="Password natas14">
-A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
+  A0xXu2x9FW8rb8OSQ4ei6n5VBbLUz8h8
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Unrestricted File Upload que deriva en Remote Code Execution (RCE), combinado con un Bypass of File Type Validation using Magic Bytes. El desarrollador intentó mejorar la seguridad validando el tipo de archivo mediante su contenido real en lugar de confiar solo en la extensión. Sin embargo, la validación implementada es débil porque solo comprueba los primeros bytes del archivo (las firmas o Magic Bytes que identifican a un JPEG) para determinar si es una imagen válida. Al anteponer estos bytes a una estructura de código PHP válida, la aplicación aprueba la subida y el servidor web ejecuta el código malicioso cuando se solicita el archivo `.php`.
-- [**CWE-434** Unrestricted Upload of File with Dangerous Type](https://cwe.mitre.org/data/definitions/434.html)
-- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+  Unrestricted File Upload que deriva en Remote Code Execution (RCE), combinado
+  con un Bypass of File Type Validation using Magic Bytes. El desarrollador
+  intentó mejorar la seguridad validando el tipo de archivo mediante su
+  contenido real en lugar de confiar solo en la extensión. Sin embargo, la
+  validación implementada es débil porque solo comprueba los primeros bytes del
+  archivo (las firmas o Magic Bytes que identifican a un JPEG) para determinar
+  si es una imagen válida. Al anteponer estos bytes a una estructura de código
+  PHP válida, la aplicación aprueba la subida y el servidor web ejecuta el
+  código malicioso cuando se solicita el archivo `.php`. - [**CWE-434**
+  Unrestricted Upload of File with Dangerous
+  Type](https://cwe.mitre.org/data/definitions/434.html) - [**CWE-20** Improper
+  Input Validation](https://cwe.mitre.org/data/definitions/20.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Funciones como `exif_imagetype()` o la revisión de cabeceras son fáciles de evadir. Se deben complementar con un procesamiento real del archivo (por ejemplo, intentar re-renderizar o recrear la imagen usando la librería GD de PHP con `imagecreatefromjpeg()`, lo cual destruye cualquier código PHP embebido).
-- El backend debe generar e imponer su propia extensión permitida (como `.jpg`) basándose estrictamente en el tipo de archivo validado, descartando por completo extensiones peligrosas suministradas por el usuario (como `.php`).
-- Bloquear la interpretación de código de scripts en el directorio de subidas (por ejemplo, con php_flag engine off en Apache o bloqueando la ejecución en Nginx) para asegurar que el archivo se sirva estrictamente como un recurso estático (descarga o visualización de imagen), sin importar su extensión.
+  - Funciones como `exif_imagetype()` o la revisión de cabeceras son fáciles de
+  evadir. Se deben complementar con un procesamiento real del archivo (por
+  ejemplo, intentar re-renderizar o recrear la imagen usando la librería GD de
+  PHP con `imagecreatefromjpeg()`, lo cual destruye cualquier código PHP
+  embebido). - El backend debe generar e imponer su propia extensión permitida
+  (como `.jpg`) basándose estrictamente en el tipo de archivo validado,
+  descartando por completo extensiones peligrosas suministradas por el usuario
+  (como `.php`). - Bloquear la interpretación de código de scripts en el
+  directorio de subidas (por ejemplo, con php_flag engine off en Apache o
+  bloqueando la ejecución en Nginx) para asegurar que el archivo se sirva
+  estrictamente como un recurso estático (descarga o visualización de imagen),
+  sin importar su extensión.
 </Callout>
 
 ## Natas Level 13 → Level 14
@@ -1583,13 +1776,23 @@ Successful login! The password for natas15 is GB6USCJYJjwLyYhZUNkE1NwDueiTow6g<b
 ```
 
 <Callout type="success" title="Password natas15">
-GB6USCJYJjwLyYhZUNkE1NwDueiTow6g
+  GB6USCJYJjwLyYhZUNkE1NwDueiTow6g
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de SQL Injection (SQLi) (inyección SQL). El fallo ocurre porque la aplicación web construye la consulta SQL concatenando directamente las entradas del usuario (`$_REQUEST["username"]` y `$_REQUEST["password"]`) de forma dinámica en el string de la query. Al no aplicar ningún tipo de input sanitization ni utilizar consultas parametrizadas, el intérprete de la base de datos confunde los datos provistos por el usuario con código de comando SQL. Esto permite a un atacante alterar la lógica booleana de la consulta original para forzar al sistema a devolver filas válidas, logrando un Authentication Bypass (evasión de autenticación).
-- [**CWE-89** Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html)
-- [**CWE-566** Authorization Bypass Through User-Controlled SQL Primary Key](https://cwe.mitre.org/data/definitions/566.html)
+  Se trata de una vulnerabilidad de SQL Injection (SQLi) (inyección SQL). El
+  fallo ocurre porque la aplicación web construye la consulta SQL concatenando
+  directamente las entradas del usuario (`$_REQUEST["username"]` y
+  `$_REQUEST["password"]`) de forma dinámica en el string de la query. Al no
+  aplicar ningún tipo de input sanitization ni utilizar consultas
+  parametrizadas, el intérprete de la base de datos confunde los datos provistos
+  por el usuario con código de comando SQL. Esto permite a un atacante alterar
+  la lógica booleana de la consulta original para forzar al sistema a devolver
+  filas válidas, logrando un Authentication Bypass (evasión de autenticación). -
+  [**CWE-89** Improper Neutralization of Special Elements used in an SQL Command
+  ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html) -
+  [**CWE-566** Authorization Bypass Through User-Controlled SQL Primary
+  Key](https://cwe.mitre.org/data/definitions/566.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
@@ -1695,7 +1898,7 @@ else:
 ```
 
 ```bash
-python3 pass_length.py 
+python3 pass_length.py
 ```
 
 ```plaintext
@@ -1747,7 +1950,7 @@ p.success("".join(password))
 ```
 
 ```bash
-python3 sqli.py 
+python3 sqli.py
 ```
 
 ```plaintex
@@ -1755,18 +1958,31 @@ python3 sqli.py
 ```
 
 <Callout type="success" title="Password natas16">
-Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
+  Xm6XEeRN3zsGjRDqBPmuqAVV65k7e3Gb
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Blind SQL Injection (Boolean-Based) (inyección SQL a ciegas basada en respuestas booleanas). El código sigue concatenando el input directamente sin usar parameterized queries, pero a diferencia del nivel anterior, la aplicación no refleja registros ni errores en la interfaz web; solo devuelve un estado binario ("This user exists" o "This user doesn't exist"). Un atacante puede realizar preguntas con respuestas lógicas de sí/no e inyectar funciones como SUBSTRING() y BINARY para forzar condiciones condicionales y exfiltrar la contraseña de forma asíncrona mediante fuerza bruta posicional.
-- [**CWE-89** Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html)
-- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
+  Se trata de una vulnerabilidad de Blind SQL Injection (Boolean-Based)
+  (inyección SQL a ciegas basada en respuestas booleanas). El código sigue
+  concatenando el input directamente sin usar parameterized queries, pero a
+  diferencia del nivel anterior, la aplicación no refleja registros ni errores
+  en la interfaz web; solo devuelve un estado binario ("This user exists" o
+  "This user doesn't exist"). Un atacante puede realizar preguntas con
+  respuestas lógicas de sí/no e inyectar funciones como SUBSTRING() y BINARY
+  para forzar condiciones condicionales y exfiltrar la contraseña de forma
+  asíncrona mediante fuerza bruta posicional. - [**CWE-89** Improper
+  Neutralization of Special Elements used in an SQL Command ('SQL
+  Injection')](https://cwe.mitre.org/data/definitions/89.html) - [**CWE-20**
+  Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html)
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- Separar completamente el código de los datos mediante consultas parametrizadas anula por completo la vulnerabilidad, haciendo imposible que el motor evalúe condiciones lógicas (`AND`, `OR`, `BINARY`) introducidas por el cliente.
-- Devolver mensajes genéricos para no dar pistas analíticas sobre la existencia exacta de registros específicos, mitigando parcialmente ataques de User Enumeration.
+  - Separar completamente el código de los datos mediante consultas
+  parametrizadas anula por completo la vulnerabilidad, haciendo imposible que el
+  motor evalúe condiciones lógicas (`AND`, `OR`, `BINARY`) introducidas por el
+  cliente. - Devolver mensajes genéricos para no dar pistas analíticas sobre la
+  existencia exacta de registros específicos, mitigando parcialmente ataques de
+  User Enumeration.
 </Callout>
 
 ## Natas Level 15 → Level 16
@@ -1839,7 +2055,7 @@ if($key != "") {
 import requests
 from requests.auth import HTTPBasicAuth
 import string
-from concurrent.futures import ThreadPoolExecutor, as_completed 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pwn import log
 
 url = "http://natas16.natas.labs.overthewire.org/"
@@ -1886,19 +2102,41 @@ python3 natas16.py
 ```
 
 <Callout type="success" title="Password natas17">
-KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx
+  KLdAM3VZux8o6TbkbhuaG5KtYjI77tfx
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de **Blind Command Injection (Boolean-Based)** (inyección de comandos a ciegas basada en respuestas booleanas). Ocurre cuando una aplicación web pasa la entrada del usuario directamente a una función que ejecuta comandos del sistema operativo (como `passthru()`) utilizando comillas dobles. Aunque la aplicación filtre operadores comunes como `;`, `|`, `&` o comillas, la sintaxis de Bash permite la sustitución de comandos mediante la estructura `$()`. Un atacante puede inyectar un comando secundario dentro del comando principal para realizar búsquedas condicionales en archivos del sistema (como la contraseña buscada). Si la condición coincide, el comando inyectado devuelve una cadena existente que altera la búsqueda original eliminando una palabra conocida de la salida HTML, lo cual permite inferir el contenido carácter por carácter mediante fuerza bruta basada en estados booleanos.
-- [**CWE-78** Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html).
-- [**CWE-20** Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html).
+  Se trata de una vulnerabilidad de **Blind Command Injection (Boolean-Based)**
+  (inyección de comandos a ciegas basada en respuestas booleanas). Ocurre cuando
+  una aplicación web pasa la entrada del usuario directamente a una función que
+  ejecuta comandos del sistema operativo (como `passthru()`) utilizando comillas
+  dobles. Aunque la aplicación filtre operadores comunes como `;`, `|`, `&` o
+  comillas, la sintaxis de Bash permite la sustitución de comandos mediante la
+  estructura `$()`. Un atacante puede inyectar un comando secundario dentro del
+  comando principal para realizar búsquedas condicionales en archivos del
+  sistema (como la contraseña buscada). Si la condición coincide, el comando
+  inyectado devuelve una cadena existente que altera la búsqueda original
+  eliminando una palabra conocida de la salida HTML, lo cual permite inferir el
+  contenido carácter por carácter mediante fuerza bruta basada en estados
+  booleanos. - [**CWE-78** Improper Neutralization of Special Elements used in
+  an OS Command ('OS Command
+  Injection')](https://cwe.mitre.org/data/definitions/78.html). - [**CWE-20**
+  Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html).
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- **Evitar la ejecución de comandos de shell mediante funciones del sistema**: Siempre que sea posible, utilizar funciones nativas del lenguaje de programación (como funciones internas de búsqueda de patrones o lectura de archivos) en lugar de invocar utilidades del sistema operativo como `grep`.
-- **Escapar argumentos del shell de forma estricta**: Si la llamada al sistema es inevitable, utilizar funciones dedicadas como `escapeshellarg()` o `escapeshellcmd()` en PHP para neutralizar todos los metacaracteres del shell (incluyendo la sintaxis de sustitución `$()`).
-- Implementar listas blancas (whitelisting): Validar la entrada del usuario asegurando que solo contenga los caracteres estrictamente necesarios (por ejemplo, mediante expresiones regulares que permitan únicamente caracteres alfanuméricos) en lugar de intentar bloquear caracteres maliciosos mediante listas negras.
+  - **Evitar la ejecución de comandos de shell mediante funciones del sistema**:
+  Siempre que sea posible, utilizar funciones nativas del lenguaje de
+  programación (como funciones internas de búsqueda de patrones o lectura de
+  archivos) en lugar de invocar utilidades del sistema operativo como `grep`. -
+  **Escapar argumentos del shell de forma estricta**: Si la llamada al sistema
+  es inevitable, utilizar funciones dedicadas como `escapeshellarg()` o
+  `escapeshellcmd()` en PHP para neutralizar todos los metacaracteres del shell
+  (incluyendo la sintaxis de sustitución `$()`). - Implementar listas blancas
+  (whitelisting): Validar la entrada del usuario asegurando que solo contenga
+  los caracteres estrictamente necesarios (por ejemplo, mediante expresiones
+  regulares que permitan únicamente caracteres alfanuméricos) en lugar de
+  intentar bloquear caracteres maliciosos mediante listas negras.
 </Callout>
 
 ## Natas Level 16 → Level 17
@@ -1914,89 +2152,117 @@ curl http://natas17.natas.labs.overthewire.org/ --user natas17:KLdAM3VZux8o6Tbkb
 ```html
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <link rel="shortcut icon" href="/img/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="/css/style.css"
+      type="text/css"
+      media="screen"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Inconsolata|Pontano+Sans|Maven+Pro&subset=latin,latin-ext"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link rel="stylesheet" href="/css/highlightcode.css" />
+    <link rel="stylesheet" href="/css/patreon.css" />
+    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="/js/mustache-4.0.0.min.js"></script>
+    <script src="/js/highlight.min.js"></script>
+    <script src="/js/otwcrap.js"></script>
+    <script src="/js/updatedmarkers.js"></script>
 
-<head>
-  <link rel='shortcut icon' href='/img/favicon.ico' />
-  <link rel="stylesheet" href="/css/style.css" type="text/css" media="screen" />
-  <link href="https://fonts.googleapis.com/css?family=Inconsolata|Pontano+Sans|Maven+Pro&subset=latin,latin-ext" rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="/css/highlightcode.css">
-  <link rel="stylesheet" href="/css/patreon.css">
-  <script src="/js/jquery-3.7.1.min.js"></script>
-  <script src="/js/mustache-4.0.0.min.js"></script>
-  <script src="/js/highlight.min.js"></script>
-  <script src="/js/otwcrap.js"></script>
-  <script src="/js/updatedmarkers.js"></script>
-  
-  <title>OverTheWire</title>
-  
-</head>
+    <title>OverTheWire</title>
+  </head>
 
-<body>
-  <div id="sitename"><a href="/">OverTheWire</a></div>
-  <div id="siteslogan">We're hackers, and we are good-looking. We are the 1%.</div>
-  <div id="topmenu">
-    <ul>
+  <body>
+    <div id="sitename"><a href="/">OverTheWire</a></div>
+    <div id="siteslogan">
+      We're hackers, and we are good-looking. We are the 1%.
+    </div>
+    <div id="topmenu">
+      <ul>
+        <li>
+          <a class="updatedmarkercontainer selected" href="/wargames/"
+            >Wargames
+            <div class="updatedmarker" data-link="/wargames/"></div>
+          </a>
+        </li>
 
-<li><a class='updatedmarkercontainer selected' href="/wargames/">Wargames
-<div class="updatedmarker" data-link="/wargames/"></div>
-</a></li>
+        <li>
+          <a class="updatedmarkercontainer" href="/rules/"
+            >Rules
+            <div class="updatedmarker" data-link="/rules/"></div>
+          </a>
+        </li>
 
-<li><a class='updatedmarkercontainer' href="/rules/">Rules
-<div class="updatedmarker" data-link="/rules/"></div>
-</a></li>
+        <li>
+          <a class="updatedmarkercontainer" href="/information/donate.html"
+            >Information
+            <div
+              class="updatedmarker"
+              data-link="/information/donate.html"
+            ></div>
+          </a>
+        </li>
+      </ul>
+    </div>
 
-<li><a class='updatedmarkercontainer' href="/information/donate.html">Information
-<div class="updatedmarker" data-link="/information/donate.html"></div>
-</a></li>
+    <div id="sidemenu"></div>
+    <script>
+      renderLevelsMenu("natas");
+    </script>
 
-    </ul>
-  </div>
-    
-  <div id="sidemenu"></div>
-  <script>renderLevelsMenu("natas");</script>
-  
-  <main id="content">
-    
-    <div id="title"></div>
-    <script>renderLevelTitle("natas", 17);</script>
-    
+    <main id="content">
+      <div id="title"></div>
+      <script>
+        renderLevelTitle("natas", 17);
+      </script>
 
-    <!--
+      <!--
     <div id="please-read-the-rules">Please read and accept the <a href="/rules/">Rules!</a></div>
     -->
 
-    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Username: natas17
+      <div class="language-plaintext highlighter-rouge">
+        <div class="highlight">
+          <pre class="highlight"><code>Username: natas17
 URL:      http://natas17.natas.labs.overthewire.org
-</code></pre></div></div>
+</code></pre>
+        </div>
+      </div>
+    </main>
 
-  </main>
+    <div id="shortcuts">
+      <a href="/information/donate.html">
+        <div class="button">Donate!</div>
+      </a>
+      <a href="/information/chat.html">
+        <div class="button">Help!?</div>
+      </a>
+    </div>
 
-  <div id="shortcuts">
-    <a href="/information/donate.html">
-      <div class="button">Donate!</div>
-    </a>
-    <a href="/information/chat.html">
-      <div class="button">Help!?</div>
-    </a>
-  </div>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-RD0K2239G0"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RD0K2239G0"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-RD0K2239G0');
-  </script>
-  <script src="/js/updatedmarkers-logic.js"></script>
-  <script>
-    if (localStorage.getItem("rules-accepted") === "true") {
-      document.getElementById("please-read-the-rules").style.display = "none";
-    }
-  </script>
-</body>
-
+      gtag("config", "G-RD0K2239G0");
+    </script>
+    <script src="/js/updatedmarkers-logic.js"></script>
+    <script>
+      if (localStorage.getItem("rules-accepted") === "true") {
+        document.getElementById("please-read-the-rules").style.display = "none";
+      }
+    </script>
+  </body>
 </html>
 ```
 
@@ -2086,17 +2352,36 @@ python3 natas18.py
 ```
 
 <Callout type="success" title="Password natas18">
-fDGn2A6Gsc0BUp3bZw0RNXpg0PZt40op
+  fDGn2A6Gsc0BUp3bZw0RNXpg0PZt40op
 </Callout>
 
 <Callout type="warning" title="Vulnerabilidad">
-Se trata de una vulnerabilidad de Time-Based Blind SQL Injection (inyección SQL a ciegas basada en tiempo). Ocurre cuando una aplicación web concatena entradas del usuario directamente en una consulta SQL sin previa sanitización ni parametrización, y además la interfaz no devuelve ninguna respuesta visual, datos ni mensajes de error sobre el resultado de la consulta. Un atacante puede explotar este comportamiento inyectando funciones como `SLEEP()` junto con operadores condicionales (como `LIKE BINARY`). Si la condición evaluada es verdadera, la base de datos detiene la ejecución durante el tiempo especificado, lo que permite exfiltrar información carácter por carácter midiendo simplemente el retardo en la respuesta HTTP del servidor.
-- [**CWE-89**: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html).
-- [CWE-20: Improper Input Validation](https://cwe.mitre.org/data/definitions/20.html).
+  Se trata de una vulnerabilidad de Time-Based Blind SQL Injection (inyección
+  SQL a ciegas basada en tiempo). Ocurre cuando una aplicación web concatena
+  entradas del usuario directamente en una consulta SQL sin previa sanitización
+  ni parametrización, y además la interfaz no devuelve ninguna respuesta visual,
+  datos ni mensajes de error sobre el resultado de la consulta. Un atacante
+  puede explotar este comportamiento inyectando funciones como `SLEEP()` junto
+  con operadores condicionales (como `LIKE BINARY`). Si la condición evaluada es
+  verdadera, la base de datos detiene la ejecución durante el tiempo
+  especificado, lo que permite exfiltrar información carácter por carácter
+  midiendo simplemente el retardo en la respuesta HTTP del servidor. -
+  [**CWE-89**: Improper Neutralization of Special Elements used in an SQL
+  Command ('SQL Injection')](https://cwe.mitre.org/data/definitions/89.html). -
+  [CWE-20: Improper Input
+  Validation](https://cwe.mitre.org/data/definitions/20.html).
 </Callout>
 
 <Callout type="tip" title="Mitigación">
-- **Separar completamente el código de los datos mediante consultas parametrizadas**: Anula por completo la vulnerabilidad, haciendo imposible que el motor de la base de datos interprete las funciones de retraso (`SLEEP()`) o las condiciones lógicas introducidas por el cliente como código ejecutable.
-- **Configurar timeouts estrictos en las consultas**: Establecer un tiempo máximo de ejecución para las queries en la base de datos de modo que se aborten las peticiones que intenten congelar o pausar el proceso de forma maliciosa.
-- **Restringir privilegios de funciones en la base de datos**: Deshabilitar o limitar el acceso a funciones de retraso o administración para la cuenta de usuario con la que se conecta la aplicación web a la base de datos.
+  - **Separar completamente el código de los datos mediante consultas
+  parametrizadas**: Anula por completo la vulnerabilidad, haciendo imposible que
+  el motor de la base de datos interprete las funciones de retraso (`SLEEP()`) o
+  las condiciones lógicas introducidas por el cliente como código ejecutable. -
+  **Configurar timeouts estrictos en las consultas**: Establecer un tiempo
+  máximo de ejecución para las queries en la base de datos de modo que se
+  aborten las peticiones que intenten congelar o pausar el proceso de forma
+  maliciosa. - **Restringir privilegios de funciones en la base de datos**:
+  Deshabilitar o limitar el acceso a funciones de retraso o administración para
+  la cuenta de usuario con la que se conecta la aplicación web a la base de
+  datos.
 </Callout>

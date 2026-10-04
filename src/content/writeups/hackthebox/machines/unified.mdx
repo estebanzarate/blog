@@ -3,8 +3,8 @@ type: writeup
 title: Unified
 description: Demuestra la explotación de la vulnerabilidad Log4Shell (CVE-2021-44228) en la aplicación UniFi Network. La enumeración revela una instancia vulnerable de UniFi donde se puede lograr una ejecución remota mediante la creación e inyección de una carga útil JNDI en una solicitud POST. Posteriormente, se puede aprovechar una base de datos MongoDB local para restablecer la contraseña de administrador y obtener acceso al panel de administración de UniFi. Se pueden descubrir credenciales SSH en texto plano en la configuración de la aplicación, lo que permite la escalada final de privilegios.
 lang: es
-draft: false
-featured: true
+draft: true
+featured: false
 image: ../../../../images/writeups/hackthebox/machines/unified/unified.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Unified
@@ -41,7 +41,7 @@ nmap -p 22,6789,8080,8443,8843,8880 -sCV -oA nmap/openports 10.129.96.149
 ```plaintext
 PORT     STATE SERVICE         VERSION
 22/tcp   open  ssh             OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
+| ssh-hostkey:
 |   3072 48:ad:d5:b8:3a:9f:bc:be:f7:e8:20:1e:f6:bf:de:ae (RSA)
 |   256 b7:89:6c:0b:20:ed:49:b2:c1:86:7c:29:92:74:1c:1f (ECDSA)
 |_  256 18:cd:9d:08:a6:21:a8:b8:b6:f7:9f:8d:40:51:54:fb (ED25519)
@@ -176,13 +176,13 @@ user.txt
 ```
 
 ```bash
-cat /home/michael/user.txt 
+cat /home/michael/user.txt
 ```
 
 ### User flag
 
 <Callout type="success" title="User flag">
-6******************************7
+  6******************************7
 </Callout>
 
 ## Privilege Escalation
@@ -293,7 +293,7 @@ db.admin.updateOne({ _id: ObjectId("61ce278f46e0fb0012d47ee4") }, { $set: { x_sh
 ```
 
 ```json
-{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+{ "acknowledged": true, "matchedCount": 1, "modifiedCount": 1 }
 ```
 
 Iniciamos sesión en el sitio web de `UniFi` con la contraseña que modificamos. En las `settings` encontramos la contraseña del usuario `root`.
@@ -305,5 +305,5 @@ Nos conectamos por ssh con las credenciales del usuario root y leemos el conteni
 ### Root flag
 
 <Callout type="success" title="Root flag">
-e******************************1
+  e******************************1
 </Callout>

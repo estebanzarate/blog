@@ -3,7 +3,7 @@ type: post
 title: Bash
 description: ""
 lang: es
-draft: false
+draft: true
 ---
 
 ## Tipos de shell
@@ -17,7 +17,7 @@ draft: false
 El archivo `/etc/shells` contiene las shells permitidas en el OS.
 
 <Callout type="info" title="Ver la shell del usuario actual">
-`grep $USER /etc/passwd`
+  `grep $USER /etc/passwd`
 </Callout>
 
 ## Archivos de inicio de Bash
@@ -78,6 +78,7 @@ Contiene una `i` si lo es.
 
 `echo $-`  
 `himBHs`
+
 </Callout>
 
 ### Comportamiento interactivo del intérprete de comandos
@@ -88,7 +89,6 @@ Contiene una `i` si lo es.
 ## Condicionales
 
 Las expresiones condicionales se utilizan por el comando compuesto `[[` y por los comandos integrados `test` y `[`.
-
 
 ## Aritmética en el intérprete de comandos
 
@@ -123,9 +123,9 @@ El stack de directorios es una lista de los directorios visitados recientemente.
 
 ## Ejecución de comandos
 
-Bash determina el tipo de programa que se va a ejecutar. Los programas normales son comandos del sistema que existen compilados en el sistema. Cuando se ejecuta un programa de este tipo, se crea un nuevo proceso porque Bash hace una copia exacta de sí mismo. Este proceso hijo tiene el mismo entorno que su padre; solo cambia su ID. Este procedimiento se denomina *forking*.
+Bash determina el tipo de programa que se va a ejecutar. Los programas normales son comandos del sistema que existen compilados en el sistema. Cuando se ejecuta un programa de este tipo, se crea un nuevo proceso porque Bash hace una copia exacta de sí mismo. Este proceso hijo tiene el mismo entorno que su padre; solo cambia su ID. Este procedimiento se denomina _forking_.
 
-Tras el proceso de *forking*, el espacio de direcciones del proceso hijo se sobrescribe con los datos del nuevo proceso. Esto se realiza mediante una llamada `exec` al sistema.
+Tras el proceso de _forking_, el espacio de direcciones del proceso hijo se sobrescribe con los datos del nuevo proceso. Esto se realiza mediante una llamada `exec` al sistema.
 
 ### Comandos integrados
 
@@ -137,9 +137,7 @@ Los comandos integrados se encuentran dentro del propio intérprete de comandos.
 2. Bash: `alias`, `bind`, `builtin`, `command`, `declare`, `echo`, `enable`, `help`, `let`, `local`, `logout`, `printf`, `read`, `shopt`, `type`, `typeset`, `ulimit` and `unalias`.
 3. Especiales: `:`, `.`, `break`, `continue`, `eval`, `exec`, `exit`, `export`, `readonly`, `return`, `set`, `shift`, `trap` and `unset`.
 
-Cuando Bash se ejecuta en modo POSIX, los comandos integrados especiales difieren de otros comandos integrados en tres aspectos:
-    - Las funciones integradas especiales se encuentran antes que las funciones del intérprete de comandos durante la búsqueda de comandos.
-    - Si una función integrada especial devuelve un estado de error, el intérprete de comandos no interactivo finaliza.
+Cuando Bash se ejecuta en modo POSIX, los comandos integrados especiales difieren de otros comandos integrados en tres aspectos: - Las funciones integradas especiales se encuentran antes que las funciones del intérprete de comandos durante la búsqueda de comandos. - Si una función integrada especial devuelve un estado de error, el intérprete de comandos no interactivo finaliza.
 
 ### Ejecutar programas desde un script
 

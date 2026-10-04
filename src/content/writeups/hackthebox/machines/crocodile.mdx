@@ -3,7 +3,7 @@ type: writeup
 title: Crocodile
 description: Demuestra los peligros de una autenticación mal configurada y la exposición de datos confidenciales. Una instancia vulnerable de un servidor FTP está mal configurada para permitir la autenticación anónima y, al enumerar el servidor, se pueden encontrar archivos confidenciales que contienen credenciales en texto plano. Enumerar y realizar pruebas de fuzzing en el sitio web revelará un punto de inicio de sesión oculto donde las credenciales obtenidas previamente pueden usarse para acceder al panel de administración.
 lang: es
-draft: false
+draft: true
 image: ../../../../images/writeups/hackthebox/machines/crocodile/crocodile.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Crocodile
@@ -36,8 +36,8 @@ nmap -p 21,80 -sCV -oA nmap/openports 10.129.1.15
 ```plaintext
 PORT   STATE SERVICE VERSION
 21/tcp open  ftp     vsftpd 3.0.3
-| ftp-syst: 
-|   STAT: 
+| ftp-syst:
+|   STAT:
 | FTP server status:
 |      Connected to ::ffff:10.10.15.78
 |      Logged in as ftp
@@ -119,7 +119,7 @@ admin
 ```
 
 ```bash
-cat allowed.userlist.passwd 
+cat allowed.userlist.passwd
 ```
 
 ```plaintext
@@ -176,5 +176,5 @@ Iniciamos sesión con las credenciales encontradas y obtenemos la flag.
 ### Flag
 
 <Callout type="success" title="Flag">
-c********************************6
+  c********************************6
 </Callout>

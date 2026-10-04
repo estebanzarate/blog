@@ -3,7 +3,7 @@ type: post
 title: Go
 description: ""
 lang: es
-draft: false
+draft: true
 ---
 
 [The Go Playground](https://go.dev/play/)

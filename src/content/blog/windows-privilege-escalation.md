@@ -3,12 +3,12 @@ type: post
 title: Windows Privilege Escalation
 description: Enumeración de un sistema Windows después de obtener acceso no autorizado, diversas técnicas de escalada de privilegios 
 lang: es
-draft: false
+draft: true
 ---
 
 ## Herramientas
 
-[Tools Compiladas](https://github.com/estebanzarate/cibersectools): Incluye `Seatbelt`, `SharpUp`, `Watson`. En mi [.bashrc](https://no0funny.vercel.app/es/blog/virtualbox-setup#homebashrc) hay una función para descargar cada herramienta.
+[Tools Compiladas](https://github.com/estebanzarate/cibersectools): Incluye `Seatbelt`, `SharpUp`, `Watson`. En mi [.bashrc](https://0xmelvin.vercel.app/es/blog/virtualbox-setup#homebashrc) hay una función para descargar cada herramienta.
 
 | Herramienta | Descripción |
 | - | - |

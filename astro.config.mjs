@@ -1,19 +1,19 @@
 // @ts-check
-import { defineConfig, fontProviders } from 'astro/config';
-import vercel from '@astrojs/vercel';
-import { unified } from '@astrojs/markdown-remark';
-import rehypeExternalLinks from 'rehype-external-links';
-import mdx from '@astrojs/mdx';
+import { defineConfig, fontProviders } from "astro/config";
+import vercel from "@astrojs/vercel";
+import { unified } from "@astrojs/markdown-remark";
+import rehypeExternalLinks from "rehype-external-links";
+import mdx from "@astrojs/mdx";
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://no0funny.vercel.app',
+  site: "https://0xmelvin.vercel.app",
   integrations: [mdx()],
   adapter: vercel({
     imageService: true,
   }),
   prefetch: {
-    defaultStrategy: 'viewport'
+    defaultStrategy: "viewport",
   },
   i18n: {
     locales: ["es", "en"],
@@ -21,10 +21,10 @@ export default defineConfig({
     routing: {
       prefixDefaultLocale: true,
       redirectToDefaultLocale: true,
-      fallbackType: "rewrite"
+      fallbackType: "rewrite",
     },
     fallback: {
-      en: "es"
+      en: "es",
     },
   },
   fonts: [
@@ -34,7 +34,6 @@ export default defineConfig({
       provider: fontProviders.fontsource(),
       weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
       styles: ["normal", "italic"],
-
     },
     {
       name: "Jost",
@@ -42,7 +41,6 @@ export default defineConfig({
       provider: fontProviders.google(),
       weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
       styles: ["normal", "italic"],
-
     },
   ],
   markdown: {
@@ -51,12 +49,12 @@ export default defineConfig({
         [
           rehypeExternalLinks,
           {
-            content: { type: 'text', value: '' },
-            target: '_blank',
-            rel: ['noopener', 'noreferrer'],
-          }
+            content: { type: "text", value: "" },
+            target: "_blank",
+            rel: ["noopener", "noreferrer"],
+          },
         ],
-      ]
+      ],
     }),
   },
 });

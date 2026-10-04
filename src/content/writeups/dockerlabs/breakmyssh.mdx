@@ -3,7 +3,7 @@ type: writeup
 title: BreakMySSH
 description: Laboratorio para practicar ataques de fuerza bruta con Hydra contra el servicio SSH.
 lang: es
-draft: false
+draft: true
 image: ../../../images/writeups/dockerlabs/dockerlabs.webp
 platform: dockerlabs
 url: https://dockerlabs.es/
@@ -35,7 +35,7 @@ nmap -p 22 -sCV -oA nmap/openports 172.17.0.2
 ```plaintext
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 7.7 (protocol 2.0)
-| ssh-hostkey: 
+| ssh-hostkey:
 |   2048 1a:cb:5e:a3:3d:d1:da:c0:ed:2a:61:7f:73:79:46:ce (RSA)
 |   256 54:9e:53:23:57:fc:60:1e:c0:41:cb:f3:85:32:01:fc (ECDSA)
 |_  256 4b:15:7e:7b:b3:07:54:3d:74:ad:e0:94:78:0c:94:93 (ED25519)

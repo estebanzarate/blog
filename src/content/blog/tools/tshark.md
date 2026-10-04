@@ -3,7 +3,7 @@ type: post
 title: tshark
 description: TShark es un analizador de protocolos de red. Permite capturar datos de paquetes desde una red en vivo o leer paquetes desde un archivo de captura previamente guardado, ya sea mostrando una versión decodificada de esos paquetes en la salida estándar o escribiéndolos en un archivo.
 lang: es
-draft: false
+draft: true
 ---
 
 [TShark web site](https://tshark.dev/)

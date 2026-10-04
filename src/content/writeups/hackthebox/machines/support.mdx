@@ -3,8 +3,8 @@ type: writeup
 title: Support
 description: Cuenta con un recurso compartido SMB que permite la autenticación anónima. Tras conectarse al recurso compartido, se descubre un archivo ejecutable que se utiliza para consultar el servidor LDAP de la máquina en busca de usuarios disponibles. Mediante ingeniería inversa, análisis de red o emulación, se identifica la contraseña que el binario utiliza para vincularse al servidor LDAP y se puede utilizar para realizar consultas LDAP adicionales. Se identifica un usuario llamado support en la lista de usuarios, y se encuentra que el campo info contiene su contraseña, lo que permite una conexión WinRM a la máquina. Una vez dentro de la máquina, se puede recopilar información del dominio mediante SharpHound, y BloodHound revela que el grupo Shared Support Accounts, al que pertenece el usuario support, tiene privilegios GenericAll en el controlador de dominio. Se realiza un ataque de delegación restringida basada en recursos y se recibe una shell como NT Authority\System.
 lang: es
-draft: false
-featured: true
+draft: true
+featured: false
 image: ../../../../images/writeups/hackthebox/machines/support/support.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Support
@@ -77,11 +77,11 @@ PORT      STATE SERVICE       VERSION
 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 
 Host script results:
-| smb2-security-mode: 
-|   3.1.1: 
+| smb2-security-mode:
+|   3.1.1:
 |_    Message signing enabled and required
 |_clock-skew: -1s
-| smb2-time: 
+| smb2-time:
 |   date: 2026-08-01T02:27:55
 |_  start_date: N/A
 ```
@@ -111,14 +111,14 @@ nxc smb 10.129.230.181 -u Guest -p "" --shares
 
 ```plaintext
 SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.129.230.181  445    DC               [+] support.htb\Guest: 
+SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
 SMB         10.129.230.181  445    DC               [*] Enumerated shares
 SMB         10.129.230.181  445    DC               Share           Permissions     Remark
 SMB         10.129.230.181  445    DC               -----           -----------     ------
 SMB         10.129.230.181  445    DC               ADMIN$                          Remote Admin
 SMB         10.129.230.181  445    DC               C$                              Default share
 SMB         10.129.230.181  445    DC               IPC$            READ            Remote IPC
-SMB         10.129.230.181  445    DC               NETLOGON                        Logon server share 
+SMB         10.129.230.181  445    DC               NETLOGON                        Logon server share
 SMB         10.129.230.181  445    DC               support-tools   READ            support staff tools
 SMB         10.129.230.181  445    DC               SYSVOL                          Logon server share
 ```
@@ -131,7 +131,7 @@ nxc smb 10.129.230.181 -u Guest -p "" --spider support-tools --pattern .
 
 ```plaintext
 SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.129.230.181  445    DC               [+] support.htb\Guest: 
+SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
 SMB         10.129.230.181  445    DC               [*] Spidering .
 SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/. [dir]
 SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/.. [dir]
@@ -371,9 +371,9 @@ nxc ldap support.htb --dns-server 10.129.68.160 -u 'ldap' -p 'nvEfEK16^1aM4$e7Ac
 ```
 
 ```plaintext
-LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
-LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
-GET-INFO... 10.129.68.160   389    DC               [+] Found following users: 
+LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert)
+LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz
+GET-INFO... 10.129.68.160   389    DC               [+] Found following users:
 GET-INFO... 10.129.68.160   389    DC               User: support              Info: Ironside47pleasure40Watchful
 ```
 
@@ -409,7 +409,7 @@ type ..\Desktop\user.txt
 ### User flag
 
 <Callout type="success" title="User flag">
-0******************************9
+  0******************************9
 </Callout>
 
 ## Privilege Escalation
@@ -421,10 +421,10 @@ nxc ldap support.htb --dns-server 10.129.68.160 -u 'ldap' -p 'nvEfEK16^1aM4$e7Ac
 ```
 
 ```plaintext
-LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert) 
-LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz 
+LDAP        10.129.68.160   389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:support.htb) (signing:None) (channel binding:No TLS cert)
+LDAP        10.129.68.160   389    DC               [+] support.htb\ldap:nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz
 LDAP        10.129.68.160   389    DC               Resolved collection methods: acl, adcs, container, dcom, group, localadmin, loggedon, objectprops, psremote, rdp, session, trusts
-LDAP        10.129.68.160   389    DC               Excluded collection methods: 
+LDAP        10.129.68.160   389    DC               Excluded collection methods:
 LDAP        10.129.68.160   389    DC               Bloodhound data collection completed in 1M 11S
 LDAP        10.129.68.160   389    DC               Collecting ADCS data (CertiHound)...
 LDAP        10.129.68.160   389    DC               Found 0 certificate templates
@@ -548,5 +548,5 @@ type C:\Users\Administrator\Desktop\root.txt
 ### Root flag
 
 <Callout type="success" title="Root flag">
-7******************************b
+  7******************************b
 </Callout>

@@ -1,19 +1,19 @@
 ---
 interface Props {
-    title?: string;
-    description?: string;
-    image?: string;
-    type?: "website" | "article";
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
 }
 
 const {
-    title = "noØfunny",
-    description = "Blog de ciberseguridad, CTFs y writeups.",
-    image = "/og-default.png",
-    type = "website",
+  title = "0xmelvin",
+  description = "Blog de ciberseguridad, CTFs y writeups.",
+  image = "/og-default.png",
+  type = "website",
 } = Astro.props;
 
-const pageTitle = title === "noØfunny" ? title : `${title} # noØfunny`;
+const pageTitle = title === "0xmelvin" ? title : `${title} # 0xmelvin`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const imageURL = new URL(image, Astro.site);
 ---
@@ -29,8 +29,8 @@ const imageURL = new URL(image, Astro.site);
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:image" content={imageURL} />
 <meta
-    property="og:locale"
-    content={Astro.currentLocale === "en" ? "en_US" : "es_AR"}
+  property="og:locale"
+  content={Astro.currentLocale === "en" ? "en_US" : "es_AR"}
 />
 
 <!-- Twitter Card -->

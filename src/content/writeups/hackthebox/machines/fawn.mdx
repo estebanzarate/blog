@@ -3,7 +3,7 @@ type: writeup
 title: Fawn
 description: Explora el Protocolo de Transferencia de Archivos (FTP) y su explotación cuando se configura incorrectamente para permitir el acceso anónimo.
 lang: es
-draft: false
+draft: true
 image: ../../../../images/writeups/hackthebox/machines/fawn/fawn.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Fawn
@@ -37,8 +37,8 @@ PORT   STATE SERVICE VERSION
 21/tcp open  ftp     vsftpd 3.0.3
 | ftp-anon: Anonymous FTP login allowed (FTP code 230)
 |_-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
-| ftp-syst: 
-|   STAT: 
+| ftp-syst:
+|   STAT:
 | FTP server status:
 |      Connected to ::ffff:10.10.15.57
 |      Logged in as ftp
@@ -66,7 +66,7 @@ Connected to 10.129.1.14.
 220 (vsFTPd 3.0.3)
 Name (10.129.1.14:melvin): anonymous
 331 Please specify the password.
-Password: 
+Password:
 230 Login successful.
 Remote system type is UNIX.
 Using binary mode to transfer files.
@@ -155,5 +155,5 @@ cat flag.txt
 ### Flag
 
 <Callout type="success" title="Flag">
-0******************************5
+  0******************************5
 </Callout>

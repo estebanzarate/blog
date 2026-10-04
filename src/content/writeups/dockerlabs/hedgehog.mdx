@@ -3,7 +3,7 @@ type: writeup
 title: HedgeHog
 description: Laboratorio para practicar fuerza bruta SSH y escalada de privilegios mediante movimiento entre usuarios.
 lang: es
-draft: false
+draft: true
 image: ../../../images/writeups/dockerlabs/dockerlabs.webp
 platform: dockerlabs
 url: https://dockerlabs.es/
@@ -36,7 +36,7 @@ nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
 ```plaintext
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
+| ssh-hostkey:
 |   256 34:0d:04:25:20:b6:e5:fc:c9:0d:cb:c9:6c:ef:bb:a0 (ECDSA)
 |_  256 05:56:e3:50:e8:f4:35:96:fe:6b:94:c9:da:e9:47:1f (ED25519)
 80/tcp open  http    Apache httpd 2.4.58 ((Ubuntu))
