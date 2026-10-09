@@ -6,3 +6,4 @@ lang: es
 draft: false
 ---
 
+- [Support](./machines/support)

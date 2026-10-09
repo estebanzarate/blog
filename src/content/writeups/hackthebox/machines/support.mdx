@@ -1,10 +1,11 @@
 ---
 type: writeup
 title: Support
-description: Cuenta con un recurso compartido SMB que permite la autenticación anónima. Tras conectarse al recurso compartido, se descubre un archivo ejecutable que se utiliza para consultar el servidor LDAP de la máquina en busca de usuarios disponibles. Mediante ingeniería inversa, análisis de red o emulación, se identifica la contraseña que el binario utiliza para vincularse al servidor LDAP y se puede utilizar para realizar consultas LDAP adicionales. Se identifica un usuario llamado support en la lista de usuarios, y se encuentra que el campo info contiene su contraseña, lo que permite una conexión WinRM a la máquina. Una vez dentro de la máquina, se puede recopilar información del dominio mediante SharpHound, y BloodHound revela que el grupo Shared Support Accounts, al que pertenece el usuario support, tiene privilegios GenericAll en el controlador de dominio. Se realiza un ataque de delegación restringida basada en recursos y se recibe una shell como NT Authority\System.
+description: >-
+  Support es una máquina Windows Active Directory cuyo compromiso completo no depende de ningún CVE, sino de una cadena de malas prácticas encadenadas: autenticación anónima habilitada en SMB, una herramienta interna distribuida con una credencial cifrada con un esquema propio (y débil) en lugar de un estándar probado, una segunda credencial guardada en texto plano en un campo de notas de Active Directory, y finalmente un permiso de control total (GenericAll) heredado por membresía de grupo sobre el objeto computadora del propio Domain Controller, explotable mediante Resource-Based Constrained Delegation. Ninguno de estos cuatro problemas es por sí solo una vulnerabilidad "crítica" de manual, pero encadenados llevan de un usuario anónimo a NT AUTHORITY\SYSTEM en el DC.
 lang: es
-draft: true
-featured: false
+draft: false
+featured: true
 image: ../../../../images/writeups/hackthebox/machines/support/support.png
 platform: hackthebox
 url: https://app.hackthebox.com/machines/Support
@@ -16,11 +17,13 @@ tags: []
 
 ## Enumeration
 
-Escaneamos todos los puertos con `nmap` para ver cuáles están abiertos y qué servicios corren en ellos.
+Comenzamos realizando un escaneo TCP completo para identificar los puertos expuestos en el objetivo. Utilizamos un SYN scan con una tasa mínima de 5000 paquetes por segundo, deshabilitando la resolución DNS y el host discovery.
 
 ```bash
-sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.230.181
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports <TARGET-IP>
 ```
+
+El escaneo identificó los siguientes puertos abiertos:
 
 ```plaintext
 PORT      STATE SERVICE          REASON
@@ -39,17 +42,28 @@ PORT      STATE SERVICE          REASON
 9389/tcp  open  adws             syn-ack ttl 127
 49664/tcp open  unknown          syn-ack ttl 127
 49667/tcp open  unknown          syn-ack ttl 127
-49670/tcp open  unknown          syn-ack ttl 127
-49677/tcp open  unknown          syn-ack ttl 127
-49685/tcp open  unknown          syn-ack ttl 127
-49708/tcp open  unknown          syn-ack ttl 127
+49678/tcp open  unknown          syn-ack ttl 127
+49690/tcp open  unknown          syn-ack ttl 127
+49706/tcp open  unknown          syn-ack ttl 127
 ```
 
-Escaneamos los puertos abiertos para conocer más detalles sobre los servicios que corren en ellos.
+La combinación de servicios descubiertos, particularmente Kerberos (88/tcp), LDAP (389/tcp), SMB (445/tcp), Global Catalog (3268/3269) y Active Directory Web Services (9389/tcp), sugiere que el objetivo forma parte de un entorno Active Directory.
+
+Una vez finalizado el escaneo completo, extrajimos automáticamente los puertos abiertos desde el archivo .gnmap generado por Nmap. Esto nos permitió construir la lista de puertos para el siguiente escaneo sin tener que introducirlos manualmente.
 
 ```bash
-nmap -p 53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49664,49667,49670,49677,49685,49708 -sCV -Pn -oA nmap/openports 10.129.230.181
+grep -oP '\d{1,5}(?=/open)' nmap/allports.gnmap | sort -un | xargs | tr ' ' ','
 ```
+
+El comando extrae los números de los puertos marcados como open, los ordena numéricamente, elimina duplicados y finalmente los convierte en una lista separada por comas, compatible con la opción `-p` de Nmap.
+
+Con la lista obtenida, realizamos una enumeración más detallada de los servicios utilizando detección de versiones y scripts predeterminados:
+
+```bash
+nmap -p 53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49664,49667,49670,49677,49685,49708 -sCV -Pn -oA nmap/openports <TARGET-IP>
+```
+
+El escaneo permitió identificar el sistema operativo como Windows y confirmó varios de los servicios asociados con Active Directory:
 
 ```plaintext
 PORT      STATE SERVICE       VERSION
@@ -86,69 +100,81 @@ Host script results:
 |_  start_date: N/A
 ```
 
-Chequeamos si el servicio `NetBIOS` en el puerto `139` permite autenticación como `Guest` sin la necesidad de ingresar contraseña.
+Además, Nmap indicó que SMB signing está habilitado y es obligatorio.
+
+Con esta información, tenemos suficientes indicios para orientar la siguiente fase de enumeración hacia los servicios de Active Directory, principalmente SMB, LDAP, Kerberos y DNS.
+
+Dado que SMB (445/tcp) se encontraba expuesto, comenzamos enumerando el servicio utilizando NetExec con el usuario Guest y una contraseña vacía:
 
 ```bash
-nxc smb 10.129.230.181 -u Guest -p ""
+nxc smb <TARGET-IP> -u Guest -p ""
 ```
+
+La respuesta confirmó que el objetivo es un Windows Server 2022 que pertenece al dominio `support.htb`. Además, la autenticación como Guest fue aceptada mediante autenticación nula:
 
 ```plaintext
-SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
+SMB         <TARGET-IP>  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         <TARGET-IP>  445    DC               [+] support.htb\Guest:
 ```
 
-Resuelve al dominio `support.htb`, lo agregamos el archivo `/etc/hosts`.
+Agregamos el dominio y el nombre del controlador de dominio al archivo `/etc/hosts` para facilitar la resolución local:
 
 ```bash
-echo "10.129.230.181 support.htb" | sudo tee -a /etc/hosts
+echo "<TARGET-IP> support.htb" | sudo tee -a /etc/hosts
 ```
 
-Listamos los recursos compartidos.
+A continuación, enumeramos los recursos compartidos disponibles para el usuario `Guest`:
 
 ```bash
-nxc smb 10.129.230.181 -u Guest -p "" --shares
+nxc smb <TARGET-IP> -u Guest -p "" --shares
 ```
+
+Entre los recursos enumerados, encontramos `support-tools`, sobre el cual el usuario `Guest` dispone de permisos de lectura:
 
 ```plaintext
-SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
-SMB         10.129.230.181  445    DC               [*] Enumerated shares
-SMB         10.129.230.181  445    DC               Share           Permissions     Remark
-SMB         10.129.230.181  445    DC               -----           -----------     ------
-SMB         10.129.230.181  445    DC               ADMIN$                          Remote Admin
-SMB         10.129.230.181  445    DC               C$                              Default share
-SMB         10.129.230.181  445    DC               IPC$            READ            Remote IPC
-SMB         10.129.230.181  445    DC               NETLOGON                        Logon server share
-SMB         10.129.230.181  445    DC               support-tools   READ            support staff tools
-SMB         10.129.230.181  445    DC               SYSVOL                          Logon server share
+SMB         <TARGET-IP>  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:False) (Null Auth:True) (DC:True)
+SMB         <TARGET-IP>  445    DC               [+] support.htb\Guest:
+SMB         <TARGET-IP>  445    DC               [*] Enumerated shares
+SMB         <TARGET-IP>  445    DC               Share           Permissions            Remark
+SMB         <TARGET-IP>  445    DC               -----           -----------            ------
+SMB         <TARGET-IP>  445    DC               ADMIN$                                 Remote Admin
+SMB         <TARGET-IP>  445    DC               C$                                     Default share
+SMB         <TARGET-IP>  445    DC               IPC$            READ                   Remote IPC
+SMB         <TARGET-IP>  445    DC               NETLOGON                               Logon server share
+SMB         <TARGET-IP>  445    DC               support-tools   READ                   support staff tools
+SMB         <TARGET-IP>  445    DC               SYSVOL                                 Logon server share
 ```
 
-Listamos el contenido del recurso compartido `support-tools` aprovechando que tenemos permisos de lectura.
+Debido a los permisos de lectura sobre `support-tools`, enumeramos su contenido:
 
 ```bash
-nxc smb 10.129.230.181 -u Guest -p "" --spider support-tools --pattern .
+nxc smb <TARGET-IP> -u Guest -p "" --spider support-tools --pattern .
 ```
+
+El recurso contiene varias herramientas portables, entre ellas `7-Zip`, `PuTTY`, `Sysinternals Suite`, `Wireshark` y un archivo denominado `UserInfo.exe.zip`:
 
 ```plaintext
-SMB         10.129.230.181  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.129.230.181  445    DC               [+] support.htb\Guest:
-SMB         10.129.230.181  445    DC               [*] Spidering .
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/. [dir]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/.. [dir]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/7-ZipPortable_21.07.paf.exe [lastm:'2022-05-28 08:19' size:2880728]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/npp.8.4.1.portable.x64.zip [lastm:'2022-05-28 08:19' size:5439245]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/putty.exe [lastm:'2022-05-28 08:20' size:1273576]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/SysinternalsSuite.zip [lastm:'2022-05-28 08:19' size:48102161]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/UserInfo.exe.zip [lastm:'2022-07-20 14:01' size:277499]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/windirstat1_1_2_setup.exe [lastm:'2022-05-28 08:20' size:79171]
-SMB         10.129.230.181  445    DC               //10.129.230.181/support-tools/WiresharkPortable64_3.6.5.paf.exe [lastm:'2022-05-28 08:19' size:44398000]
+SMB         <TARGET-IP>  445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:support.htb) (signing:True) (SMBv1:False) (Null Auth:True) (DC:True)
+SMB         <TARGET-IP>  445    DC               [+] support.htb\Guest:
+SMB         <TARGET-IP>  445    DC               [*] Spidering .
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/. [dir]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/.. [dir]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/7-ZipPortable_21.07.paf.exe [lastm:'2022-05-28 08:19' size:2880728]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/npp.8.4.1.portable.x64.zip [lastm:'2022-05-28 08:19' size:5439245]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/putty.exe [lastm:'2022-05-28 08:20' size:1273576]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/SysinternalsSuite.zip [lastm:'2022-05-28 08:19' size:48102161]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/UserInfo.exe.zip [lastm:'2022-07-20 14:01' size:277499]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/windirstat1_1_2_setup.exe [lastm:'2022-05-28 08:20' size:79171]
+SMB         <TARGET-IP>  445    DC               //<TARGET-IP>/support-tools/WiresharkPortable64_3.6.5.paf.exe [lastm:'2022-05-28 08:19' size:44398000]
 ```
 
-Descargamos el archivo que parece contener información sensible.
+El archivo `UserInfo.exe.zip` llamó especialmente nuestra atención por su nombre, ya que podría estar relacionado con información de usuarios. Aprovechando los permisos de lectura obtenidos mediante la cuenta `Guest`, lo descargamos para analizarlo localmente:
 
 ```bash
-nxc smb 10.129.230.181 -u Guest -p "" --share support-tools --get-file UserInfo.exe.zip UserInfo.exe.zip
+nxc smb <TARGET-IP> -u Guest -p "" --share support-tools --get-file UserInfo.exe.zip UserInfo.exe.zip
 ```
+
+A partir de este punto, analizamos el archivo descargado para determinar su funcionalidad y comprobar si contiene información útil para continuar la enumeración.
 
 Creamos un directorio para extraer el contenido del archivo descargado.
 
