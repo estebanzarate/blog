@@ -961,9 +961,9 @@ case "$1" in
 esac
 
 if [ -n "$IP" ]; then
-  echo "%{F$COLOR_PRIMARY}󰈀%{F-}%{O12}$IP"
+  echo "%{F$COLOR_INFO}󰈀%{F-}%{O12}$IP"
 else
-  echo "%{F$COLOR_DARK}󰈀%{F-}%{O10}"
+  echo "%{F$COLOR_FG_MUTED}󰈀%{F-}%{O10}"
 fi
 EOF
 ```

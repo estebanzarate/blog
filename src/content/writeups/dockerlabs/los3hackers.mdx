@@ -1,0 +1,50 @@
+---
+type: writeup
+title: Los 3 Hackers
+description: La máquina "Los 3 Hackers", es una máquina de dificultad "Fácil", la cual nos enseña a explotar distintas técnicas de evasión, entre ellas SQLi con una blacklist de por medio + rate limit, una vez explotada accedemos al dashboard y nos obliga a seguir enumerando, logrando un comprimido con las credenciales del 1er usuario, ya dentro de la máquina víctima pivotamos a 2 usuarios más, abusando de un Port Forwarding, procesos cron mal configurados, y finalmente para acceder a root se explota un binario con permisos capabilities.
+lang: es
+draft: false
+featured: true
+image: ../../../images/writeups/dockerlabs/los3hackers/los3hackers.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: facil
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Escaneamos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 64
+80/tcp open  http    syn-ack ttl 64
+```
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.15 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 66:5c:17:fa:34:9b:93:5c:1b:f5:40:87:ae:e4:60:17 (ECDSA)
+|_  256 74:c0:2e:c2:5b:a7:71:7e:45:42:83:cc:91:b0:28:38 (ED25519)
+80/tcp open  http    Gunicorn
+|_http-server-header: gunicorn
+|_http-title: Los 3 Hackers \xE2\x80\x93 Ayuda al Red Hacker
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+![Sitio web](@images/writeups/dockerlabs/los3hackers/los3hackers-web.png)
+
+El servicio http aloja un sitio web perteneciente a 3 hackers, uno de ellos, el red, necesita ayuda para entrar al panel de administración al que ya no tiene acceso. Al hacer click en el botón `AYUDAR AL RED HACKER` ingresamos al login.
+
+![Panel de login](@images/writeups/dockerlabs/los3hackers/los3hackers-login.png)
