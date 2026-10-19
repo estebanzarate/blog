@@ -570,7 +570,7 @@ super + alt + {Left,Down,Up,Right}
 
 # Show keybinds
 super + k
-	$HOME/.config/sxhkd/scripts/show_keybinds.sh
+	$HOME/.config/sxhkd/scripts/keybinds.sh
 EOF
 ```
 
@@ -933,6 +933,7 @@ cat > $HOME/.config/polybar/launch.sh << 'EOF'
 killall -q polybar
 
 polybar main 2>&1 | tee -a /tmp/polybar.log & disown
+EOF
 ```
 
 ### $HOME/.config/polybar/scripts/ip.sh

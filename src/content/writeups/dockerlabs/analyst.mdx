@@ -1,0 +1,166 @@
+---
+type: writeup
+title: Analyst
+description: Análisis de tráfico de red con Wireshark y obtención de credenciales.
+lang: es
+draft: false
+featured: true
+image: ../../../images/writeups/dockerlabs/analyst/analyst.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: facil
+hints: []
+tags: []
+---
+
+Hay que analizar la captura de paquetes de un archivo `.pcap` para reconstruir la cadena de ataque y la información que se llegó a comprometer.
+
+Para empezar hay que descargar el archivo `.pcap` del siguiente enlace [http://172.17.0.2/descargas/incidente_pinguino.pcap](http://172.17.0.2/descargas/incidente_pinguino.pcap) y también descargar un archivo `json` que contiene el feed de threat intelligence [http://172.17.0.2/descargas/threat_intel_feed.json](http://172.17.0.2/descargas/threat_intel_feed.json).
+
+Lo primero que hay que averiguar es lo siguiente:
+
+## 1. Identificacion del origen
+
+El servidor recibe trafico externo de mas de una IP durante la ventana capturada, pero solo una de ellas llega a comprometerlo. ¿Cual es la direccion IP del atacante real (la que consigue subir un archivo)?
+
+<Callout type="hint" title="Hint">
+  Filtra por http.request.method=="POST" para ir directo a quien sube archivos,
+  en vez de fiarte de cualquier IP externa que solo genere 404 sueltos.
+</Callout>
+
+Al filtrar por el método POST se puede ver que se hicieron dos requests desde una sola IP.
+
+![Source IP](@images/writeups/dockerlabs/analyst/analyst-1.png)
+
+Hacemos click derecho sobre `Source Address` seleccionamos `Copy` y `Value`.
+
+<Callout type="success" title="IP sospechosa">
+  198.51.100.23
+</Callout>
+
+## 2. Atribucion geografica
+
+Segun el feed de threat intelligence adjunto (threat_intel_feed.json), ¿de que pais procede esa IP atacante (la de la pregunta anterior, no cualquier IP del feed)?
+
+<Callout type="hint" title="Hint">
+  El feed tiene mas de una entrada. Busca la que coincide exactamente con la IP
+  que identificaste antes de responder.
+</Callout>
+
+Para conocer el país filtramos el archivo del feed y buscamos las entradas pertenecientes a la IP sospechosa y accedemos al valor `Country`.
+
+```bash
+jq -r '.entries[] | select(.ip == "198.51.100.23") | .country' threat_intel_feed.json
+```
+
+<Callout type="success" title="País de origen">
+  Vietnam
+</Callout>
+
+## 3. Huella del atacante
+
+¿Cual es el User-Agent que usa el atacante en sus peticiones HTTP?
+
+<Callout type="Hint" title="Hint">Clic derecho sobre un paquete del atacante -> Follow -> TCP Stream, y localiza la cabecera User-Agent.</Callout>
+
+<Callout type="success" title="User-Agent">
+  Mozilla/5.0 (compatible; ReconBot/1.0; +http://lab.invalid/reconbot)
+</Callout>
+
+## 4. Endpoint de subida
+
+¿A que ruta (script) del servidor se envian las peticiones POST que suben archivos?
+
+<Callout type="hint" title="Hint">
+  Filtra: http.request.method=="POST" y mira la columna Info.
+</Callout>
+
+Filtramos por el método `POST` de las requests (`http.request.method=="POST"`) y miramos la columna `Info` para ver la ruta.
+
+![Ruta de subida de archivos](@images/writeups/dockerlabs/analyst/analyst-4.png)
+
+<Callout type="success" title="Ruta de subida de archivos">
+  /reviews/upload.php
+</Callout>
+
+## 5. Directorio de subidas
+
+Durante el reconocimiento, el atacante prueba varias rutas hasta encontrar el directorio real de subidas del sitio. ¿Cual es?
+
+<Callout type="hint" title="Hint">
+  Mira las peticiones GET anteriores a la subida y compara los codigos de
+  respuesta (404 vs 403/200).
+</Callout>
+
+Primero vemos cuál es el `No.` de la request en la que el atacante subió el archivo sospechoso, el primer intento, la número `108` para tener una idea de dónde estamos parados. Después filtramos por la IP atacante y el método `GET` de la siguiente manera `ip.src == 198.51.100.23 and http.request.method == "GET"`. El número de request previo a la `108` donde se sube el archivo sospechoso es la `88`. Una vez seleccionada la request copiamos el `Value` de `Request URI`.
+
+![Ruta de subida de archivos](@images/writeups/dockerlabs/analyst/analyst-5.png)
+
+<Callout type="success" title="Directorio real de subidas del sitio">
+  /reviews/uploads/
+</Callout>
+
+## 6. El archivo malicioso
+
+La primera subida es bloqueada por el filtro de extensiones, pero la segunda tiene exito gracias a un bypass. ¿Como se llama el archivo que consigue subirse?
+
+<Callout type="hint" title="Hint">
+  Compara el 'filename' de las dos peticiones POST multipart/form-data.
+</Callout>
+
+Filtramos por el método `POST` de las requests y seleccionamos la que subió el archivo exitosamente, hacemos click derecho, seleccionamos `Follow` y `HTTP Stream` para ver el nombre del archivo completo.
+
+![Nombre del archivo subido](@images/writeups/dockerlabs/analyst/analyst-6.png)
+
+<Callout type="success" title="Nombre del archivo">
+  image.jpg.php
+</Callout>
+
+## 7. Conexion saliente
+
+Tras acceder al archivo subido, el servidor abre una conexion saliente hacia la maquina del atacante. ¿A que puerto se conecta?
+
+<Callout type="hint" title="Hint">
+Filtra por `ip.addr == <IP del servidor> && ip.addr == <IP atacante>` y observa el nuevo flujo TCP que arranca justo despues del GET al archivo subido.
+</Callout>
+
+Filtramos por las IP de origen y destino y por el protocolo `TCP` en puertos que no sean el `80` `ip.src == 10.10.2.15 and ip.dst == 198.51.100.23 and tcp.port != 80` y vemos las requests posteriores a la `118` que es en la que se subió el archivo exitosamente. En la columna `Info` vemos el puerto al que se conecta el servidor.
+
+![Puero de conexión](@images/writeups/dockerlabs/analyst/analyst-7.png)
+
+<Callout type="success" title="Puerto">
+  8080
+</Callout>
+
+## 8. Reconocimiento interno
+
+Dentro de la sesion de shell inversa, el atacante lee el contenido de un fichero del sistema con el comando cat. ¿Que fichero es?
+
+<Callout type="hint" title="Hint">
+  Sigue el TCP Stream del flujo hacia el puerto detectado en la pregunta
+  anterior.
+</Callout>
+
+Con el mismo filtro aplicado `ip.src == 10.10.2.15 and ip.dst == 198.51.100.23 and tcp.port != 80` hacemos click derecho en la requests `135`, seleccionamos la opción `Follow` y `TCP Stream` y buscamos que fichero se abrió con el comando `cat`.
+
+![Nombre del fichero](@images/writeups/dockerlabs/analyst/analyst-8.png)
+
+<Callout type="success" title="Fichero">
+  /etc/passwd
+</Callout>
+
+## 9. Usuario afectado
+
+El atacante ejecuta un script interno para resetear la contrasena de un usuario del sistema. ¿Cual es el nombre de ese usuario?
+
+<Callout type="hint" title="Hint">
+  Sigue leyendo el mismo TCP Stream despues del 'sudo -l'.
+</Callout>
+
+Con el mismo filtro aplicado y observando la misma request buscamos la ejecución de un script interno, en este caso `/opt/scripts/reset_user_pass.sh` al que se le pasa el usuario `pinguinito` para resetearle la contraseña.
+
+![Nombre de usuario](@images/writeups/dockerlabs/analyst/analyst-9.png)
+
+<Callout type="success" title="Nombre de usuario">
+  pinguinito
+</Callout>
