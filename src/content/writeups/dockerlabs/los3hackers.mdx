@@ -45,6 +45,18 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 ![Sitio web](@images/writeups/dockerlabs/los3hackers/los3hackers-web.png)
 
-El servicio http aloja un sitio web perteneciente a 3 hackers, uno de ellos, el red, necesita ayuda para entrar al panel de administración al que ya no tiene acceso. Al hacer click en el botón `AYUDAR AL RED HACKER` ingresamos al login.
+El servicio http aloja un sitio web perteneciente a 3 hackers, uno de ellos, el red, necesita ayuda para entrar al panel de administración al que ya no tiene acceso. Al hacer click en el botón `AYUDAR AL RED HACKER` ingresamos a la página de inicio de sesión.
 
 ![Panel de login](@images/writeups/dockerlabs/los3hackers/los3hackers-login.png)
+
+Probamos con cualquier usuario y contraseña para ver cómo responde.
+
+![Wrong password](@images/writeups/dockerlabs/los3hackers/los3hackers-wrongpass.png)
+
+Probamos con una SQLi en el input `usuario` `melvin' or 1=1-- -`.
+
+![Patrón no permitido](@images/writeups/dockerlabs/los3hackers/los3hackers-patronnopermitido.png)
+
+Probamos con más injecciones SQL y nos bloquea por haber realizados varios intentos fallidos.
+
+![Rate limit](@images/writeups/dockerlabs/los3hackers/los3hackers-ratelimit.png)

