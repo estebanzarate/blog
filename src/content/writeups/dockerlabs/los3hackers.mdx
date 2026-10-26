@@ -57,6 +57,20 @@ Probamos con una SQLi en el input `usuario` `melvin' or 1=1-- -`.
 
 ![Patrón no permitido](@images/writeups/dockerlabs/los3hackers/los3hackers-patronnopermitido.png)
 
-Probamos con más injecciones SQL y nos bloquea por haber realizados varios intentos fallidos.
+Probamos con más injecciones SQL y nos bloquea por haber realizados varios intentos fallidos lo que indica que hay un rate limit.
 
 ![Rate limit](@images/writeups/dockerlabs/los3hackers/los3hackers-ratelimit.png)
+
+Para bypasear el rate limit podemos agregar el header `X-Forwarded-For: 127.0.0.1` e ir modificando la IP para evitar que nos bloquee.
+
+Probando con la inyección SQL `admin' --` accedemos al panel de administrador.
+
+![SQLi](@images/writeups/dockerlabs/los3hackers/los3hackers-sqli.png)
+
+En el panel de administrador encontramos la primer flag.
+
+![Admin dashboard](@images/writeups/dockerlabs/los3hackers/los3hackers-admindashboard.png)
+
+<Callout type="success" title="Flag">
+  \{SQLi_bypass_r4t3_l1m1t_pwn3d}
+</Callout>
