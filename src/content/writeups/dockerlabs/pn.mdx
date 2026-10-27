@@ -116,7 +116,7 @@ El servicio http muestra que está corriendo Apache Tomcat. Para iniciar sesión
 Hacemos fuerza bruta para encontrar la contraseña del usuario `tomcat` según lo que se da a entender en el archivo `tomcat.txt`. Entre las contraseñas que probamos logramos acceso con `s3cr3t`.
 
 ```bash
-hydra -l tomcat -P /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt 172.17.0.2 -s 8080 http-head /manager/html -I -t 16 -F
+hydra -l tomcat -P /usr/share/wordlists/seclists/Passwords/Common-Credentials/Pwdb_top-100000.txt 172.17.0.2 -s 8080 http-head /manager/html -I -t 16 -F
 ```
 
 ## Exploitation
