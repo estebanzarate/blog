@@ -9,8 +9,8 @@ image: ../../../images/writeups/dockerlabs/los3hackers/los3hackers.webp
 platform: dockerlabs
 url: https://dockerlabs.es/
 difficulty: facil
-hints: []
-tags: []
+hints: [enumeration, fuzzing, reverse shell, capabilities]
+tags: [fuzzing, permisos, capabilities]
 ---
 
 ## Enumeration
@@ -52,6 +52,8 @@ El servicio http aloja un sitio web perteneciente a 3 hackers, uno de ellos, el 
 Probamos con cualquier usuario y contraseña para ver cómo responde.
 
 ![Wrong password](@images/writeups/dockerlabs/los3hackers/los3hackers-wrongpass.png)
+
+## Exploitation
 
 Probamos con una SQLi en el input `usuario` `melvin' or 1=1-- -`.
 
@@ -413,6 +415,8 @@ Esos sí permanecen.
 
 - Black
 ```
+
+## Privilege Escalation
 
 Según el contenido del archivo hay privilegios que permanecen. Listamos las capabilities para ver si hay binarios con privilegios.
 
