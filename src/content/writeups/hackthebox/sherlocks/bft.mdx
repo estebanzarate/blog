@@ -1,0 +1,95 @@
+---
+type: writeup
+title: BFT
+description: Análisis forense de la Tabla Maestra de Archivos (MFT). Se utilizan herramientas y metodologías para analizar los artefactos de la MFT e identificar actividades maliciosas. Durante el análisis, se utiliza la herramienta MFTECmd para analizar el archivo MFT proporcionado, TimeLine Explorer para abrir y analizar los resultados del análisis de la MFT, y un editor hexadecimal para recuperar el contenido de los archivos de la MFT.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/bft/bft.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/BFT
+difficulty: veryeasy
+os: windows
+hints: []
+tags: []
+---
+
+Herramientas usadas:
+
+- [MFTECmd](https://github.com/ericzimmerman/mftecmd)
+- [TimeLine Explorer](https://ericzimmerman.github.io/#forensic-tools) - [Descargar](https://download.ericzimmermanstools.com/net/TimelineExplorer.zip)
+- HxD Hex Editor
+
+Para organizar todo mejor, descargamos el archivo `zip` del sherlock, las herramientas MFTECmd y TimeLine Explorer dentro de la misma carpeta.
+
+Como no tengo idea qué es una MFT (Master File Table) buscamos de qué se trata y encontramos la siguiente información [Tabla maestra de archivos (sistemas de archivos locales)](https://learn.microsoft.com/es-es/windows/win32/fileio/master-file-table). Tenemos que instalar [.NET 10.0 Runtime (v10.0.14) - Windows x64 Installer](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-10.0.14-windows-x64-installer?cid=getdotnetcore).
+
+Ejecutamos el comando sugerido para
+
+```powershell
+.\MFTECmd.exe -f 'C:\Users\esteb\OneDrive\Escritorio\bft\C\$MFT' --csv 'C:\Users\esteb\OneDrive\Escritorio\' --csvf MFT_ANALYSIS.csv
+```
+
+```plaintext
+MFTECmd version 2026.10.6
+
+Author: Eric Zimmerman (saericzimmerman@gmail.com)
+https://github.com/EricZimmerman/MFTECmd
+
+Command line: -f C:\Users\esteb\OneDrive\Escritorio\bft\C\$MFT --csv C:\Users\esteb\OneDrive\Escritorio\bft\ --csvf MFT_ANALYSIS.csv
+
+Console log: C:\Users\esteb\OneDrive\Escritorio\bft\20261028031415_MFTECmd_2026.10.6_ConsoleLog.txt
+
+Warning: Administrator privileges not found!
+
+File type: Mft
+
+Processed C:\Users\esteb\OneDrive\Escritorio\bft\C\$MFT in 2.6846 seconds
+
+C:\Users\esteb\OneDrive\Escritorio\bft\C\$MFT: FILE records found: 171,927 (Free records: 142,905) File size: 307.5MB
+        CSV output will be saved to C:\Users\esteb\OneDrive\Escritorio\bft\MFT_ANALYSIS.csv
+```
+
+## Task 1
+
+<Callout type="question" title="Task 1">
+  Simon Stark was targeted by attackers on February 13. He downloaded a ZIP file
+  from a link received in an email. What was the name of the ZIP file he
+  downloaded from the link?
+</Callout>
+
+Siguiendo la información de la tarea en `TimeLine Explorer` filtramos por el nombre del usuario `simon.stark` en la columna `Parent Path` usando `Contains`, por la fecha `2/13/2023` en la columna `Created0x10` que es la fecha que ve el usuario comúnmente en el Explorador de Archivos de Windows usando `Is greater than` y por `.zip` en la columna `File Name`.
+
+Buscando información sobre las columnas de `TimeLine Explorer` encontramos la siguiente información:
+
+La columna `Zone Id Contents` contiene el contenido del archivo de identificación de zona (Zone.Identifier), que revela el origen de un archivo descargado de internet o de una red externa.
+
+**ZoneTransfer**: Indica el tipo de red desde donde provino el archivo a través de un número (Zone ID):
+
+- **3**: Internet (La más común para descargas web, activa la advertencia de seguridad de Windows).
+
+Entre los resultados se encuentra un archivo descargado desde Google Drive, la URL del archivo (`drive-bulk-export-anonymous`) es el comportamiento que ocurre cuando se hace clic en un enlace de Google, y este empaqueta todo en un archivo ZIP para entregarlo.
+
+<Callout type="success" title="ZIP file">
+  Stage-20240213T093324Z-001.zip
+</Callout>
+
+## Task 2
+
+Examine the Zone Identifier contents for the initially downloaded ZIP file. This field reveals the HostUrl from where the file was downloaded, serving as a valuable Indicator of Compromise (IOC) in our investigation/analysis. What is the full Host URL from where this ZIP file was downloaded?
+
+## Task 3
+
+What is the full path and name of the malicious file that executed malicious code and connected to a C2 server?
+
+## Task 4
+
+Analyze the $Created0x30 timestamp for the previously identified file. When was this file created on disk?
+
+## Task 5
+
+Finding the hex offset of an MFT record is beneficial in many investigative scenarios. Find the hex offset of the stager file from Question 3.
+
+## Task 6
+
+Each MFT record is 1024 bytes in size. If a file on disk has smaller size than 1024 bytes, they can be stored directly on MFT File itself. These are called MFT Resident files. During Windows File system Investigation, its crucial to look for any malicious/suspicious files that may be resident in MFT. This way we can find contents of malicious files/scripts. Find the contents of The malicious stager identified in Question3 and answer with the C2 IP and port.
