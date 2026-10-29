@@ -11,7 +11,7 @@ url: https://app.hackthebox.com/sherlocks/BFT
 difficulty: veryeasy
 os: windows
 hints: []
-tags: []
+tags: [mft, hex editor, timeline explorer]
 ---
 
 Herramientas usadas:
@@ -78,18 +78,64 @@ Entre los resultados se encuentra un archivo descargado desde Google Drive, la U
 
 Examine the Zone Identifier contents for the initially downloaded ZIP file. This field reveals the HostUrl from where the file was downloaded, serving as a valuable Indicator of Compromise (IOC) in our investigation/analysis. What is the full Host URL from where this ZIP file was downloaded?
 
+Con el filtro anterior aplicado buscamos en la columna `Zone Id Contents` la fila que corresponde al archivo descargado, en su contenido se encuentra la `HostUrl`.
+
+<Callout type="success" title="HostUrl">
+  https://storage.googleapis.com/drive-bulk-export-anonymous/20240213T093324.039Z/4133399871716478688/a40aecd0-1cf3-4f88-b55a-e188d5c1c04f/1/c277a8b4-afa9-4d34-b8ca-e1eb5e5f983c?authuser
+</Callout>
+
 ## Task 3
 
 What is the full path and name of the malicious file that executed malicious code and connected to a C2 server?
+
+Con el filtro anterior aplicado buscamos la fecha de descarga del archivo para buscar el path completo y nombre del archivo malicioso alrededor de la hora de descarga del archivo `Stage-20240213T093324Z-001.zip`. Armamos la ruta completa con las columnas `Parent Path` y `File Name`.
+
+<Callout type="success" title="Full path malicious file">
+  C:\Users\simon.stark\Downloads\Stage-20240213T093324Z-001\Stage\invoice\invoices\invoice.bat
+</Callout>
 
 ## Task 4
 
 Analyze the $Created0x30 timestamp for the previously identified file. When was this file created on disk?
 
+La columna `Created0x30` contiene la fecha de creación en disco real del archivo que solo se actualiza cuando el archivo se crea, se mueve de directorio o se le cambia el nombre.
+
+<Callout type="success" title="Timestamp">
+  2024-02-13 16:38:39
+</Callout>
+
 ## Task 5
 
 Finding the hex offset of an MFT record is beneficial in many investigative scenarios. Find the hex offset of the stager file from Question 3.
 
+La MFT es una base de datos donde cada archivo y carpeta del sistema tiene asignada una posición o "registro" (record). El `Entry Number` dice exactamente en qué fila de esa base de datos está guardada la información de ese archivo.
+
+Buscando en internet como encontrar el offset de un registro de la MFT en hexadecimal encontramos que se debe multiplicar el `Entry Number` por el tamaño de cada registro (que casi siempre es de 1024 bytes) y luego convertir ese resultado a hexadecimal.
+
+Multiplicamos el valor de la columna `Entry Number` por 1024.
+
+```plaintext
+23436 * 1024 = 23,998,464
+```
+
+Convertimos el valor decimal a hexadecimal desde Bash.
+
+```bash
+printf "0x%X\n" $((23436 * 1024))
+```
+
+<Callout type="success" title="Hex offset">
+  0x16E3000
+</Callout>
+
 ## Task 6
 
 Each MFT record is 1024 bytes in size. If a file on disk has smaller size than 1024 bytes, they can be stored directly on MFT File itself. These are called MFT Resident files. During Windows File system Investigation, its crucial to look for any malicious/suspicious files that may be resident in MFT. This way we can find contents of malicious files/scripts. Find the contents of The malicious stager identified in Question3 and answer with the C2 IP and port.
+
+Siguiendo la pista, descargamos e instalamos HxD, en el menú `Search`, seleccionamos la opción `Go to...` e ingresamos el offset obtenido de la tarea anterior `16E3000`. Scrolleamos un poco y encontramos la IP y puerto.
+
+![IP:PORT](@images/writeups/hackthebox/sherlocks/bft/bft-ipport.png)
+
+<Callout type="success" title="IP:PORT">
+  43.204.110.203:6666
+</Callout>
