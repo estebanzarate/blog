@@ -6,6 +6,8 @@ lang: es
 draft: true
 ---
 
+- [BFT](./sherlocks/bft)
 - [MangoBleed](./sherlocks/mangobleed)
 - [Phishing_Email](./sherlocks/phishingemail)
 - [RomCom](./sherlocks/romcom)
+- [Subatomic](./sherlocks/subatomic)

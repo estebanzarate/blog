@@ -1,0 +1,152 @@
+---
+type: writeup
+title: Subatomic
+description: >-
+  Forela necesita tu ayuda. Un empleado les informó que su cuenta de Discord se había utilizado para enviar un mensaje con un enlace a un archivo que sospechan que es malware. El mensaje decía: "¡Hola! He estado trabajando en un nuevo juego que creo que te puede interesar. Combina varios juegos que nos gusta jugar juntos, ¡échale un vistazo!". El usuario de Forela ha intentado proteger su cuenta de Discord, pero los mensajes siguen llegando. ¡Necesitan tu ayuda para comprender este malware y recuperar el control de su cuenta! Advertencia: Este archivo, Sherlock, incluye software que interactuará con tu ordenador y tus archivos. Este software se ha incluido intencionadamente con fines educativos y NO está diseñado para ejecutarse ni utilizarse de otra manera. Siempre maneja este tipo de archivos en entornos aislados, controlados y seguros. Una vez descomprimido el archivo ZIP de Sherlock, encontrarás un archivo DANGER.txt. Léelo para continuar.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/subatomic/subatomic.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/Subatomic
+difficulty: medium
+os: windows
+hints: []
+tags: []
+---
+
+## Task 1
+
+<Callout type="question" title="Task 1">
+  What is the Imphash of this malware installer?
+</Callout>
+
+Como no tengo idea qué es `Imphash` busco en internet. El imphash (Import Hash) es una huella digital o hash que se calcula en función de las funciones de software (librerías) que un archivo ejecutable importa para poder funcionar. Para conocer el ImpHash subí el archivo a [VirusTotal](https://www.virustotal.com/gui/home/upload) y en la pestaña `DETAILS`, en la sección `Basic properties` se encuentra el Imphash.
+
+<Callout type="success" title="Imphash">
+  b34f154ec913d2d2c435cbd644e91687
+</Callout>
+
+## Task 2
+
+<Callout type="question" title="Task 2">
+  The malware contains a digital signature. What is the program name specified
+  in the SpcSpOpusInfo Data Structure?
+</Callout>
+
+Dentro de la sección `Signature info` se encuentra el `SpcSpOpusInfo` que es una estructura de datos utilizada en la firma digital de código para proporcionar información complementaria sobre el software firmado. Contiene una lista de tuplas, cada una con el nombre del programa y una URL para obtener más información sobre el firmante. Dentro de esta estructura se encuentra el nombre del programa.
+
+<Callout type="success" title="Program name">
+  Windows Update Assistant
+</Callout>
+
+## Task 3
+
+<Callout type="question" title="Task 3">
+  The malware uses a unique GUID during installation, what is this GUID?
+</Callout>
+
+Buscando información en internet sobre el nombre del archivo, encontré que NSIS (Nullsoft Scriptable Install System) es un motor de código abierto muy popular que desarrolladores (y creadores de malware) utilizan para crear instaladores de Windows.
+
+Herramientas de descompresión como `7-Zip` o `7z` en Linux están programadas para escanear los archivos `.exe` en busca de las firmas o "huellas" específicas que dejan motores de instalación (como NSIS, Inno Setup o WiX). Cuando `7z` encuentra la firma de NSIS, ignora la cabecera ejecutable, va directo al bloque de datos comprimidos y permite extraerlos como si fuera un simple archivo `.zip`.
+
+Un GUID (siglas en inglés para Globally Unique Identifier, o Identificador Único Global) es un código alfanumérico largo que se utiliza en informática para darle un nombre completamente único a un componente, archivo, programa o entrada de registro.
+
+<Callout type="success" title=""></Callout>
+
+## Task 4
+
+<Callout type="question" title="Task 4">
+  The malware contains a package.json file with metadata associated with it.
+  What is the 'License' tied to this malware?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 5
+
+<Callout type="question" title="Task 5">
+  The malware connects back to a C2 address during execution. What is the domain
+  used for C2?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 6
+
+<Callout type="question" title="Task 6">
+  The malware attempts to get the public IP address of an infected system. What
+  is the full URL used to retrieve this information?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 7
+
+<Callout type="question" title="Task 7">
+  The malware is looking for a particular path to connect back on. What is the
+  full URL used for C2 of this malware?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 8
+
+<Callout type="question" title="Task 8">
+  The malware has a configured user_id which is sent to the C2 in the headers or
+  body on every request. What is the key or variable name sent which contains
+  the user_id value?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 9
+
+<Callout type="question" title="Task 9">
+  The malware checks for a number of hostnames upon execution, and if any are
+  found it will terminate. What hostname is it looking for that begins with
+  arch?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 10
+
+<Callout type="question" title="Task 10">
+  The malware looks for a number of processes when checking if it is running in
+  a VM; however, the malware author has mistakenly made it check for the same
+  process twice. What is the name of this process?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 11
+
+<Callout type="question" title="Task 11">
+  The malware has a special function which checks to see if
+  C:\Windows\system32\cmd.exe exists. If it doesn't it will write a file from
+  the C2 server to an unusual location on disk using the environment variable
+  USERPROFILE. What is the location it will be written to?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 12
+
+<Callout type="question" title="Task 12">
+  The malware appears to be targeting browsers as much as Discord. What command
+  is run to locate Firefox cookies on the system?
+</Callout>
+
+<Callout type="success" title=""></Callout>
+
+## Task 13
+
+<Callout type="question" title="Task 13">
+  To finally eradicate the malware, Forela needs you to find out what Discord
+  module has been modified by the malware so they can clean it up. What is the
+  Discord module infected by this malware, and what's the name of the infected
+  file?
+</Callout>
+
+<Callout type="success" title=""></Callout>

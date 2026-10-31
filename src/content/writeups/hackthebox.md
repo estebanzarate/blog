@@ -7,3 +7,4 @@ draft: false
 ---
 
 - [Máquinas](./hackthebox/machines)
+- [Sherlocks](./hackthebox/sherlocks)
