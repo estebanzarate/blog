@@ -52,7 +52,13 @@ Herramientas de descompresión como `7-Zip` o `7z` en Linux están programadas p
 
 Un GUID (siglas en inglés para Globally Unique Identifier, o Identificador Único Global) es un código alfanumérico largo que se utiliza en informática para darle un nombre completamente único a un componente, archivo, programa o entrada de registro.
 
-<Callout type="success" title=""></Callout>
+Aparentemente el GUID se guarda en la key del registro `Software\Microsoft\Windows\CurrentVersion\Uninstall\{GUID}` dentro del archivo `.nsi`, pero como las últimas versiones de 7z no permiten extraerlo o algo así, hay que hacer una tramoya para que la última versión haga lo que hacía y necesitamos que haga. Siguiendo lo que dice este repo lo podemos lograr [7z-build-nsis](https://github.com/myfreeer/7z-build-nsis).
+
+Extraemos el contenido del archivo `nsis-installer.exe`, abrimos el archivo `[NSIS].nsi` con algún editor de texto de preferencia y buscamos la clave `Software\Microsoft\Windows\CurrentVersion\Uninstall\`, ahí está el famoso y desgraciado GUID.
+
+<Callout type="success" title="GUID">
+  cfbc383d-9aa0-5771-9485-7b806e8442d5
+</Callout>
 
 ## Task 4
 
@@ -61,7 +67,64 @@ Un GUID (siglas en inglés para Globally Unique Identifier, o Identificador Úni
   What is the 'License' tied to this malware?
 </Callout>
 
-<Callout type="success" title=""></Callout>
+Aparentemente hay un archivo `package.json`, en dónde? Andá a saber.
+
+Tirando el comando `tree` vemos la estructura del archivo `nsis-installer.exe`.
+
+```bash
+.
+├── $PLUGINSDIR
+│   ├── app-32.7z
+│   ├── nsExec.dll
+│   ├── nsis7z.dll
+│   ├── SpiderBanner.dll
+│   ├── StdUtils.dll
+│   ├── System.dll
+│   └── WinShell.dll
+├── $R0
+│   └── Uninstall SerenityTherapyInstaller.exe
+└── [NSIS].nsi
+
+3 directories, 9 files
+```
+
+Vamos a extraer el archivo `app-32.7z`.
+
+```bash
+7zz x app-32.7z -oapp
+```
+
+Dentro del directorio `app` donde guardamos lo que extrajimos hay un directorio `resources` con un archivo `app.asar`. Buscamos qué carajo es la extensión `.asar` y resulta ser que es un formato de archivo empaquetado (similar a un archivo `.tar` sin compresión) utilizado por las aplicaciones creadas con el framework Electron (como Discord, Visual Studio Code o WhatsApp Desktop) para guardar su código fuente y recursos.
+
+Para extraer su contenido buscando encontramos que se puede extraer con el siguiente comando.
+
+```bash
+npx --yes @electron/asar extract app.asar ./asar_extracted
+```
+
+Dentro del directorio con el contenido extraído se encuentra el archivo `package.json`.
+
+```json
+{
+  "name": "SerenityTherapyInstaller",
+  "version": "1.0.0",
+  "main": "app.js",
+  "nodeVersion": "system",
+  "bin": "app.js",
+  "author": "SerenityTherapyInstaller Inc",
+  "license": "ISC",
+  "dependencies": {
+    "@primno/dpapi": "1.1.1",
+    "node-addon-api": "^7.0.0",
+    "sqlite3": "^5.1.6",
+    "systeminformation": "^5.21.22"
+  }
+}
+```
+
+<Callout type="success" title="License">
+  ISC
+</Callout>
 
 ## Task 5
 
@@ -70,7 +133,11 @@ Un GUID (siglas en inglés para Globally Unique Identifier, o Identificador Úni
   used for C2?
 </Callout>
 
-<Callout type="success" title=""></Callout>
+Me volví loco y la respuesta estaba en VirusTotal `https://www.virustotal.com/gui/file/7a95214e7077d7324c0e8dc7d20f2a4e625bc0ac7e14b1446e37c47dff7eeb5b/behavior` en la sección `RELATIONS` debajo de `Contacted Domains` se encuentran los dominios que se contactan del archivo.
+
+<Callout type="success" title="Domain">
+  illitmagnetic.site
+</Callout>
 
 ## Task 6
 
