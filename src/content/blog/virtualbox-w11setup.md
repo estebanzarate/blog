@@ -3,7 +3,7 @@ type: post
 title: Setup de Windows 11
 description: Instalación de Windows 11 en Virtual Box
 lang: es
-featured: true
+featured: false
 image: ../../images/blog/windows11/windows11.png
 ---
 
