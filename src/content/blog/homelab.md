@@ -114,3 +114,92 @@ El acceso está administrado mediante grupos de seguridad de Active Directory y 
 ### Integración con el SIEM
 
 Wazuh Agent 4.14.9 está instalado en el endpoint y envía eventos al servidor central SOC-SERVER. Esto permite monitorear actividades como intentos fallidos de autenticación, accesos a recursos y otras operaciones relevantes para la seguridad del sistema.
+
+## Estructura organizativa de Active Directory
+
+El dominio `corp.lab` utiliza Active Directory Domain Services (AD DS) para centralizar la administración de identidades y recursos de la organización.
+
+La estructura se organiza mediante Unidades Organizativas (Organizational Units u OU), que permiten agrupar objetos del directorio según su función dentro de la empresa.
+
+La organización está dividida en las siguientes unidades:
+
+### CORP
+
+Contiene las unidades organizativas correspondientes a los departamentos de la empresa:
+
+- IT: usuarios y recursos del departamento de Tecnología.
+- HR: usuarios y recursos de Recursos Humanos.
+- Finance: usuarios y recursos de Finanzas.
+- Sales: usuarios y recursos de Ventas.
+
+### Service Accounts
+
+Contiene las cuentas utilizadas por servicios y procesos automatizados. Estas identidades permiten ejecutar tareas específicas sin depender de cuentas personales de los empleados.
+
+### Workstations
+
+Está destinada a organizar las estaciones de trabajo pertenecientes al dominio. Permite administrar los equipos corporativos de forma centralizada.
+
+### Domain Controllers
+
+Es la unidad organizativa predeterminada de Active Directory para los controladores de dominio. En este laboratorio contiene el objeto correspondiente a DC01.
+
+Esta estructura facilita la administración de los objetos del directorio y proporciona una base para aplicar políticas de grupo (Group Policy Objects o GPO) según las necesidades de cada área.
+
+## Administración de usuarios y grupos
+
+La administración de identidades del dominio corp.lab se realiza mediante Active Directory Domain Services. Los usuarios se organizan de acuerdo con su departamento y las responsabilidades que desempeñan dentro de la organización.
+
+La estructura contempla cuatro departamentos: IT, HR, Finance y Sales. Cada departamento cuenta con un usuario representativo y un grupo de seguridad global asociado.
+
+La asignación de permisos se realiza mediante grupos de seguridad, evitando administrar los accesos individualmente para cada usuario. Este enfoque facilita la administración de recursos y permite modificar los permisos de un departamento sin tener que configurar cada cuenta por separado.
+
+Además de las cuentas personales, existe una cuenta de servicio denominada svc.backup, destinada a representar las operaciones de respaldo de información. Esta cuenta pertenece al grupo GG_ServiceAccounts y no posee privilegios administrativos.
+
+Las cuentas predeterminadas Administrator, Guest y krbtgt forman parte de la estructura inicial de Active Directory y cumplen funciones propias del dominio.
+
+## Membresía de grupos y organización de identidades
+
+El dominio `corp.lab` utiliza grupos de seguridad globales para organizar las identidades de acuerdo con sus responsabilidades dentro de la organización.
+
+Cada empleado pertenece al grupo correspondiente a su departamento. Por ejemplo, John Smith pertenece a GG_IT, mientras que Robert Williams pertenece a GG_Finance.
+
+La cuenta `svc.backup` tiene una función diferente a la de los usuarios convencionales. Por este motivo, se encuentra separada de los grupos departamentales y pertenece exclusivamente a GG_ServiceAccounts, además de su pertenencia predeterminada a Domain Users.
+
+Esta organización permite aplicar permisos sobre recursos compartidos mediante grupos, simplificando la administración de accesos y reduciendo la necesidad de asignar permisos directamente a usuarios individuales.
+
+## Administración de recursos compartidos mediante SMB
+
+El equipo `WIN11-01` funciona como servidor de archivos de la organización simulada. Los recursos se encuentran organizados por departamento y se publican mediante el protocolo Server Message Block (SMB), utilizado habitualmente para compartir archivos y carpetas en redes Windows.
+
+La estructura contempla cuatro recursos compartidos: Finance, HR, IT y Public.
+
+Los recursos departamentales utilizan grupos de seguridad de Active Directory para controlar el acceso. De esta manera, los integrantes de cada departamento pueden acceder a la información correspondiente a sus responsabilidades, mientras que los demás usuarios no reciben permisos de acceso por estas asignaciones.
+
+El recurso Public tiene una política más amplia y permite que los usuarios pertenecientes a Domain Users puedan consultar, crear, modificar y eliminar archivos.
+
+La cuenta de servicio svc.backup dispone de permisos de lectura sobre los cuatro recursos. Esta configuración representa una cuenta destinada a operaciones de respaldo que necesita consultar información sin modificar los archivos originales.
+
+La administración de permisos mediante grupos permite centralizar las políticas de acceso y facilita su mantenimiento cuando se incorporan nuevos empleados o cambian sus responsabilidades.
+
+## Control de acceso mediante permisos NTFS
+
+Además de los permisos SMB, el servidor de archivos utiliza listas de control de acceso (Access Control Lists o ACL) del sistema de archivos NTFS para administrar las operaciones permitidas sobre cada directorio.
+
+Cada carpeta departamental cuenta con permisos explícitos asignados al grupo de seguridad correspondiente. Por ejemplo, los integrantes de GG_Finance pueden modificar el contenido de C:\Shares\Finance, pero no reciben permisos departamentales sobre las carpetas de Recursos Humanos o Tecnología.
+
+La carpeta Public utiliza el grupo Domain Users, permitiendo que cualquier usuario autenticado del dominio pueda trabajar con su contenido.
+
+La cuenta svc.backup tiene permisos de lectura y ejecución sobre los cuatro directorios. Esta configuración permite representar una cuenta de servicio dedicada a consultar información para tareas de respaldo, sin concederle permisos de modificación.
+
+Las entradas de las ACL se propagan a los archivos y subdirectorios, manteniendo el mismo modelo de acceso dentro de cada recurso.
+
+## Combinación de permisos SMB y NTFS
+
+El acceso a los archivos mediante la red depende de dos mecanismos independientes: los permisos configurados en el recurso compartido SMB y los permisos NTFS aplicados sobre el directorio físico.
+
+Cuando un usuario accede mediante SMB, se aplican ambas restricciones y prevalece la más restrictiva.
+
+Por ejemplo, un integrante del departamento de Finanzas tiene permiso Full en el recurso SMB Finance, pero solamente Modify en NTFS. Por lo tanto, su acceso efectivo queda limitado a las operaciones permitidas por Modify.
+
+Este modelo permite mantener un control de acceso en dos niveles: uno para el recurso compartido y otro para los archivos almacenados en el servidor.
