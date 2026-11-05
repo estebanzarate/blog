@@ -63,6 +63,68 @@ El servidor utiliza dos interfaces de red:
 
 Esta configuración permite mantener la comunicación interna del laboratorio separada de la conectividad externa.
 
+### Configuración
+
+```bash
+sudo nano /etc/netplan/00-installer-config.yaml
+```
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: false
+      addresses:
+        - 192.168.56.20/24
+      match:
+        macaddress: 08:00:27:b5:8b:50
+      set-name: enp0s3
+
+    enp0s8:
+      accept-ra: true
+      dhcp4: true
+      dhcp6: true
+```
+
+```bash
+sudo netplan generate
+```
+
+Aplicar temporalmente la configuración y revertirla automáticamente si no se confirman los cambios
+
+```bash
+sudo netplan try
+```
+
+Iniciar el servicio ssh
+
+```bash
+sudo systemctl start ssh
+```
+
+Verificar que escuche en el puerto 22
+
+```bash
+sudo ss -tlnp | grep ':22'
+```
+
+Instalar Wazuh
+
+```bash
+curl -fSLO https://packages.wazuh.com/4.14/wazuh-install.sh
+```
+
+```bash
+sudo bash wazuh-install.sh -a
+```
+
+Comprobar el estado de los servicios de Wazuh
+
+```bash
+sudo systemctl status wazuh-indexer wazuh-manager wazuh-dashboard filebeat --no-pager
+```
+
 ## Controlador de dominio: DC01
 
 DC01 es el controlador de dominio principal de la infraestructura corporativa simulada. Ejecuta Windows Server 2025 Standard Evaluation y proporciona los servicios centrales de autenticación, administración de identidades y resolución de nombres.
@@ -85,6 +147,34 @@ Integración con el SIEM
 
 El servidor tiene instalado Wazuh Agent 4.14.9, que permite enviar eventos y registros al servidor central SOC-SERVER. Esto proporciona visibilidad sobre la actividad del controlador de dominio, incluyendo eventos de autenticación y operaciones relacionadas con Active Directory.
 
+### Instalación y configuración
+
+En la instalación seleccionar `Windows Server Standard (Desktop Experience)`.
+
+IP estática del adaptador `Host-Only`
+
+```powershell
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.56.10 -PrefixLength 24
+```
+
+Configurar el nombre del equipo
+
+```powershell
+Rename-Computer -NewName "DC01" -Restart
+```
+
+Instalar Active Directory Domain Services
+
+```powershell
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+```
+
+Promover DC01 como controlador de dominio
+
+```powershell
+Install-ADDSForest -DomainName "corp.lab" -DomainNetbiosName "CORP" -InstallDNS
+```
+
 ## Endpoint corporativo: WIN11-01
 
 WIN11-01 representa una estación de trabajo perteneciente a la infraestructura corporativa simulada. Ejecuta Windows 11 Pro de 64 bits y se encuentra unido al dominio `corp.lab`, administrado por el controlador de dominio DC01.
@@ -103,7 +193,70 @@ El endpoint cuenta con dos interfaces de red:
 - **NAT (10.0.3.15)**: proporciona conectividad a Internet.
 Recursos compartidos y control de acceso
 
-El equipo aloja cuatro recursos compartidos organizados por departamento:
+### Configuración
+
+IP estática
+
+```powershell
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.56.101 -PrefixLength 24
+```
+
+Descargar Wazuh Agent
+
+```powershell
+Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.14.9-1.msi -OutFile "$env:USERPROFILE\Downloads\wazuh-agent.msi"
+```
+
+```powershell
+msiexec.exe /i "$env:USERPROFILE\Downloads\wazuh-agent.msi"
+```
+
+```plaintext
+Manager IP: 192.168.56.20
+Authentication key: dejarlo vacío.
+```
+
+Iniciar el agente
+
+```powershell
+Start-Service WazuhSvc
+```
+
+Comprobar estado del servicio
+
+```powershell
+Get-Service WazuhSvc
+```
+
+En `SOC-SERVER` comprobamos que aparezca `WIN11-01`, puede demorar un poco en aparecer como `Active`
+
+```bash
+sudo /var/ossec/bin/agent_control -l
+```
+
+Habilitar ICMP
+
+```powershell
+New-NetFirewallRule -DisplayName "Allow ICMPv4 from Lab" -Protocol ICMPv4 -IcmpType 8 -Direction Inbound -Action Allow -RemoteAddress 192.168.56.0/24
+```
+
+Unirse al dominio, debe utilizar DC01 como servidor DNS
+
+```powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 192.168.56.10
+```
+
+Comprobar resolución DNS
+
+```powershell
+nslookup corp.lab
+```
+
+```powershell
+Add-Computer -DomainName "corp.lab" -Credential (Get-Credential) -Restart
+```
+
+### El equipo aloja cuatro recursos compartidos organizados por departamento:
 
 - Finance: archivos del departamento de Finanzas.
 - HR: archivos del departamento de Recursos Humanos.
