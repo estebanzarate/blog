@@ -947,3 +947,101 @@ Verificar
 ```powershell
 Get-ADGroupMember -Identity "GG_ServiceAccounts"
 ```
+
+## Primeras pruebas
+
+### Generar una modificación
+
+```powershell
+Set-ADUser j.smith -Description "SOC Lab - Audit Test"
+```
+
+```powershell
+Get-ADUser j.smith -Properties Description | Select-Object SamAccountName,Description
+```
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 5136
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+En Wazuh
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "5136"
+```
+
+### Modificación de grupos
+
+```powershell
+Add-ADGroupMember -Identity "GG_IT" -Members "a.brown"
+```
+
+```powershell
+Get-ADGroupMember GG_IT | Select-Object Name,SamAccountName,ObjectClass
+```
+
+```powershell
+Remove-ADGroupMember -Identity "GG_IT" -Members "a.brown" -Confirm:$false
+```
+
+```powershell
+Get-ADGroupMember GG_IT | Select-Object Name,SamAccountName,ObjectClass
+```
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4728,4729
+} -MaxEvents 10 | Format-List TimeCreated, Id, Message
+```
+
+En Wazuh
+
+```plaintext
+agent.name: "DC01" AND (data.win.system.eventID: "4728" OR data.win.system.eventID: "4729")
+```
+
+### Crear un usuario temporal de prueba
+
+```powershell
+New-ADUser -Name "SOC Audit Test" -SamAccountName "soc.audit.test" -UserPrincipalName "soc.audit.test@corp.lab" -Path "OU=IT,OU=CORP,DC=corp,DC=lab" -Enabled $false -Description "Temporary account for SOC audit validation"
+```
+
+```powershell
+Get-ADUser soc.audit.test | Select-Object Name,SamAccountName,Enabled,DistinguishedName
+```
+
+```powershell
+$Password = Read-Host "Ingresá una contraseña temporal" -AsSecureString
+Set-ADAccountPassword -Identity "soc.audit.test" -NewPassword $Password
+```
+
+Verificar
+
+```powershell
+Get-ADUser soc.audit.test -Properties PasswordLastSet | Select-Object SamAccountName,Enabled,PasswordLastSet
+```
+
+Habilitar la cuenta temporal
+
+```powershell
+Enable-ADAccount -Identity "soc.audit.test"
+```
+
+Comprobar el estado
+
+```powershell
+Get-ADUser soc.audit.test | Select-Object Name,SamAccountName,Enabled
+```
+
+Comprobar el evento
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4722
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
