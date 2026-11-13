@@ -952,17 +952,23 @@ Verificar
 Get-ADGroupMember -Identity "GG_ServiceAccounts"
 ```
 
-## Primeras pruebas
+## Pruebas
 
-### Generar una modificación
+### Modificación de objetos de Active Directory
+
+Modificar la descripción de un usuario
 
 ```powershell
 Set-ADUser j.smith -Description "SOC Lab - Audit Test"
 ```
 
+Comprobar que el cambio en la descripción se realizó
+
 ```powershell
 Get-ADUser j.smith -Properties Description | Select-Object SamAccountName,Description
 ```
+
+Comprobar que se registró el evento
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
@@ -971,7 +977,7 @@ Get-WinEvent -FilterHashtable @{
 } -MaxEvents 5 | Format-List TimeCreated, Id, Message
 ```
 
-En Wazuh
+Buscar en Wazuh el evento de modificación de objetos de Active Directory
 
 ```plaintext
 agent.name: "DC01" AND data.win.system.eventID: "5136"
@@ -979,21 +985,31 @@ agent.name: "DC01" AND data.win.system.eventID: "5136"
 
 ### Modificación de grupos
 
+Agregar un usuario a un grupo
+
 ```powershell
 Add-ADGroupMember -Identity "GG_IT" -Members "a.brown"
 ```
 
+Comprobar que se agregó el usuario al grupo
+
 ```powershell
 Get-ADGroupMember GG_IT | Select-Object Name,SamAccountName,ObjectClass
 ```
+
+Eliminar el usuario del grupo al que se añadió
 
 ```powershell
 Remove-ADGroupMember -Identity "GG_IT" -Members "a.brown" -Confirm:$false
 ```
 
+Comprobar que se eliminó el usuario del grupo
+
 ```powershell
 Get-ADGroupMember GG_IT | Select-Object Name,SamAccountName,ObjectClass
 ```
+
+Comprobar que se crearon los eventos de agregar y eliminar miembros de un grupo global
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
@@ -1002,7 +1018,7 @@ Get-WinEvent -FilterHashtable @{
 } -MaxEvents 10 | Format-List TimeCreated, Id, Message
 ```
 
-En Wazuh
+Comprobar que se registraron en Wazuh los eventos de agregar y eliminar miembros de un grupo global
 
 ```plaintext
 agent.name: "DC01" AND (data.win.system.eventID: "4728" OR data.win.system.eventID: "4729")
