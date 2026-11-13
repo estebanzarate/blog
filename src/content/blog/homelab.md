@@ -246,6 +246,12 @@ IP estática del adaptador `Host-Only`
 New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.56.10 -PrefixLength 24
 ```
 
+Verificar
+
+```powershell
+Get-NetIPConfiguration
+```
+
 Configurar el nombre del equipo
 
 ```powershell
@@ -785,7 +791,6 @@ La cuenta `svc.backup` tiene una función diferente a la de los usuarios convenc
 Esta organización permite aplicar permisos sobre recursos compartidos mediante grupos, simplificando la administración de accesos y reduciendo la necesidad de asignar permisos directamente a usuarios individuales.
 
 ```powershell
-```powershell
 Get-ADGroup -Filter 'Name -like "GG_*"' |
 ForEach-Object {
     $group = $_
@@ -852,7 +857,6 @@ Crear las Organizational Units (OU)
 New-ADOrganizationalUnit -Name "CORP" -Path "DC=corp,DC=lab"
 New-ADOrganizationalUnit -Name "Service Accounts" -Path "DC=corp,DC=lab"
 New-ADOrganizationalUnit -Name "Workstations" -Path "DC=corp,DC=lab"
-
 New-ADOrganizationalUnit -Name "IT" -Path "OU=CORP,DC=corp,DC=lab"
 New-ADOrganizationalUnit -Name "HR" -Path "OU=CORP,DC=corp,DC=lab"
 New-ADOrganizationalUnit -Name "Finance" -Path "OU=CORP,DC=corp,DC=lab"
@@ -1004,7 +1008,7 @@ En Wazuh
 agent.name: "DC01" AND (data.win.system.eventID: "4728" OR data.win.system.eventID: "4729")
 ```
 
-### Crear un usuario temporal de prueba
+### Creación de cuenta
 
 ```powershell
 New-ADUser -Name "SOC Audit Test" -SamAccountName "soc.audit.test" -UserPrincipalName "soc.audit.test@corp.lab" -Path "OU=IT,OU=CORP,DC=corp,DC=lab" -Enabled $false -Description "Temporary account for SOC audit validation"
@@ -1013,6 +1017,16 @@ New-ADUser -Name "SOC Audit Test" -SamAccountName "soc.audit.test" -UserPrincipa
 ```powershell
 Get-ADUser soc.audit.test | Select-Object Name,SamAccountName,Enabled,DistinguishedName
 ```
+
+En Wazuh buscar el evento de creación de cuenta
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4720"
+```
+
+### Habilitación de cuenta
+
+Asignarle una contraseña antes de habilitar la cuenta
 
 ```powershell
 $Password = Read-Host "Ingresá una contraseña temporal" -AsSecureString
@@ -1044,4 +1058,66 @@ Get-WinEvent -FilterHashtable @{
     LogName = 'Security'
     Id = 4722
 } -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+En Wazuh buscar el evento de cuenta habilitada
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4722"
+```
+
+### Deshabilitación de cuenta
+
+```powershell
+Disable-ADAccount -Identity "soc.audit.test"
+```
+
+Verificar
+
+```powershell
+Get-ADUser soc.audit.test | Select-Object Name,SamAccountName,Enabled
+```
+
+Comprobar el evento
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4725
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+En Wazuh buscar el evento de cuenta deshabilitada
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4725"
+```
+
+### Eliminación de cuenta
+
+Eliminar cuenta
+
+```powershell
+Remove-ADUser -Identity "soc.audit.test" -Confirm:$false
+```
+
+Verificar la eliminación de la cuenta
+
+```powershell
+Get-ADUser soc.audit.test
+```
+
+Verificar que se creó el evento
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4726
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+Buscar en Wazuh el evento de eliminación de cuenta
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4726"
 ```
