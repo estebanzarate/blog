@@ -526,8 +526,7 @@ $Acl = Get-Acl $Path
 
 $Rules = @(
     [System.Security.AccessControl.FileSystemAccessRule]::new("NT AUTHORITY\SYSTEM", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow"),
-    [System.Security.AccessControl.FileSystemAccessRule]::new("BUILTIN\Administrators", "FullControl",
-"ContainerInherit,ObjectInherit", "None", "Allow")
+    [System.Security.AccessControl.FileSystemAccessRule]::new("BUILTIN\Administrators", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
 )
 
 foreach ($Rule in $Rules) {
@@ -954,6 +953,27 @@ Get-ADGroupMember -Identity "GG_ServiceAccounts"
 
 ## Pruebas
 
+### Creación de procesos
+
+```powershell
+Start-Process -FilePath "whoami.exe" -Wait
+```
+
+Comprobar que se creó el evento
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4688
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+Buscar en Wazuh la creación del evento de creación del proceso
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4688"
+```
+
 ### Modificación de objetos de Active Directory
 
 Modificar la descripción de un usuario
@@ -1136,4 +1156,76 @@ Buscar en Wazuh el evento de eliminación de cuenta
 
 ```plaintext
 agent.name: "DC01" AND data.win.system.eventID: "4726"
+```
+
+### Modificaciones de cuentas
+
+Modificar la descripción de un usuario
+
+```powershell
+Set-ADUser j.smith -Description "SOC Lab - Account Modification Test"
+```
+
+Comprobar el cambio
+
+```powershell
+Get-ADUser j.smith -Properties Description | Select-Object SamAccountName,Description
+```
+
+Buscar en Wazuh el evento de modificación de cuenta
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "4738"
+```
+
+```plaintext
+agent.name: "DC01" AND data.win.system.eventID: "5136"
+```
+
+### Auditoría de acceso a archivos
+
+File System, acceso a archivos y carpetas
+
+```powershell
+auditpol /set /subcategory:"File System" /success:enable /failure:enable
+```
+
+File Share, acceso a recursos compartidos SMB
+
+```powershell
+auditpol /set /subcategory:"File Share" /success:enable /failure:enable
+```
+
+Detailed File Share, conexiones y accesos detallados SMB
+
+```powershell
+auditpol /set /subcategory:"Detailed File Share" /success:enable /failure:enable
+```
+
+Comprobar que se habilitaron las auditorías de acceso a objetos
+
+```powershell
+auditpol /get /subcategory:"File System"
+auditpol /get /subcategory:"File Share"
+auditpol /get /subcategory:"Detailed File Share"
+```
+
+Configurar auditoría sobre las carpetas compartidas
+
+```powershell
+$Path = "C:\Shares\Finance"
+
+$Acl = Get-Acl -Path $Path -Audit
+
+$Rule = New-Object System.Security.AccessControl.FileSystemAuditRule(
+    "Everyone",
+    "ReadData,WriteData,AppendData,Delete,ChangePermissions,TakeOwnership",
+    "ContainerInherit,ObjectInherit",
+    "None",
+    "Success,Failure"
+)
+
+$Acl.AddAuditRule($Rule)
+
+Set-Acl -Path $Path -AclObject $Acl
 ```
