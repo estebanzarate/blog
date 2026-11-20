@@ -1229,3 +1229,52 @@ $Acl.AddAuditRule($Rule)
 
 Set-Acl -Path $Path -AclObject $Acl
 ```
+
+En `WIN11-01`, con la sesión de `CORP\r.williams`
+
+```powershell
+"Finance access test - SOC Lab" | Set-Content "\\localhost\Finance\soc-finance-test.txt"
+```
+
+```powershell
+Get-Content "\\localhost\Finance\soc-finance-test.txt"
+```
+
+Revisar los eventos de seguridad
+
+Acceso al recurso compartido (5140)
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 5140
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+Acceso detallado al recurso compartido (5145)
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 5145
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+Acceso a objetos del sistema de archivos (4663)
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4663
+} -MaxEvents 5 | Format-List TimeCreated, Id, Message
+```
+
+Buscar en Wazuh los eventos
+
+```plaintext
+agent.name: "WIN11-01" AND data.win.system.eventID: "5140"
+```
+
+```plaintext
+agent.name: "WIN11-01" AND data.win.system.eventID: "5145"
+```
