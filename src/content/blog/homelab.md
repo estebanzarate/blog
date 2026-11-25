@@ -1278,3 +1278,83 @@ agent.name: "WIN11-01" AND data.win.system.eventID: "5140"
 ```plaintext
 agent.name: "WIN11-01" AND data.win.system.eventID: "5145"
 ```
+
+## Configuración de Wazuh
+
+```bash
+sudo nano /var/ossec/etc/ossec.conf
+```
+
+```bash
+<logall_json>yes</logall_json>
+```
+
+```bash
+sudo nano /etc/filebeat/filebeat.yml
+```
+
+```yaml
+archives:
+  enabled: true
+```
+
+```bash
+sudo systemctl restart filebeat
+```
+
+```bash
+sudo systemctl restart wazuh-manager
+```
+
+## Unauthorized Finance Access
+
+Iniciar sesión como `CORP\j.smith` en `WIN11-01`.
+
+En PowerShell ejecutar:
+
+```powershell
+Get-ChildItem "\\localhost\Finance"
+```
+
+```powershell
+Get-Content "\\localhost\Finance\soc-finance-test.txt"
+```
+
+Las operaciones deberían ser rechazadas por falta de permisos.
+
+Consultar eventos en `WIN11-01`.
+
+Abrir PowerShell como Administrator y ejecutar:
+
+```powershell
+Evento 5140 — Acceso al recurso compartido:
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 5140
+    StartTime = (Get-Date).AddMinutes(-30)
+} | Format-List TimeCreated, Id, Message
+```
+
+Evento 5140 - Acceso al recurso compartido
+
+```powershell
+Evento 5145 — Comprobación detallada de permisos:
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 5145
+    StartTime = (Get-Date).AddMinutes(-30)
+} | Format-List TimeCreated, Id, Message
+```
+
+Evento 5145 - Comprobación detallada de permisos
+
+```powershell
+Evento 4663 — Acceso al objeto:
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4663
+    StartTime = (Get-Date).AddMinutes(-30)
+} | Format-List TimeCreated, Id, Message
+```
+
+Evento 4663 - Acceso al objeto

