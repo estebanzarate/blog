@@ -5,7 +5,7 @@ description: >-
   Forela necesita tu ayuda. Un empleado les informó que su cuenta de Discord se había utilizado para enviar un mensaje con un enlace a un archivo que sospechan que es malware. El mensaje decía: "¡Hola! He estado trabajando en un nuevo juego que creo que te puede interesar. Combina varios juegos que nos gusta jugar juntos, ¡échale un vistazo!". El usuario de Forela ha intentado proteger su cuenta de Discord, pero los mensajes siguen llegando. ¡Necesitan tu ayuda para comprender este malware y recuperar el control de su cuenta! Advertencia: Este archivo, Sherlock, incluye software que interactuará con tu ordenador y tus archivos. Este software se ha incluido intencionadamente con fines educativos y NO está diseñado para ejecutarse ni utilizarse de otra manera. Siempre maneja este tipo de archivos en entornos aislados, controlados y seguros. Una vez descomprimido el archivo ZIP de Sherlock, encontrarás un archivo DANGER.txt. Léelo para continuar.
 lang: es
 draft: false
-featured: true
+featured: false
 image: ../../../../images/writeups/hackthebox/sherlocks/subatomic/subatomic.png
 platform: hackthebox
 url: https://app.hackthebox.com/sherlocks/Subatomic
@@ -96,7 +96,7 @@ Vamos a extraer el archivo `app-32.7z`.
 
 Dentro del directorio `app` donde guardamos lo que extrajimos hay un directorio `resources` con un archivo `app.asar`. Buscamos qué carajo es la extensión `.asar` y resulta ser que es un formato de archivo empaquetado (similar a un archivo `.tar` sin compresión) utilizado por las aplicaciones creadas con el framework Electron (como Discord, Visual Studio Code o WhatsApp Desktop) para guardar su código fuente y recursos.
 
-Para extraer su contenido buscando encontramos que se puede extraer con el siguiente comando.
+Para extraer su contenido encontramos que se puede extraer con el siguiente comando.
 
 ```bash
 npx --yes @electron/asar extract app.asar ./asar_extracted

