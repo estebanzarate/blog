@@ -10,4 +10,5 @@ draft: true
 - [MangoBleed](./sherlocks/mangobleed)
 - [Phishing_Email](./sherlocks/phishingemail)
 - [RomCom](./sherlocks/romcom)
+- [SSHole](./sherlocks/sshole)
 - [Subatomic](./sherlocks/subatomic)
